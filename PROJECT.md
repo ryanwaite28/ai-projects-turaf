@@ -1,0 +1,1912 @@
+# Event-Driven SaaS Platform: Problem Tracking + Solution Validation
+
+## 1. Overview
+
+This project is a **production-style SaaS platform** designed to demonstrate principal-level software engineering, system design, and DevOps practices.
+
+The platform enables teams, founders, and product builders to **identify problems, form hypotheses, run experiments, and validate solutions using measurable metrics**.
+
+The system is intentionally designed as a **cloud-native, event-driven architecture** deployed on AWS with full CI/CD and infrastructure-as-code.
+
+This repository is intended to serve as a **portfolio-quality engineering project** demonstrating:
+
+- Principal-level software architecture
+- Domain-driven design
+- Event-driven systems
+- Cloud-native infrastructure
+- DevOps automation
+- Production-level observability
+
+---
+
+# 2. Project Objectives
+
+The objective of this project is to build a **multi-tenant SaaS experimentation platform** that allows organizations to:
+
+1. Define problems they want to solve
+2. Create hypotheses
+3. Run structured experiments
+4. Record metrics
+5. Generate validation reports
+
+The system must support:
+
+- multi-tenant organizations
+- event-driven workflows
+- asynchronous processing
+- scalable cloud deployment
+- CI/CD automation
+- observability
+
+---
+
+# 3. Skills Demonstrated
+
+This project demonstrates capabilities expected from **Senior / Staff / Principal Engineers**.
+
+## Software Engineering
+
+- SOLID design principles
+- Clean Architecture
+- Domain Driven Design (DDD)
+- Testability and modular design
+- Dependency inversion
+
+## System Design
+
+- Event-driven architecture
+- Asynchronous workflows
+- Domain events
+- Bounded contexts
+- Service boundaries
+
+## Cloud Architecture
+
+- AWS distributed systems
+- event buses
+- containerized services
+- serverless processing
+- scalable storage
+
+## DevOps
+
+- CI/CD pipelines
+- Infrastructure as Code
+- automated deployments
+- container builds
+- environment promotion
+
+## Production Operations
+
+- observability
+- structured logging
+- metrics and dashboards
+- distributed tracing
+
+---
+
+# 4. Product Concept
+
+## Problem
+
+Many teams attempt to build solutions without structured validation of the problems they are solving.
+
+This leads to:
+
+- wasted engineering time
+- unvalidated features
+- poor product-market fit
+
+## Solution
+
+A platform that enforces **structured experimentation**.
+
+Users move through a workflow:
+
+Problem -> Hypothesis -> Experiment -> Metrics -> Validation Report
+
+This ensures product teams can make **data-driven decisions**.
+
+---
+
+# 5. Core Features
+
+## Problem Management
+
+Users define problems including:
+
+- problem description
+- affected users
+- context
+
+## Hypothesis Tracking
+
+Users create hypotheses linked to problems.
+
+Example:
+
+"If we implement X feature, user engagement will increase by 20%."
+
+## Experiment Execution
+
+Experiments allow teams to test hypotheses.
+
+Experiments track:
+
+- start date
+- end date
+- metrics
+- outcome
+
+## Metrics Collection
+
+Experiments record quantitative metrics.
+
+Example metrics:
+
+- conversion rate
+- user engagement
+- signup rate
+
+## Report Generation
+
+After experiment completion the system generates:
+
+- validation summary
+- metrics analysis
+- outcome classification
+
+Reports are stored for future reference.
+
+---
+
+# 6. Domain Model (DDD)
+
+## Core Entities
+
+Organization
+User
+Problem
+Hypothesis
+Experiment
+Metric
+ExperimentResult
+Report
+
+## Entity Relationships
+
+Organization
+  -> Users
+  -> Problems
+
+Problem
+  -> Hypotheses
+
+Hypothesis
+  -> Experiments
+
+Experiment
+  -> Metrics
+  -> Results
+
+---
+
+# 7. Domain Events
+
+The system is designed as an **event-driven architecture**.
+
+## Key Events
+
+ProblemCreated
+HypothesisCreated
+ExperimentStarted
+MetricRecorded
+ExperimentCompleted
+ReportGenerated
+
+These events allow services to react asynchronously.
+
+Example:
+
+ExperimentCompleted
+  -> triggers report generation
+
+---
+
+# 8. Event Driven Architecture
+
+High level event flow:
+
+User Action
+  -> API Service
+  -> Domain Event
+  -> Event Bus
+  -> Event Consumers
+
+Example pipeline:
+
+ExperimentCompleted
+  -> Event Bus
+  -> Report Generator
+  -> Report Stored
+  -> Notification Sent
+
+---
+
+# 9. System Architecture
+
+High-level architecture components:
+
+Frontend (React)
+
+API Layer
+
+Core API Service
+
+Event Bus
+
+Async Processing Services
+
+Persistent Storage
+
+Object Storage
+
+---
+
+# 10. AWS Infrastructure
+
+The platform will run entirely on AWS.
+
+Compute
+
+ECS services
+Lambda processors
+
+Messaging
+
+Event bus
+Queue processing
+
+Storage
+
+Relational database
+Object storage
+
+Infrastructure
+
+Infrastructure as Code templates
+
+---
+
+# 11. Service Boundaries
+
+Logical service domains:
+
+Identity Service
+Organization Service
+Experiment Service
+Metrics Service
+Reporting Service
+Notification Service
+
+Each service publishes and consumes domain events.
+
+---
+
+# 12. Clean Architecture Structure
+
+Example code layout:
+
+src/
+
+ domain/
+
+ application/
+
+ infrastructure/
+
+ interfaces/
+
+The domain layer contains:
+
+- entities
+- value objects
+- domain events
+
+The application layer contains:
+
+- use cases
+- services
+
+The infrastructure layer contains:
+
+- database repositories
+- messaging adapters
+
+The interface layer contains:
+
+- REST APIs
+- GraphQL APIs
+
+---
+
+# 13. Observability
+
+The platform must support full production observability.
+
+## Logging
+
+Structured JSON logs.
+
+## Metrics
+
+Track operational metrics such as:
+
+- experiments started
+- experiments completed
+- event processing latency
+
+## Tracing
+
+Distributed tracing across services.
+
+---
+
+# 14. DevOps Pipeline
+
+Continuous integration and deployment pipeline.
+
+Stages:
+
+1. Lint
+2. Unit Tests
+3. Build Containers
+4. Security Scan
+5. Push Images
+6. Deploy Infrastructure
+7. Deploy Services
+
+---
+
+# 15. Infrastructure as Code
+
+All cloud resources must be provisioned using Infrastructure as Code.
+
+Resources include:
+
+- compute services
+- networking
+- storage
+- event infrastructure
+- permissions
+
+---
+
+# 16. Repository Structure
+
+Root repository structure:
+
+services/
+
+infrastructure/
+
+libs/
+
+.github/workflows/
+
+docs/
+
+Docs folder includes:
+
+architecture documentation
+architecture decision records
+diagrams
+
+---
+
+# 17. Architecture Decision Records
+
+Document engineering decisions.
+
+Examples:
+
+ADR-001 event bus choice
+ADR-002 database strategy
+ADR-003 compute platform choice
+
+These records explain:
+
+- context
+- decision
+- tradeoffs
+
+---
+
+# 18. Advanced Features
+
+To demonstrate principal-level design the system should include:
+
+Multi-tenant architecture
+
+Event-driven workflows
+
+Async processing
+
+Automated reporting
+
+External integrations
+
+Webhook support
+
+Notification system
+
+---
+
+# 19. Development Phases
+
+## Phase 1
+
+Domain model
+API service
+Basic experiment workflow
+
+## Phase 2
+
+Event system
+Async processors
+Reporting
+
+## Phase 3
+
+Cloud deployment
+Infrastructure as Code
+
+## Phase 4
+
+Observability
+Monitoring
+
+## Phase 5
+
+Documentation
+Architecture diagrams
+
+---
+
+# 20. Success Criteria
+
+The project will be considered complete when:
+
+- full experiment lifecycle works
+- events trigger async workflows
+- infrastructure deploys automatically
+- CI/CD pipeline functions
+- observability is implemented
+- architecture documentation is complete
+
+---
+
+# 21. Long-Term Extensions
+
+Future enhancements could include:
+
+analytics dashboards
+A/B testing support
+AI-assisted experiment analysis
+advanced metrics pipelines
+
+---
+
+# 22. Goal of the Repository
+
+This repository serves as a **portfolio-grade demonstration of principal-level engineering**.
+
+It demonstrates the ability to:
+
+- design distributed systems
+- build scalable SaaS platforms
+- operate production cloud infrastructure
+- implement DevOps automation
+
+The project should be treated as if it were a **real production startup system**.
+
+
+---
+
+# 23. Engineering Principles
+
+The system must follow well established engineering principles used in large production systems.
+
+## SOLID
+
+All services and modules should follow SOLID principles:
+
+Single Responsibility Principle
+
+Each class or module should have only one responsibility.
+
+Open Closed Principle
+
+Modules should be open for extension but closed for modification.
+
+Liskov Substitution Principle
+
+Interfaces must be substitutable without breaking behavior.
+
+Interface Segregation Principle
+
+Prefer multiple smaller interfaces rather than one large interface.
+
+Dependency Inversion Principle
+
+High level modules should depend on abstractions rather than implementations.
+
+---
+
+## Domain Driven Design
+
+The system should model the real domain using DDD principles.
+
+Important concepts:
+
+Entities
+Value Objects
+Aggregates
+Domain Events
+Repositories
+Application Services
+
+The domain layer must not depend on infrastructure concerns.
+
+---
+
+## Clean Architecture
+
+The architecture must enforce strict separation between layers.
+
+Dependency direction:
+
+interfaces -> application -> domain
+
+Infrastructure depends on domain but domain never depends on infrastructure.
+
+---
+
+## Testing Philosophy
+
+Testing strategy must include multiple levels:
+
+Unit Tests
+
+Test domain logic in isolation.
+
+Integration Tests
+
+Validate database and messaging integrations.
+
+End-to-End Tests
+
+Verify full experiment workflows.
+
+---
+
+# 24. Coding Standards
+
+The repository must follow consistent coding standards.
+
+## Code Quality
+
+Code should be:
+
+Readable
+Modular
+Well documented
+Strongly typed when possible
+
+All public APIs should include documentation comments.
+
+---
+
+## Repository Layer
+
+Repositories abstract persistence.
+
+Example repository interfaces:
+
+ProblemRepository
+HypothesisRepository
+ExperimentRepository
+
+Infrastructure implementations may include:
+
+PostgresRepository
+DynamoRepository
+
+---
+
+## Service Layer
+
+Application services orchestrate domain behavior.
+
+Example services:
+
+ExperimentService
+MetricService
+ReportingService
+
+Services coordinate domain entities and publish events.
+
+---
+
+## Event Model Standards
+
+Events must include common metadata.
+
+Example event envelope:
+
+EventId
+EventType
+Timestamp
+SourceService
+Payload
+
+Events should be immutable.
+
+---
+
+# 25. AI Agent Development Instructions
+
+This repository is intended to be used in AI-enabled development environments such as Windsurf.
+
+AI agents working within this repository should follow these rules.
+
+## Planning First
+
+Before implementing features, the AI should:
+
+1. Analyze the domain model
+2. Identify affected services
+3. Identify domain events
+4. Generate implementation tasks
+
+---
+
+## Implementation Strategy
+
+Each feature should be implemented using the following workflow:
+
+1. Define domain entities or value objects
+2. Implement domain logic
+3. Create application service or use case
+4. Define repository interfaces
+5. Implement infrastructure adapters
+6. Expose functionality via API
+7. Publish domain events
+
+---
+
+## Event Driven Behavior
+
+Whenever domain state changes occur, appropriate domain events must be emitted.
+
+Examples:
+
+ProblemCreated
+HypothesisCreated
+ExperimentStarted
+ExperimentCompleted
+
+Event consumers should handle side effects.
+
+---
+
+## AI Implementation Constraints
+
+AI-generated code must:
+
+Avoid tight coupling
+Favor dependency injection
+Use clear abstractions
+Preserve domain isolation
+
+---
+
+# 26. Complete System Architecture Plan
+
+This section describes the full architecture of the platform.
+
+---
+
+## System Overview
+
+The system is a multi-tenant SaaS platform using an event-driven architecture.
+
+Major layers:
+
+Client Applications
+API Layer
+Application Services
+Domain Layer
+Event Infrastructure
+Async Processing Services
+Data Storage
+
+---
+
+## High Level Architecture
+
+Core system flow:
+
+Client
+
+-> API Gateway
+
+-> API Service
+
+-> Domain Logic
+
+-> Domain Events
+
+-> Event Bus
+
+-> Async Consumers
+
+-> Data Storage
+
+---
+
+## Component Architecture
+
+### Frontend
+
+React based web application.
+
+Responsibilities:
+
+User authentication
+Problem management
+Experiment dashboards
+Metrics visualization
+
+---
+
+### API Layer
+
+Handles client requests.
+
+Responsibilities:
+
+Request validation
+Authentication
+Authorization
+Routing to application services
+
+---
+
+### Core API Service
+
+Primary backend service.
+
+Responsibilities:
+
+Problem management
+Hypothesis management
+Experiment lifecycle
+Metric ingestion
+
+---
+
+### Event Bus
+
+Central event distribution system.
+
+Responsibilities:
+
+Publish domain events
+Deliver events to consumers
+Enable loose coupling between services
+
+---
+
+### Async Processing Services
+
+Independent processors reacting to events.
+
+Examples:
+
+Report Generator
+Metrics Aggregator
+Notification Service
+
+---
+
+### Data Storage
+
+Different storage systems serve different needs.
+
+Relational storage for transactional data.
+
+Object storage for reports and artifacts.
+
+---
+
+# 27. Data Architecture
+
+## Primary Database
+
+Stores core domain entities.
+
+Tables include:
+
+organizations
+users
+problems
+hypotheses
+experiments
+metrics
+reports
+
+---
+
+## Object Storage
+
+Stores large generated artifacts.
+
+Examples:
+
+experiment reports
+analytics exports
+
+---
+
+# 28. Event Architecture
+
+Events are the backbone of the system.
+
+## Event Producers
+
+Experiment Service
+Metrics Service
+Problem Service
+
+## Event Consumers
+
+Reporting Service
+Notification Service
+Analytics Service
+
+---
+
+## Event Flow Example
+
+ExperimentCompleted event:
+
+Experiment Service
+
+-> Event Bus
+
+-> Reporting Service generates report
+
+-> Notification Service alerts users
+
+---
+
+# 29. Multi-Tenant Architecture
+
+The system must support multiple organizations.
+
+Each data record contains:
+
+organization_id
+
+Tenant isolation rules:
+
+All queries must filter by organization.
+
+Authorization ensures users only access their organization data.
+
+---
+
+# 30. Deployment Architecture
+
+Environments:
+
+local
+
+staging
+
+production
+
+Each environment is deployed using infrastructure templates.
+
+---
+
+# 31. CI/CD Architecture
+
+Continuous integration pipeline:
+
+1. Code pushed to repository
+2. Automated tests run
+3. Containers built
+4. Security scans executed
+5. Artifacts published
+
+Continuous deployment pipeline:
+
+Deploy infrastructure
+Deploy services
+Run smoke tests
+
+---
+
+# 32. Observability Architecture
+
+Observability includes three pillars.
+
+## Logging
+
+Structured logs across all services.
+
+## Metrics
+
+System performance metrics collected.
+
+Examples:
+
+experiments_started
+experiments_completed
+report_generation_time
+
+## Tracing
+
+Distributed traces across event pipelines.
+
+---
+
+# 33. Security Architecture
+
+Security practices include:
+
+Authentication
+Authorization
+Least privilege IAM roles
+Secure secret management
+
+---
+
+# 34. Scalability Strategy
+
+The system must scale horizontally.
+
+API services scale via containers.
+
+Event processors scale via serverless workers.
+
+Storage systems scale independently.
+
+---
+
+# 35. Reliability Strategy
+
+The platform must tolerate failures.
+
+Strategies include:
+
+Retry policies
+Dead letter queues
+Idempotent event handlers
+Circuit breakers
+
+---
+
+# 36. Documentation Requirements
+
+The repository must include extensive documentation.
+
+Architecture diagrams
+Event flow diagrams
+Infrastructure diagrams
+
+Decision records explaining tradeoffs.
+
+---
+
+# 37. Final Goal
+
+The final system should resemble a production-grade SaaS platform demonstrating principal-level engineering capabilities.
+
+It should clearly showcase:
+
+Distributed system design
+Cloud architecture expertise
+DevOps maturity
+Strong software engineering practices
+
+---
+
+# 38. Technology Stack Standards
+
+To ensure consistency and demonstrate enterprise-grade engineering practices, the platform will use a defined technology stack.
+
+## Backend Services
+
+All backend microservices must be implemented using:
+
+Java
+Spring Boot
+Gradle or Maven
+
+Each service should follow Spring Boot best practices including:
+
+layered architecture
+constructor-based dependency injection
+configuration via environment variables
+
+Recommended modules:
+
+spring-boot-starter-web
+spring-boot-starter-data-jpa
+spring-boot-starter-validation
+spring-boot-starter-actuator
+spring-boot-starter-security
+
+---
+
+## Frontend
+
+The frontend application must be implemented using Angular.
+
+Responsibilities of the frontend include:
+
+User authentication
+Problem and hypothesis management
+Experiment dashboards
+Metrics visualization
+Report viewing
+
+Angular best practices should be followed including:
+
+feature modules
+service-based API clients
+state management
+component separation
+
+---
+
+## Monorepo Strategy
+
+The entire platform will be implemented as a single monorepo.
+
+Reasons for a monorepo approach:
+
+simplified dependency management
+consistent tooling
+shared libraries
+coordinated versioning
+
+Example repository structure:
+
+repo/
+
+frontend/
+  angular-app/
+
+services/
+  identity-service/
+  organization-service/
+  experiment-service/
+  metrics-service/
+  reporting-service/
+  notification-service/
+
+libs/
+  domain-model/
+  event-models/
+  shared-utils/
+
+infrastructure/
+  cloudformation/
+  environments/
+
+.github/
+  workflows/
+
+docs/
+  architecture/
+  adr/
+
+---
+
+# 39. Event Schema Definitions
+
+All events in the system must follow a standardized schema.
+
+## Event Envelope
+
+Each event must include metadata:
+
+EventId
+EventType
+EventVersion
+Timestamp
+SourceService
+OrganizationId
+Payload
+
+Example event structure:
+
+{
+  "eventId": "uuid",
+  "eventType": "ExperimentCompleted",
+  "eventVersion": 1,
+  "timestamp": "ISO-8601",
+  "sourceService": "experiment-service",
+  "organizationId": "org-123",
+  "payload": {}
+}
+
+---
+
+## Event Definitions
+
+### ProblemCreated
+
+Payload fields:
+
+problemId
+title
+description
+createdBy
+
+---
+
+### HypothesisCreated
+
+Payload fields:
+
+hypothesisId
+problemId
+statement
+createdBy
+
+---
+
+### ExperimentStarted
+
+Payload fields:
+
+experimentId
+hypothesisId
+startTime
+
+---
+
+### MetricRecorded
+
+Payload fields:
+
+experimentId
+metricName
+metricValue
+timestamp
+
+---
+
+### ExperimentCompleted
+
+Payload fields:
+
+experimentId
+endTime
+resultSummary
+
+---
+
+### ReportGenerated
+
+Payload fields:
+
+reportId
+experimentId
+reportLocation
+
+---
+
+# 40. Service Implementation Specifications
+
+This section defines the responsibilities of each microservice.
+
+---
+
+## Identity Service
+
+Responsibilities:
+
+User authentication
+Token issuance
+Password management
+
+APIs:
+
+POST /auth/login
+POST /auth/register
+GET /auth/me
+
+---
+
+## Organization Service
+
+Responsibilities:
+
+Organization lifecycle
+Membership management
+Tenant isolation
+
+APIs:
+
+POST /organizations
+GET /organizations/{id}
+POST /organizations/{id}/users
+
+---
+
+## Experiment Service
+
+Responsibilities:
+
+Problem management
+Hypothesis management
+Experiment lifecycle
+
+APIs:
+
+POST /problems
+POST /hypotheses
+POST /experiments
+POST /experiments/{id}/start
+POST /experiments/{id}/complete
+
+Events produced:
+
+ProblemCreated
+HypothesisCreated
+ExperimentStarted
+ExperimentCompleted
+
+---
+
+## Metrics Service
+
+Responsibilities:
+
+Metric ingestion
+Metric aggregation
+Metric storage
+
+APIs:
+
+POST /metrics
+GET /experiments/{id}/metrics
+
+Events produced:
+
+MetricRecorded
+
+---
+
+## Reporting Service
+
+Responsibilities:
+
+Generate experiment reports
+Store reports
+
+Consumes events:
+
+ExperimentCompleted
+
+Produces events:
+
+ReportGenerated
+
+---
+
+## Notification Service
+
+Responsibilities:
+
+Send notifications
+Integrate with external systems
+
+Consumes events:
+
+ReportGenerated
+ExperimentCompleted
+
+Channels may include:
+
+email
+webhooks
+messaging integrations
+
+---
+
+# 41. Step-by-Step Implementation Roadmap
+
+The project should be implemented in incremental phases.
+
+---
+
+## Phase 1 – Repository and Core Setup
+
+Create monorepo structure
+Initialize Spring Boot services
+Initialize Angular frontend
+Create shared libraries
+
+---
+
+## Phase 2 – Domain Model
+
+Implement domain entities
+Define value objects
+Define domain events
+Create repository interfaces
+
+---
+
+## Phase 3 – Core APIs
+
+Implement problem management
+Implement hypothesis management
+Implement experiment lifecycle
+
+---
+
+## Phase 4 – Event System
+
+Implement event publishing
+Integrate event bus
+Create event consumers
+
+---
+
+## Phase 5 – Metrics System
+
+Implement metric ingestion
+Implement aggregation pipelines
+
+---
+
+## Phase 6 – Reporting Engine
+
+Generate experiment reports
+Store reports
+Emit report events
+
+---
+
+## Phase 7 – Cloud Infrastructure
+
+Define infrastructure templates
+Deploy compute resources
+Configure networking and IAM
+
+---
+
+## Phase 8 – CI/CD
+
+Configure build pipelines
+Automate deployments
+Implement environment promotion
+
+---
+
+## Phase 9 – Observability
+
+Add structured logging
+Add metrics dashboards
+Add distributed tracing
+
+---
+
+## Phase 10 – Documentation and Diagrams
+
+Create system architecture diagrams
+Create event flow diagrams
+Create deployment diagrams
+
+---
+
+# 42. Long-Term Enhancements
+
+Possible future improvements include:
+
+AI-assisted experiment insights
+Advanced analytics dashboards
+Feature flag integration
+A/B testing framework
+
+---
+
+# 43. Final Outcome
+
+When complete, this repository should function as a comprehensive demonstration of principal-level engineering capability.
+
+The project should demonstrate expertise in:
+
+large-scale system design
+cloud-native architecture
+DevOps automation
+software architecture best practices
+
+It should resemble the structure and engineering rigor of a real production SaaS platform.
+
+---
+
+# 44. Architecture Diagrams
+
+This section provides diagrams that describe the system architecture. These diagrams are written using **Mermaid** so they can be rendered directly by many IDEs, documentation systems, and AI-enabled development environments.
+
+These diagrams represent the intended architecture and should be kept synchronized with the implementation.
+
+---
+
+## System Architecture Diagram
+
+```mermaid
+graph TD
+
+User --> Frontend
+Frontend --> APIGateway
+
+APIGateway --> IdentityService
+APIGateway --> ExperimentService
+APIGateway --> MetricsService
+
+ExperimentService --> Database
+MetricsService --> Database
+
+ExperimentService --> EventBus
+MetricsService --> EventBus
+
+EventBus --> ReportingService
+EventBus --> NotificationService
+
+ReportingService --> ObjectStorage
+
+NotificationService --> Email
+NotificationService --> Webhooks
+```
+
+---
+
+## Event Flow Architecture
+
+```mermaid
+flowchart TD
+
+UserAction --> APIRequest
+APIRequest --> ExperimentService
+
+ExperimentService --> PublishEvent
+PublishEvent --> EventBus
+
+EventBus --> ReportingService
+EventBus --> NotificationService
+
+ReportingService --> GenerateReport
+GenerateReport --> StoreReport
+
+NotificationService --> SendNotification
+```
+
+---
+
+## Microservice Interaction Diagram
+
+```mermaid
+graph LR
+
+IdentityService --> OrganizationService
+OrganizationService --> ExperimentService
+
+ExperimentService --> MetricsService
+ExperimentService --> EventBus
+
+MetricsService --> EventBus
+
+EventBus --> ReportingService
+EventBus --> NotificationService
+```
+
+---
+
+## AWS Deployment Architecture
+
+```mermaid
+graph TD
+
+User --> CloudFront
+CloudFront --> AngularApp
+
+AngularApp --> APIGateway
+
+APIGateway --> ECSCluster
+
+subgraph ECSCluster
+
+IdentityService
+ExperimentService
+MetricsService
+
+end
+
+ExperimentService --> RDS
+MetricsService --> RDS
+
+ExperimentService --> EventBridge
+MetricsService --> EventBridge
+
+EventBridge --> LambdaReporting
+EventBridge --> LambdaNotifications
+
+LambdaReporting --> S3
+
+LambdaNotifications --> EmailService
+```
+
+---
+
+## CI/CD Pipeline Architecture
+
+```mermaid
+flowchart TD
+
+Developer --> GitHubRepo
+
+GitHubRepo --> GitHubActions
+
+GitHubActions --> RunTests
+RunTests --> BuildContainers
+BuildContainers --> SecurityScan
+
+SecurityScan --> PushToRegistry
+PushToRegistry --> DeployInfrastructure
+DeployInfrastructure --> DeployServices
+
+DeployServices --> RunSmokeTests
+```
+
+---
+
+# 45. Development Starting Point
+
+The repository can now be implemented using the following initial sequence.
+
+1. Create the monorepo structure
+2. Initialize Spring Boot microservices
+3. Initialize Angular frontend
+4. Implement shared domain models
+5. Implement Experiment Service APIs
+6. Implement event publishing
+7. Deploy base infrastructure
+
+Once these are complete the system foundation will be established and further features can be implemented incrementally.
+
+---
+
+# 46. Project Ready State
+
+At this point the specification is considered complete.
+
+This document now contains:
+
+Product definition
+Engineering principles
+Technology stack
+Architecture design
+Event schemas
+Service specifications
+Infrastructure approach
+CI/CD strategy
+Implementation roadmap
+Architecture diagrams
+
+This is sufficient for engineers or AI development agents to begin implementing the system.
+
+No additional specification documents should be required to begin development.
+
+
+---
+
+# 47. DevOps Architecture
+
+This project must demonstrate **production-grade DevOps practices** consistent with modern cloud-native engineering teams.
+
+The platform will be deployed on **AWS** and must support automated CI/CD, infrastructure as code, secure credential management, and multi-environment deployments.
+
+---
+
+## Deployment Platform
+
+All infrastructure and runtime environments will be deployed on AWS.
+
+Primary platform services include:
+
+Compute
+- Amazon ECS (containerized microservices)
+- AWS Lambda (event-driven processors)
+
+Networking
+- Amazon VPC
+- Application Load Balancer
+- API Gateway
+
+Storage
+- Amazon RDS (PostgreSQL)
+- Amazon S3 (artifact and report storage)
+
+Messaging
+- Amazon EventBridge (event bus)
+- Amazon SQS (optional async queue processing)
+
+Security
+- AWS IAM
+- AWS Secrets Manager
+- AWS KMS encryption
+
+Monitoring
+- Amazon CloudWatch
+- AWS X-Ray
+
+---
+
+# 48. Environment Strategy
+
+The platform must support multiple deployment environments.
+
+Environments include:
+
+DEV
+QA
+PROD
+
+Each environment should be fully isolated using separate infrastructure stacks.
+
+Example environment architecture:
+
+DEV
+
+Used by engineers for feature development and testing.
+
+QA
+
+Used for integration testing and staging validation.
+
+PROD
+
+Production environment used by real users.
+
+Environment isolation strategies:
+
+- separate infrastructure stacks
+- environment specific configuration
+- separate databases
+- separate secrets
+
+---
+
+# 49. CI/CD Pipeline Design
+
+CI/CD pipelines will be implemented using **GitHub Actions**.
+
+Pipeline responsibilities include:
+
+Code validation
+Security scanning
+Container builds
+Artifact publishing
+Infrastructure deployment
+Application deployment
+
+---
+
+## CI Pipeline Jobs
+
+Continuous Integration jobs must include:
+
+Lint
+
+Static code quality checks.
+
+Unit Tests
+
+Execute backend and frontend unit tests.
+
+Build
+
+Compile Java services and Angular frontend.
+
+SonarQube Analysis
+
+Perform code quality analysis.
+
+Security Scanning
+
+Run container vulnerability scans.
+
+Tools may include:
+
+SonarQube
+Trivy
+Dependabot
+
+---
+
+## CD Pipeline Jobs
+
+Continuous deployment stages include:
+
+Build Docker Images
+
+Push images to container registry.
+
+Deploy Infrastructure
+
+Apply infrastructure templates.
+
+Deploy Services
+
+Update ECS services.
+
+Run Smoke Tests
+
+Verify successful deployment.
+
+---
+
+# 50. Container Strategy
+
+All backend services must be containerized.
+
+Each microservice will include:
+
+Dockerfile
+Container build pipeline
+Versioned image
+
+Images will be stored in a container registry.
+
+Recommended registry:
+
+Amazon ECR
+
+---
+
+# 51. Infrastructure as Code
+
+All infrastructure must be defined as code.
+
+Recommended tools:
+
+CloudFormation
+Terraform
+
+Infrastructure components include:
+
+VPC networking
+ECS cluster
+RDS database
+S3 buckets
+EventBridge bus
+IAM roles
+Secrets Manager
+
+Infrastructure must be version controlled and deployed through CI/CD pipelines.
+
+---
+
+# 52. GitHub Actions Authentication with AWS
+
+GitHub Actions must authenticate securely with AWS.
+
+Recommended method:
+
+OIDC Federation between GitHub and AWS IAM.
+
+Benefits:
+
+No long-lived credentials
+Improved security
+Temporary access tokens
+
+Authentication flow:
+
+GitHub Actions job
+
+-> OIDC token issued
+
+-> AWS IAM role assumed
+
+-> temporary credentials provided
+
+-> deployment actions executed
+
+---
+
+# 53. Secrets Management
+
+Sensitive configuration must never be stored in source code.
+
+Secrets must be managed using:
+
+AWS Secrets Manager
+
+Examples of stored secrets:
+
+Database credentials
+API keys
+Webhook tokens
+
+Applications retrieve secrets at runtime.
+
+---
+
+# 54. Encryption Strategy
+
+All sensitive data must be encrypted.
+
+Encryption requirements:
+
+Encryption at rest
+
+- RDS encryption
+- S3 encryption
+
+Encryption in transit
+
+- HTTPS
+- TLS between services
+
+Key management via AWS KMS.
+
+---
+
+# 55. Observability and Monitoring
+
+Operational visibility is required for production systems.
+
+Monitoring stack includes:
+
+Amazon CloudWatch Logs
+Amazon CloudWatch Metrics
+AWS X-Ray distributed tracing
+
+Metrics should include:
+
+API request rate
+experiment processing latency
+event processing failures
+report generation time
+
+Alerts should be configured for:
+
+service failures
+high error rates
+queue backlogs
+
+---
+
+# 56. DevOps Goals
+
+The DevOps implementation should demonstrate the ability to:
+
+Design production deployment pipelines
+Implement secure cloud authentication
+Automate infrastructure provisioning
+Build containerized microservices
+Operate distributed systems
+
+This DevOps architecture should resemble practices used in modern cloud-native engineering organizations.
+
