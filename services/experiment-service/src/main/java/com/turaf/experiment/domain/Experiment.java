@@ -9,6 +9,7 @@ import com.turaf.experiment.domain.event.ExperimentCancelled;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public class Experiment extends AggregateRoot<ExperimentId> implements TenantAware {
@@ -48,9 +49,7 @@ public class Experiment extends AggregateRoot<ExperimentId> implements TenantAwa
     }
 
     public void start() {
-        if (status != ExperimentStatus.DRAFT) {
-            throw new IllegalStateException("Can only start experiments in DRAFT status. Current status: " + status);
-        }
+        ExperimentStateMachine.validateTransition(status, ExperimentStatus.RUNNING);
         this.status = ExperimentStatus.RUNNING;
         this.startedAt = Instant.now();
         this.updatedAt = Instant.now();
@@ -65,9 +64,7 @@ public class Experiment extends AggregateRoot<ExperimentId> implements TenantAwa
     }
 
     public void complete() {
-        if (status != ExperimentStatus.RUNNING) {
-            throw new IllegalStateException("Can only complete experiments in RUNNING status. Current status: " + status);
-        }
+        ExperimentStateMachine.validateTransition(status, ExperimentStatus.COMPLETED);
         this.status = ExperimentStatus.COMPLETED;
         this.completedAt = Instant.now();
         this.updatedAt = Instant.now();
@@ -82,9 +79,7 @@ public class Experiment extends AggregateRoot<ExperimentId> implements TenantAwa
     }
 
     public void cancel() {
-        if (status == ExperimentStatus.COMPLETED || status == ExperimentStatus.CANCELLED) {
-            throw new IllegalStateException("Cannot cancel experiments in " + status + " status");
-        }
+        ExperimentStateMachine.validateTransition(status, ExperimentStatus.CANCELLED);
         this.status = ExperimentStatus.CANCELLED;
         this.updatedAt = Instant.now();
 
@@ -95,6 +90,14 @@ public class Experiment extends AggregateRoot<ExperimentId> implements TenantAwa
             hypothesisId.getValue(),
             Instant.now()
         ));
+    }
+
+    public Set<ExperimentStatus> getAllowedTransitions() {
+        return ExperimentStateMachine.getAllowedTransitions(status);
+    }
+
+    public boolean canTransitionTo(ExperimentStatus targetStatus) {
+        return ExperimentStateMachine.canTransition(status, targetStatus);
     }
 
     public void update(String name, String description) {

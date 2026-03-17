@@ -127,12 +127,12 @@ public class Experiment extends AggregateRoot<ExperimentId> implements TenantAwa
 
 ## Acceptance Criteria
 
-- [ ] State machine defines all valid transitions
-- [ ] Invalid transitions throw exceptions
-- [ ] State machine is immutable and thread-safe
-- [ ] Experiment entity uses state machine for validation
-- [ ] getAllowedTransitions returns correct states
-- [ ] Unit tests pass
+- [x] State machine defines all valid transitions
+- [x] Invalid transitions throw exceptions
+- [x] State machine is immutable and thread-safe
+- [x] Experiment entity uses state machine for validation
+- [x] getAllowedTransitions returns correct states
+- [x] Unit tests pass
 
 ## Testing Requirements
 
