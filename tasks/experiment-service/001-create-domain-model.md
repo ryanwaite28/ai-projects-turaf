@@ -219,15 +219,15 @@ public interface ExperimentRepository extends Repository<Experiment, ExperimentI
 
 ## Acceptance Criteria
 
-- [ ] Problem entity with validation
-- [ ] Hypothesis entity with validation
-- [ ] Experiment entity with state machine
-- [ ] ExperimentStatus enum defined
-- [ ] State transitions enforced (DRAFT → RUNNING → COMPLETED)
-- [ ] Domain events registered
-- [ ] Repository interfaces defined
-- [ ] All entities implement TenantAware
-- [ ] Unit tests pass
+- [x] Problem entity with validation
+- [x] Hypothesis entity with validation
+- [x] Experiment entity with state machine
+- [x] ExperimentStatus enum defined
+- [x] State transitions enforced (DRAFT → RUNNING → COMPLETED)
+- [x] Domain events registered
+- [x] Repository interfaces defined
+- [x] All entities implement TenantAware
+- [x] Unit tests pass
 
 ## Testing Requirements
 

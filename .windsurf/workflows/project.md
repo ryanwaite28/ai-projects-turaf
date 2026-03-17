@@ -6,7 +6,7 @@ This workflow is designed for use with Windsurf (or similar AI IDEs) to efficien
 ### Notes:
 
 - All plan documents should be created in this local directory: `.windsurf/plans/`.
-- There should be a `changelog/` directory for tracking changes to the project (PROJECT.md). In this directory, each file should be named with a date and a description of the changes made.
+- There should be a `changelog/` directory (at project root) for tracking changes to the project (PROJECT.md). In this directory, each file should be named with a date and a description of the changes made.
 
 ---
 
@@ -110,6 +110,7 @@ Follow engineering principles in PROJECT.md:
 Generate only the code necessary for this task.
 Include unit tests where relevant.
 Do NOT change other services or violate service boundaries.
+Track progress using task checklists in the task files.
 ```
 
 > Repeat for all tasks across microservices, frontend, and infrastructure.
