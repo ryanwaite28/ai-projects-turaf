@@ -123,14 +123,14 @@ public class ProblemDto {
 
 ## Acceptance Criteria
 
-- [ ] Create problem works
-- [ ] Get problem by ID works
-- [ ] Get all problems scoped to organization
-- [ ] Update problem works
-- [ ] Delete problem works
-- [ ] Domain events published
-- [ ] Validation enforced
-- [ ] Unit tests pass
+- [x] Create problem works
+- [x] Get problem by ID works
+- [x] Get all problems scoped to organization
+- [x] Update problem works
+- [x] Delete problem works
+- [x] Domain events published
+- [x] Validation enforced
+- [x] Unit tests pass
 
 ## Testing Requirements
 

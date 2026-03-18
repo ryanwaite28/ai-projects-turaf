@@ -164,13 +164,13 @@ public class GlobalExceptionHandler {
 
 ## Acceptance Criteria
 
-- [ ] All problem endpoints work correctly
-- [ ] All hypothesis endpoints work correctly
-- [ ] All experiment endpoints work correctly
-- [ ] State transition endpoints work
-- [ ] Query parameters for filtering work
-- [ ] Validation enforced
-- [ ] Error handling works
+- [x] All problem endpoints work correctly
+- [x] All hypothesis endpoints work correctly
+- [x] All experiment endpoints work correctly
+- [x] State transition endpoints work
+- [x] Query parameters for filtering work
+- [x] Validation enforced
+- [x] Error handling works
 - [ ] All endpoints documented with OpenAPI
 
 ## Testing Requirements

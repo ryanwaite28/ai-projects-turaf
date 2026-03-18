@@ -31,11 +31,11 @@ Similar to organization-service event publishing implementation. Key events to p
 
 ## Acceptance Criteria
 
-- [ ] EventPublisher interface defined
-- [ ] EventBridge publisher implementation works
-- [ ] Events published with correct envelope
-- [ ] All domain events supported
-- [ ] Integration tests pass
+- [x] EventPublisher interface defined
+- [x] EventBridge publisher implementation works
+- [x] Events published with correct envelope
+- [x] All domain events supported
+- [x] Integration tests pass
 
 ## Testing Requirements
 

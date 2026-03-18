@@ -195,13 +195,13 @@ public class ExperimentRepositoryImpl implements ExperimentRepository {
 
 ## Acceptance Criteria
 
-- [ ] JPA entities created for all domain entities
-- [ ] Database migrations create correct schema
-- [ ] Foreign key constraints enforced
-- [ ] Indexes created for performance
-- [ ] Repository implementations work correctly
-- [ ] Tenant-aware queries implemented
-- [ ] Integration tests pass
+- [x] JPA entities created for all domain entities
+- [x] Database migrations create correct schema
+- [x] Foreign key constraints enforced
+- [x] Indexes created for performance
+- [x] Repository implementations work correctly
+- [x] Tenant-aware queries implemented
+- [x] Integration tests pass
 
 ## Testing Requirements
 

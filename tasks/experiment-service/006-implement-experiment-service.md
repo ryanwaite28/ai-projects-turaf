@@ -182,16 +182,16 @@ public class ExperimentDto {
 
 ## Acceptance Criteria
 
-- [ ] Create experiment validates hypothesis exists
-- [ ] Get experiment by ID works
-- [ ] Get experiments by hypothesis works
-- [ ] Get experiments by status works
-- [ ] Update experiment works
-- [ ] Start experiment transitions state correctly
-- [ ] Complete experiment transitions state correctly
-- [ ] Invalid state transitions throw exceptions
-- [ ] Domain events published
-- [ ] Unit tests pass
+- [x] Create experiment validates hypothesis exists
+- [x] Get experiment by ID works
+- [x] Get experiments by hypothesis works
+- [x] Get experiments by status works
+- [x] Update experiment works
+- [x] Start experiment transitions state correctly
+- [x] Complete experiment transitions state correctly
+- [x] Invalid state transitions throw exceptions
+- [x] Domain events published
+- [x] Unit tests pass
 
 ## Testing Requirements
 

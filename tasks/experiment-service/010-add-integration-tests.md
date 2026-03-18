@@ -32,11 +32,11 @@ Test complete flow:
 
 ## Acceptance Criteria
 
-- [ ] All API endpoints tested end-to-end
-- [ ] Complete experiment flow tested
-- [ ] State transitions verified
-- [ ] Event publishing verified
-- [ ] All integration tests pass
+- [x] All API endpoints tested end-to-end
+- [x] Complete experiment flow tested
+- [x] State transitions verified
+- [x] Event publishing verified
+- [x] All integration tests pass
 
 ## Testing Requirements
 

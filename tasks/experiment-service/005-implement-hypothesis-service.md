@@ -135,14 +135,14 @@ public class HypothesisDto {
 
 ## Acceptance Criteria
 
-- [ ] Create hypothesis validates problem exists
-- [ ] Get hypothesis by ID works
-- [ ] Get hypotheses by problem works
-- [ ] Update hypothesis works
-- [ ] Delete hypothesis works
-- [ ] Domain events published
-- [ ] Validation enforced
-- [ ] Unit tests pass
+- [x] Create hypothesis validates problem exists
+- [x] Get hypothesis by ID works
+- [x] Get hypotheses by problem works
+- [x] Update hypothesis works
+- [x] Delete hypothesis works
+- [x] Domain events published
+- [x] Validation enforced
+- [x] Unit tests pass
 
 ## Testing Requirements
 
