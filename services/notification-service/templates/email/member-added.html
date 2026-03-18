@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to {{ organization_name }} - Turaf{% endblock %}
+
+{% block header %}Welcome to {{ organization_name }}!{% endblock %}
+
+{% block content %}
+<div class="email-content">
+    <p>Hello {{ member_name }},</p>
+    
+    <p>You've been added to <strong>{{ organization_name }}</strong> on Turaf! We're excited to have you on board.</p>
+    
+    <div class="info-box">
+        <p><strong>Organization:</strong> {{ organization_name }}</p>
+        <p><strong>Your Role:</strong> {{ role }}</p>
+        {% if invited_by %}
+        <p><strong>Invited By:</strong> {{ invited_by }}</p>
+        {% endif %}
+    </div>
+    
+    <p>As a member of this organization, you now have access to:</p>
+    
+    <ul style="margin: 20px 0; padding-left: 20px; color: #555555;">
+        <li style="margin-bottom: 10px;">Create and manage A/B testing experiments</li>
+        <li style="margin-bottom: 10px;">View real-time experiment metrics and analytics</li>
+        <li style="margin-bottom: 10px;">Generate comprehensive experiment reports</li>
+        <li style="margin-bottom: 10px;">Collaborate with team members</li>
+    </ul>
+    
+    <p>Get started by accessing your organization dashboard:</p>
+    
+    <a href="{{ frontend_url }}/organizations/{{ organization_id }}" class="button">Go to Dashboard</a>
+    
+    <p style="margin-top: 30px; color: #777777; font-size: 14px;">
+        <strong>Need Help?</strong><br>
+        Check out our <a href="{{ frontend_url }}/docs" style="color: #667eea;">documentation</a> or contact your organization administrator for assistance.
+    </p>
+</div>
+{% endblock %}

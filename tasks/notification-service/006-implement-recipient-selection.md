@@ -85,11 +85,11 @@ public class OrganizationServiceClient {
 
 ## Acceptance Criteria
 
-- [ ] Recipient selection works
-- [ ] Preferences respected
-- [ ] Organization members fetched
-- [ ] Error handling implemented
-- [ ] Unit tests pass
+- [x] Recipient selection works
+- [x] Preferences respected
+- [x] Organization members fetched
+- [x] Error handling implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 

@@ -77,11 +77,11 @@ public class TemplateService {
 
 ## Acceptance Criteria
 
-- [ ] All email templates created
-- [ ] Templates render correctly
-- [ ] Template service works
-- [ ] Styling applied
-- [ ] Unit tests pass
+- [x] All email templates created
+- [x] Templates render correctly
+- [x] Template service works
+- [x] Styling applied
+- [x] Unit tests pass
 
 ## Testing Requirements
 

@@ -70,11 +70,13 @@ class IdempotencyService:
 
 ## Acceptance Criteria
 
-- [ ] Idempotency check works
-- [ ] Events marked as processed
-- [ ] TTL configured
-- [ ] Duplicate processing prevented
-- [ ] Unit tests pass
+- [x] Idempotency check works
+- [x] Events marked as processed
+- [x] TTL configured
+- [x] Duplicate processing prevented
+- [x] Unit tests pass
+
+**Note**: Idempotency service was already implemented in Task 002 with full DynamoDB integration, TTL support, and comprehensive unit tests.
 
 ## Testing Requirements
 

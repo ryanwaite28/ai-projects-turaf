@@ -119,11 +119,11 @@ public class SesEmailSender {
 
 ## Acceptance Criteria
 
-- [ ] Email service sends emails via SES
-- [ ] Templates rendered correctly
-- [ ] Recipients fetched correctly
-- [ ] Error handling implemented
-- [ ] Unit tests pass
+- [x] Email service sends emails via SES
+- [x] Templates rendered correctly
+- [x] Recipients fetched correctly
+- [x] Error handling implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 

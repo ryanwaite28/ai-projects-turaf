@@ -132,11 +132,11 @@ public class WebhookDeliveryService {
 
 ## Acceptance Criteria
 
-- [ ] Webhook delivery works
-- [ ] Retry logic implemented
-- [ ] Signature generation works
-- [ ] Timeout handling implemented
-- [ ] Unit tests pass
+- [x] Webhook delivery works
+- [x] Retry logic implemented
+- [x] Signature generation works
+- [x] Timeout handling implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 

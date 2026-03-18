@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Experiment Completed - Turaf{% endblock %}
+
+{% block header %}Experiment Completed{% endblock %}
+
+{% block content %}
+<div class="email-content">
+    <p>Great news! Your experiment has been completed successfully.</p>
+    
+    <div class="info-box">
+        <p><strong>Experiment Name:</strong> {{ experiment_name }}</p>
+        <p><strong>Experiment ID:</strong> {{ experiment_id }}</p>
+        {% if completed_at %}
+        <p><strong>Completed At:</strong> {{ completed_at }}</p>
+        {% endif %}
+    </div>
+    
+    <p>Your experiment has finished running and the results are now being processed. A detailed report is being generated and will be available shortly.</p>
+    
+    <p>You can view your experiment details and results by clicking the button below:</p>
+    
+    <a href="{{ frontend_url }}/experiments/{{ experiment_id }}" class="button">View Experiment Results</a>
+    
+    <p style="margin-top: 30px; color: #777777; font-size: 14px;">
+        <strong>What's Next?</strong><br>
+        Once the report generation is complete, you'll receive another notification with a link to download your comprehensive experiment report.
+    </p>
+</div>
+{% endblock %}

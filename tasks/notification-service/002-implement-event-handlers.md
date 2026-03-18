@@ -103,11 +103,11 @@ def handle_experiment_completed(event: Dict[str, Any], context: Any) -> Dict[str
 
 ## Acceptance Criteria
 
-- [ ] Event router dispatches to correct handlers
-- [ ] All event handlers implemented
-- [ ] Idempotency check works
-- [ ] Error handling implemented
-- [ ] Unit tests pass
+- [x] Event router dispatches to correct handlers
+- [x] All event handlers implemented
+- [x] Idempotency check works
+- [x] Error handling implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 

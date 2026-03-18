@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Experiment Report Available - Turaf{% endblock %}
+
+{% block header %}Report Available{% endblock %}
+
+{% block content %}
+<div class="email-content">
+    <p>Your experiment report has been generated and is ready for download!</p>
+    
+    <div class="info-box">
+        <p><strong>Experiment Name:</strong> {{ experiment_name }}</p>
+        <p><strong>Experiment ID:</strong> {{ experiment_id }}</p>
+        <p><strong>Report ID:</strong> {{ report_id }}</p>
+        {% if generated_at %}
+        <p><strong>Generated At:</strong> {{ generated_at }}</p>
+        {% endif %}
+    </div>
+    
+    <p>We've analyzed your experiment data and compiled a comprehensive report with detailed insights, metrics, and visualizations.</p>
+    
+    {% if report_url %}
+    <p><strong>Download your report:</strong></p>
+    <a href="{{ report_url }}" class="button">Download Report (PDF)</a>
+    {% endif %}
+    
+    <p style="margin-top: 20px;">You can also view the report online:</p>
+    <a href="{{ frontend_url }}/experiments/{{ experiment_id }}/reports/{{ report_id }}" class="button" style="background: #28a745;">View Report Online</a>
+    
+    <p style="margin-top: 30px; color: #777777; font-size: 14px;">
+        <strong>Report Highlights:</strong><br>
+        • Detailed metric analysis<br>
+        • Performance comparisons<br>
+        • Statistical significance testing<br>
+        • Actionable recommendations
+    </p>
+</div>
+{% endblock %}
