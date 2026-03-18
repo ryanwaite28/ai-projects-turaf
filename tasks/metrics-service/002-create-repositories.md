@@ -45,11 +45,11 @@ CREATE INDEX idx_metrics_experiment_time ON metrics(experiment_id, timestamp);
 
 ## Acceptance Criteria
 
-- [ ] JPA entity created
-- [ ] Database migration creates schema
-- [ ] Indexes optimized for time-series queries
-- [ ] Repository implementation works
-- [ ] Integration tests pass
+- [x] JPA entity created
+- [x] Database migration creates schema
+- [x] Indexes optimized for time-series queries
+- [x] Repository implementation works
+- [x] Integration tests pass
 
 ## Testing Requirements
 

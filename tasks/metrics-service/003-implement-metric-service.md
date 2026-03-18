@@ -86,12 +86,12 @@ public class MetricService {
 
 ## Acceptance Criteria
 
-- [ ] Record single metric works
-- [ ] Record batch metrics works
-- [ ] Get metrics by experiment works
-- [ ] Time-range filtering works
-- [ ] Events published
-- [ ] Unit tests pass
+- [x] Record single metric works
+- [x] Record batch metrics works
+- [x] Get metrics by experiment works
+- [x] Time-range filtering works
+- [x] Events published
+- [x] Unit tests pass
 
 ## Testing Requirements
 

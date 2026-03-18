@@ -109,12 +109,12 @@ public class MetricRecorded implements DomainEvent {
 
 ## Acceptance Criteria
 
-- [ ] Metric entity created with validation
-- [ ] MetricType enum defined
-- [ ] Repository interface defined
-- [ ] Domain events created
-- [ ] Tags support implemented
-- [ ] Unit tests pass
+- [x] Metric entity created with validation
+- [x] MetricType enum defined
+- [x] Repository interface defined
+- [x] Domain events created
+- [x] Tags support implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 

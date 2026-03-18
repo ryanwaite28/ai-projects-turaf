@@ -91,11 +91,11 @@ public class AggregationService {
 
 ## Acceptance Criteria
 
-- [ ] Aggregate single metric works
-- [ ] Aggregate all metrics works
-- [ ] Statistics calculated correctly
-- [ ] Empty results handled
-- [ ] Unit tests pass
+- [x] Aggregate single metric works
+- [x] Aggregate all metrics works
+- [x] Statistics calculated correctly
+- [x] Empty results handled
+- [x] Unit tests pass
 
 ## Testing Requirements
 

@@ -82,12 +82,12 @@ public class MetricController {
 
 ## Acceptance Criteria
 
-- [ ] POST /api/v1/metrics endpoint works
-- [ ] POST /api/v1/metrics/batch endpoint works
-- [ ] GET /api/v1/metrics endpoint works
-- [ ] GET /api/v1/metrics/aggregate endpoint works
-- [ ] GET /api/v1/metrics/aggregate/all endpoint works
-- [ ] All endpoints documented with OpenAPI
+- [x] POST /api/v1/metrics endpoint works
+- [x] POST /api/v1/metrics/batch endpoint works
+- [x] GET /api/v1/metrics endpoint works
+- [x] GET /api/v1/metrics/aggregate endpoint works
+- [x] GET /api/v1/metrics/aggregate/all endpoint works
+- [x] All endpoints documented with OpenAPI
 
 ## Testing Requirements
 

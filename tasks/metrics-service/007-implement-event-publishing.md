@@ -29,9 +29,9 @@ Similar to previous services. Key events:
 
 ## Acceptance Criteria
 
-- [ ] EventPublisher implemented
-- [ ] Events published correctly
-- [ ] Integration tests pass
+- [x] EventPublisher implemented
+- [x] Events published correctly
+- [x] Integration tests pass
 
 ## Testing Requirements
 
