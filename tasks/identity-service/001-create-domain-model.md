@@ -206,15 +206,15 @@ public interface RefreshTokenRepository {
 
 ## Acceptance Criteria
 
-- [ ] User entity extends AggregateRoot
-- [ ] UserId value object with UUID generation
-- [ ] Email value object with validation
-- [ ] Password value object with hashing and strength validation
-- [ ] RefreshToken entity with expiration logic
-- [ ] Repository interfaces defined
-- [ ] All domain invariants enforced
-- [ ] No infrastructure dependencies in domain layer
-- [ ] Unit tests pass
+- [x] User entity extends AggregateRoot
+- [x] UserId value object with UUID generation
+- [x] Email value object with validation
+- [x] Password value object with hashing and strength validation
+- [x] RefreshToken entity with expiration logic
+- [x] Repository interfaces defined
+- [x] All domain invariants enforced
+- [x] No infrastructure dependencies in domain layer
+- [x] Unit tests pass
 
 ## Testing Requirements
 

@@ -170,14 +170,14 @@ jwt:
 
 ## Acceptance Criteria
 
-- [ ] JWT access tokens generated with user claims
-- [ ] Refresh tokens generated and stored
-- [ ] Access token validation works
-- [ ] Refresh token flow works correctly
-- [ ] Expired refresh tokens rejected
-- [ ] Refresh tokens can be revoked
-- [ ] JWT secret configurable via environment
-- [ ] Unit tests pass
+- [x] JWT access tokens generated with user claims
+- [x] Refresh tokens generated and stored
+- [x] Access token validation works
+- [x] Refresh token flow works correctly
+- [x] Expired refresh tokens rejected
+- [x] Refresh tokens can be revoked
+- [x] JWT secret configurable via environment
+- [x] Unit tests pass
 
 ## Testing Requirements
 

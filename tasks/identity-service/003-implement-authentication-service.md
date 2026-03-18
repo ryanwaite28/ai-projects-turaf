@@ -132,14 +132,14 @@ public class UserDto {
 
 ## Acceptance Criteria
 
-- [ ] Register creates new user with hashed password
-- [ ] Register validates email uniqueness
-- [ ] Login verifies credentials
-- [ ] Login throws exception for invalid credentials
-- [ ] Change password verifies current password
-- [ ] Change password updates with new hashed password
-- [ ] All validation rules enforced
-- [ ] Unit tests pass
+- [x] Register creates new user with hashed password
+- [x] Register validates email uniqueness
+- [x] Login verifies credentials
+- [x] Login throws exception for invalid credentials
+- [x] Change password verifies current password
+- [x] Change password updates with new hashed password
+- [x] All validation rules enforced
+- [x] Unit tests pass
 
 ## Testing Requirements
 

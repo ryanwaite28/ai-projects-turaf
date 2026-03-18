@@ -134,14 +134,14 @@ public class UserPrincipal {
 
 ## Acceptance Criteria
 
-- [ ] Spring Security configured with JWT
-- [ ] BCrypt password encoder configured
-- [ ] Public endpoints accessible without authentication
-- [ ] Protected endpoints require valid JWT
-- [ ] JWT extracted from Authorization header
-- [ ] User principal set in security context
-- [ ] CORS configured for frontend origins
-- [ ] Security tests pass
+- [x] Spring Security configured with JWT
+- [x] BCrypt password encoder configured
+- [x] Public endpoints accessible without authentication
+- [x] Protected endpoints require valid JWT
+- [x] JWT extracted from Authorization header
+- [x] User principal set in security context
+- [x] CORS configured for frontend origins
+- [x] Security tests pass
 
 ## Testing Requirements
 

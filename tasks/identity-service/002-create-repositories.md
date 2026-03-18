@@ -139,13 +139,13 @@ CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 
 ## Acceptance Criteria
 
-- [ ] JPA entities map to domain entities
-- [ ] Repository implementations delegate to Spring Data JPA
-- [ ] Database migrations create proper schema
-- [ ] Indexes created for performance
-- [ ] Foreign key constraints enforced
-- [ ] Domain-to-JPA and JPA-to-domain conversions work correctly
-- [ ] Integration tests pass
+- [x] JPA entities map to domain entities
+- [x] Repository implementations delegate to Spring Data JPA
+- [x] Database migrations create proper schema
+- [x] Indexes created for performance
+- [x] Foreign key constraints enforced
+- [x] Domain-to-JPA and JPA-to-domain conversions work correctly
+- [x] Integration tests pass
 
 ## Testing Requirements
 

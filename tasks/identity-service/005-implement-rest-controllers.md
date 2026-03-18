@@ -168,15 +168,15 @@ public class ErrorResponse {
 
 ## Acceptance Criteria
 
-- [ ] POST /api/v1/auth/register endpoint works
-- [ ] POST /api/v1/auth/login endpoint works
-- [ ] POST /api/v1/auth/refresh endpoint works
-- [ ] POST /api/v1/auth/logout endpoint works
-- [ ] GET /api/v1/users/me endpoint works
-- [ ] PUT /api/v1/users/me/password endpoint works
-- [ ] Validation errors return 400 with details
-- [ ] Authentication errors return 401
-- [ ] Duplicate user returns 409
+- [x] POST /api/v1/auth/register endpoint works
+- [x] POST /api/v1/auth/login endpoint works
+- [x] POST /api/v1/auth/refresh endpoint works
+- [x] POST /api/v1/auth/logout endpoint works
+- [x] GET /api/v1/users/me endpoint works
+- [x] PUT /api/v1/users/me/password endpoint works
+- [x] Validation errors return 400 with details
+- [x] Authentication errors return 401
+- [x] Duplicate user returns 409
 - [ ] All endpoints documented with OpenAPI
 
 ## Testing Requirements
