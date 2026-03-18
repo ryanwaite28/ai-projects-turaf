@@ -15,28 +15,34 @@ Implement idempotency tracking using DynamoDB to prevent duplicate notifications
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/java/com/turaf/notification/service/IdempotencyService.java`
+- `repositories/processed_event_repository.py`
 
 ## Implementation Details
 
 ### Idempotency Service
 
-```java
-public class IdempotencyService {
-    private final DynamoDbClient dynamoDbClient;
-    private final String tableName;
-    
-    public IdempotencyService() {
-        this.dynamoDbClient = DynamoDbClient.builder()
-            .region(Region.US_EAST_1)
-            .build();
-        this.tableName = System.getenv("IDEMPOTENCY_TABLE_NAME");
-    }
-    
-    public boolean isProcessed(String eventId) {
-        GetItemRequest request = GetItemRequest.builder()
-            .tableName(tableName)
-            .key(Map.of("eventId", AttributeValue.builder().s(eventId).build()))
+```python
+class IdempotencyService:
+    def __init__(self):
+        self.dynamo_db_client = boto3.client('dynamodb')
+        self.table_name = os.getenv("IDEMPOTENCY_TABLE_NAME")
+
+    def is_processed(self, event_id):
+        response = self.dynamo_db_client.get_item(
+            TableName=self.table_name,
+            Key={'eventId': {'S': event_id}}
+        )
+        return 'Item' in response
+
+    def mark_processed(self, event_id):
+        self.dynamo_db_client.put_item(
+            TableName=self.table_name,
+            Item={
+                'eventId': {'S': event_id},
+                'processedAt': {'S': datetime.now().isoformat()},
+                'ttl': {'N': str(int(datetime.now().timestamp()) + 30 * 24 * 60 * 60)}
+            }
+        )
             .build();
         
         GetItemResponse response = dynamoDbClient.getItem(request);
@@ -77,7 +83,7 @@ public class IdempotencyService {
 - Test mark processed
 
 **Test Files to Create**:
-- `IdempotencyServiceTest.java`
+- `test_idempotency.py`
 
 ## References
 

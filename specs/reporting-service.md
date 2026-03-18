@@ -30,20 +30,20 @@ This specification defines the Reporting Service, an event-driven Lambda functio
 
 ## Technology Stack
 
-**Runtime**: AWS Lambda (Java 17)  
-**Framework**: Spring Cloud Function  
-**Report Generation**: Apache PDFBox or iText  
-**Template Engine**: Thymeleaf  
-**Storage**: Amazon S3  
+**Runtime**: AWS Lambda (Python 3.11)  
+**Framework**: Native Python Lambda  
+**Report Generation**: ReportLab or WeasyPrint  
+**Template Engine**: Jinja2  
+**Storage**: Amazon S3 (via Boto3)  
 **Events**: AWS EventBridge  
-**Build Tool**: Maven  
+**Build Tool**: pip  
 
 **Key Dependencies**:
-- `spring-cloud-function-adapter-aws`
-- `spring-boot-starter-thymeleaf`
-- `pdfbox` or `itext7`
-- `aws-java-sdk-s3`
-- `aws-java-sdk-eventbridge`
+- `boto3` (AWS SDK for S3, EventBridge, Secrets Manager)
+- `jinja2` (report templates)
+- `reportlab` or `weasyprint` (PDF generation)
+- `requests` (API calls)
+- `python-json-logger` (structured logging)
 
 ---
 
@@ -64,38 +64,39 @@ This specification defines the Reporting Service, an event-driven Lambda functio
 ```
 
 **Handler Logic**:
-```java
-@Component
-public class ExperimentCompletedHandler implements Function<EventBridgeEvent, Void> {
+```python
+import json
+from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle ExperimentCompleted event from EventBridge"""
+    event_id = event['id']
     
-    @Override
-    public Void apply(EventBridgeEvent event) {
-        String eventId = event.getEventId();
-        
-        // Check idempotency
-        if (reportRepository.existsByEventId(eventId)) {
-            log.info("Report already generated for event {}", eventId);
-            return null;
-        }
-        
-        // Parse payload
-        ExperimentCompletedPayload payload = parsePayload(event);
-        
-        // Generate report
-        Report report = generateReport(payload.getExperimentId());
-        
-        // Store report
-        storeReport(report);
-        
-        // Publish ReportGenerated event
-        publishReportGeneratedEvent(report);
-        
-        // Mark event as processed
-        markEventProcessed(eventId);
-        
-        return null;
-    }
-}
+    # Check idempotency
+    if is_already_processed(event_id):
+        logger.info(f'Report already generated for event {event_id}')
+        return {'statusCode': 200, 'body': 'Already processed'}
+    
+    # Parse payload
+    detail = event['detail']
+    experiment_id = detail['experimentId']
+    
+    # Generate report
+    report = generate_report(experiment_id)
+    
+    # Store report in S3
+    report_location = store_report(report)
+    
+    # Publish ReportGenerated event
+    publish_report_generated_event(report, report_location)
+    
+    # Mark event as processed
+    mark_event_processed(event_id, report['id'])
+    
+    return {'statusCode': 200, 'body': 'Success'}
 ```
 
 ---
@@ -109,18 +110,26 @@ public class ExperimentCompletedHandler implements Function<EventBridgeEvent, Vo
 - Metrics Service API: All metrics for experiment
 
 **API Calls**:
-```java
-private ExperimentData fetchExperimentData(ExperimentId experimentId) {
-    // Call Experiment Service
-    ExperimentDto experiment = experimentClient.getExperiment(experimentId);
-    HypothesisDto hypothesis = experimentClient.getHypothesis(experiment.getHypothesisId());
-    ProblemDto problem = experimentClient.getProblem(hypothesis.getProblemId());
+```python
+import requests
+from typing import Dict, List
+
+def fetch_experiment_data(experiment_id: str) -> Dict:
+    """Fetch all data needed for report generation"""
+    # Call Experiment Service
+    experiment = experiment_client.get_experiment(experiment_id)
+    hypothesis = experiment_client.get_hypothesis(experiment['hypothesisId'])
+    problem = experiment_client.get_problem(hypothesis['problemId'])
     
-    // Call Metrics Service
-    List<MetricDto> metrics = metricsClient.getExperimentMetrics(experimentId);
+    # Call Metrics Service
+    metrics = metrics_client.get_experiment_metrics(experiment_id)
     
-    return new ExperimentData(experiment, hypothesis, problem, metrics);
-}
+    return {
+        'experiment': experiment,
+        'hypothesis': hypothesis,
+        'problem': problem,
+        'metrics': metrics
+    }
 ```
 
 ---
@@ -134,63 +143,70 @@ private ExperimentData fetchExperimentData(ExperimentId experimentId) {
 - Outcome classification
 
 **Implementation**:
-```java
-private MetricsAnalysis analyzeMetrics(List<MetricDto> metrics) {
-    Map<String, MetricStats> statsByName = metrics.stream()
-        .collect(Collectors.groupingBy(
-            MetricDto::getName,
-            Collectors.collectingAndThen(
-                Collectors.toList(),
-                this::calculateStats
-            )
-        ));
-    
-    return new MetricsAnalysis(statsByName);
-}
+```python
+from collections import defaultdict
+from typing import List, Dict
+import statistics
 
-private MetricStats calculateStats(List<MetricDto> metrics) {
-    DoubleSummaryStatistics stats = metrics.stream()
-        .mapToDouble(MetricDto::getValue)
-        .summaryStatistics();
+def analyze_metrics(metrics: List[Dict]) -> Dict:
+    """Calculate aggregations for all metrics"""
+    stats_by_name = defaultdict(list)
     
-    return new MetricStats(
-        stats.getAverage(),
-        stats.getMin(),
-        stats.getMax(),
-        stats.getCount()
-    );
-}
+    # Group metrics by name
+    for metric in metrics:
+        stats_by_name[metric['name']].append(metric['value'])
+    
+    # Calculate stats for each metric
+    analysis = {}
+    for name, values in stats_by_name.items():
+        analysis[name] = calculate_stats(values)
+    
+    return analysis
+
+def calculate_stats(values: List[float]) -> Dict:
+    """Calculate statistical aggregations"""
+    return {
+        'average': statistics.mean(values),
+        'min': min(values),
+        'max': max(values),
+        'count': len(values)
+    }
 ```
 
 ---
 
 ### Step 3: Apply Report Template
 
-**Template Engine**: Thymeleaf
+**Template Engine**: Jinja2
 
-**Template Location**: `src/main/resources/templates/report-template.html`
+**Template Location**: `templates/report-template.html`
 
 **Template Variables**:
-```java
-private Map<String, Object> prepareTemplateVariables(ExperimentData data, MetricsAnalysis analysis) {
-    Map<String, Object> variables = new HashMap<>();
-    variables.put("experiment", data.getExperiment());
-    variables.put("hypothesis", data.getHypothesis());
-    variables.put("problem", data.getProblem());
-    variables.put("metricsAnalysis", analysis);
-    variables.put("generatedAt", Instant.now());
-    variables.put("reportId", UUID.randomUUID());
-    return variables;
-}
+```python
+import uuid
+from datetime import datetime
+
+def prepare_template_variables(data: Dict, analysis: Dict) -> Dict:
+    """Prepare variables for template rendering"""
+    return {
+        'experiment': data['experiment'],
+        'hypothesis': data['hypothesis'],
+        'problem': data['problem'],
+        'metrics_analysis': analysis,
+        'generated_at': datetime.utcnow().isoformat(),
+        'report_id': str(uuid.uuid4())
+    }
 ```
 
 **Template Rendering**:
-```java
-private String renderTemplate(Map<String, Object> variables) {
-    Context context = new Context();
-    context.setVariables(variables);
-    return templateEngine.process("report-template", context);
-}
+```python
+from jinja2 import Environment, FileSystemLoader
+
+def render_template(variables: Dict) -> str:
+    """Render report template with variables"""
+    env = Environment(loader=FileSystemLoader('templates'))
+    template = env.get_template('report-template.html')
+    return template.render(**variables)
 ```
 
 ---
@@ -198,16 +214,15 @@ private String renderTemplate(Map<String, Object> variables) {
 ### Step 4: Generate PDF
 
 **PDF Generation**:
-```java
-private byte[] generatePdf(String htmlContent) {
-    // Using iText or PDFBox
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    
-    // Convert HTML to PDF
-    HtmlConverter.convertToPdf(htmlContent, outputStream);
-    
-    return outputStream.toByteArray();
-}
+```python
+from weasyprint import HTML
+import io
+
+def generate_pdf(html_content: str) -> bytes:
+    """Convert HTML to PDF using WeasyPrint"""
+    pdf_buffer = io.BytesIO()
+    HTML(string=html_content).write_pdf(pdf_buffer)
+    return pdf_buffer.getvalue()
 ```
 
 ---
@@ -224,28 +239,37 @@ turaf-reports-{env}/
 ```
 
 **S3 Upload**:
-```java
-private String storeReport(UUID organizationId, UUID experimentId, UUID reportId, byte[] pdfContent, String htmlContent) {
-    String bucketName = "turaf-reports-" + environment;
-    String pdfKey = String.format("%s/%s/%s.pdf", organizationId, experimentId, reportId);
-    String htmlKey = String.format("%s/%s/%s.html", organizationId, experimentId, reportId);
+```python
+import boto3
+import os
+
+s3_client = boto3.client('s3')
+
+def store_report(organization_id: str, experiment_id: str, report_id: str, 
+                pdf_content: bytes, html_content: str) -> str:
+    """Upload report files to S3"""
+    environment = os.environ.get('ENVIRONMENT', 'dev')
+    bucket_name = f'turaf-reports-{environment}'
+    pdf_key = f'{organization_id}/{experiment_id}/{report_id}.pdf'
+    html_key = f'{organization_id}/{experiment_id}/{report_id}.html'
     
-    // Upload PDF
-    s3Client.putObject(PutObjectRequest.builder()
-        .bucket(bucketName)
-        .key(pdfKey)
-        .contentType("application/pdf")
-        .build(), RequestBody.fromBytes(pdfContent));
+    # Upload PDF
+    s3_client.put_object(
+        Bucket=bucket_name,
+        Key=pdf_key,
+        Body=pdf_content,
+        ContentType='application/pdf'
+    )
     
-    // Upload HTML
-    s3Client.putObject(PutObjectRequest.builder()
-        .bucket(bucketName)
-        .key(htmlKey)
-        .contentType("text/html")
-        .build(), RequestBody.fromString(htmlContent));
+    # Upload HTML
+    s3_client.put_object(
+        Bucket=bucket_name,
+        Key=html_key,
+        Body=html_content,
+        ContentType='text/html'
+    )
     
-    return String.format("s3://%s/%s", bucketName, pdfKey);
-}
+    return f's3://{bucket_name}/{pdf_key}'
 ```
 
 ---
@@ -253,35 +277,42 @@ private String storeReport(UUID organizationId, UUID experimentId, UUID reportId
 ### Step 6: Publish ReportGenerated Event
 
 **Event Publishing**:
-```java
-private void publishReportGeneratedEvent(Report report) {
-    ReportGeneratedPayload payload = new ReportGeneratedPayload(
-        report.getId(),
-        report.getExperimentId(),
-        report.getReportLocation(),
-        report.getReportFormat(),
-        Instant.now()
-    );
+```python
+import boto3
+import json
+import uuid
+from datetime import datetime
+
+eventbridge_client = boto3.client('events')
+
+def publish_report_generated_event(report: Dict, report_location: str):
+    """Publish ReportGenerated event to EventBridge"""
+    payload = {
+        'reportId': report['id'],
+        'experimentId': report['experimentId'],
+        'reportLocation': report_location,
+        'reportFormat': 'PDF',
+        'generatedAt': datetime.utcnow().isoformat()
+    }
     
-    DomainEvent event = DomainEvent.builder()
-        .eventId(UUID.randomUUID())
-        .eventType("ReportGenerated")
-        .eventVersion(1)
-        .timestamp(Instant.now())
-        .sourceService("reporting-service")
-        .organizationId(report.getOrganizationId())
-        .payload(payload)
-        .build();
+    event = {
+        'eventId': str(uuid.uuid4()),
+        'eventType': 'ReportGenerated',
+        'eventVersion': 1,
+        'timestamp': datetime.utcnow().isoformat(),
+        'sourceService': 'reporting-service',
+        'organizationId': report['organizationId'],
+        'payload': payload
+    }
     
-    eventBridgeClient.putEvents(PutEventsRequest.builder()
-        .entries(PutEventsRequestEntry.builder()
-            .eventBusName("turaf-event-bus")
-            .source("turaf.reporting-service")
-            .detailType("ReportGenerated")
-            .detail(toJson(event))
-            .build())
-        .build());
-}
+    eventbridge_client.put_events(
+        Entries=[{
+            'EventBusName': 'turaf-event-bus',
+            'Source': 'turaf.reporting-service',
+            'DetailType': 'ReportGenerated',
+            'Detail': json.dumps(event)
+        }]
+    )
 ```
 
 ---
@@ -304,7 +335,7 @@ private void publishReportGeneratedEvent(Report report) {
 **Sample Template**:
 ```html
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <title>Experiment Report</title>
     <style>
@@ -313,23 +344,23 @@ private void publishReportGeneratedEvent(Report report) {
 </head>
 <body>
     <h1>Experiment Report</h1>
-    <h2 th:text="${experiment.name}">Experiment Name</h2>
+    <h2>{{ experiment.name }}</h2>
     
     <section class="summary">
         <h3>Executive Summary</h3>
-        <p><strong>Outcome:</strong> <span th:text="${experiment.result.outcome}">VALIDATED</span></p>
-        <p th:text="${experiment.result.summary}">Summary text</p>
+        <p><strong>Outcome:</strong> {{ experiment.result.outcome }}</p>
+        <p>{{ experiment.result.summary }}</p>
     </section>
     
     <section class="problem">
         <h3>Problem Statement</h3>
-        <p th:text="${problem.title}">Problem title</p>
-        <p th:text="${problem.description}">Problem description</p>
+        <p>{{ problem.title }}</p>
+        <p>{{ problem.description }}</p>
     </section>
     
     <section class="hypothesis">
         <h3>Hypothesis</h3>
-        <p th:text="${hypothesis.statement}">Hypothesis statement</p>
+        <p>{{ hypothesis.statement }}</p>
     </section>
     
     <section class="metrics">
@@ -345,20 +376,22 @@ private void publishReportGeneratedEvent(Report report) {
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="stat : ${metricsAnalysis.stats}">
-                    <td th:text="${stat.name}">Metric Name</td>
-                    <td th:text="${stat.average}">0.00</td>
-                    <td th:text="${stat.min}">0.00</td>
-                    <td th:text="${stat.max}">0.00</td>
-                    <td th:text="${stat.count}">0</td>
+                {% for name, stat in metrics_analysis.items() %}
+                <tr>
+                    <td>{{ name }}</td>
+                    <td>{{ "%.2f"|format(stat.average) }}</td>
+                    <td>{{ "%.2f"|format(stat.min) }}</td>
+                    <td>{{ "%.2f"|format(stat.max) }}</td>
+                    <td>{{ stat.count }}</td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
     </section>
     
     <footer>
-        <p>Report ID: <span th:text="${reportId}">uuid</span></p>
-        <p>Generated: <span th:text="${generatedAt}">timestamp</span></p>
+        <p>Report ID: {{ report_id }}</p>
+        <p>Generated: {{ generated_at }}</p>
     </footer>
 </body>
 </html>
@@ -383,15 +416,17 @@ private void publishReportGeneratedEvent(Report report) {
 4. **PDF generation failure**: Log error, send to DLQ
 
 **Implementation**:
-```java
-@Retryable(
-    value = {TransientException.class},
-    maxAttempts = 5,
-    backoff = @Backoff(delay = 1000, multiplier = 2)
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=16)
 )
-public Report generateReport(ExperimentId experimentId) {
-    // Report generation logic
-}
+def generate_report(experiment_id: str) -> Dict:
+    """Generate report with retry logic for transient failures"""
+    # Report generation logic
+    pass
 ```
 
 ---
@@ -403,24 +438,27 @@ public Report generateReport(ExperimentId experimentId) {
 **Idempotency Key**: EventBridge eventId
 
 **Implementation**:
-```java
-@Entity
-@Table(name = "processed_events")
-public class ProcessedEvent {
-    @Id
-    private String eventId;
-    private Instant processedAt;
-    private String reportId;
-}
+```python
+import boto3
+from datetime import datetime
 
-private boolean isAlreadyProcessed(String eventId) {
-    return processedEventRepository.existsById(eventId);
-}
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('processed_events')
 
-private void markAsProcessed(String eventId, String reportId) {
-    ProcessedEvent event = new ProcessedEvent(eventId, Instant.now(), reportId);
-    processedEventRepository.save(event);
-}
+def is_already_processed(event_id: str) -> bool:
+    """Check if event has already been processed"""
+    response = table.get_item(Key={'eventId': event_id})
+    return 'Item' in response
+
+def mark_as_processed(event_id: str, report_id: str):
+    """Mark event as processed in DynamoDB"""
+    table.put_item(
+        Item={
+            'eventId': event_id,
+            'processedAt': datetime.utcnow().isoformat(),
+            'reportId': report_id
+        }
+    )
 ```
 
 ---

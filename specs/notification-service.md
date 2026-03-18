@@ -29,19 +29,18 @@ This specification defines the Notification Service, an event-driven Lambda func
 
 ## Technology Stack
 
-**Runtime**: AWS Lambda (Java 17)  
-**Framework**: Spring Cloud Function  
-**Email**: Amazon SES  
-**HTTP Client**: Spring WebClient  
+**Runtime**: AWS Lambda (Python 3.11)  
+**Framework**: Native Python Lambda  
+**Email**: Amazon SES (via Boto3)  
+**HTTP Client**: requests  
 **Events**: AWS EventBridge  
-**Build Tool**: Maven  
+**Build Tool**: pip  
 
 **Key Dependencies**:
-- `spring-cloud-function-adapter-aws`
-- `aws-java-sdk-ses`
-- `spring-boot-starter-webflux`
-- `aws-java-sdk-eventbridge`
-- `thymeleaf` (email templates)
+- `boto3` (AWS SDK for SES, Secrets Manager)
+- `jinja2` (email templates)
+- `requests` (HTTP webhooks)
+- `python-json-logger` (structured logging)
 
 ---
 
@@ -56,40 +55,44 @@ This specification defines the Notification Service, an event-driven Lambda func
 **Recipients**: Experiment creator and organization admins
 
 **Handler Logic**:
-```java
-@Component
-public class ExperimentCompletedNotificationHandler implements Function<EventBridgeEvent, Void> {
+```python
+import json
+from typing import Dict, Any
+from handlers.experiment_completed import handle_experiment_completed
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle ExperimentCompleted event from EventBridge"""
+    event_id = event['id']
     
-    @Override
-    public Void apply(EventBridgeEvent event) {
-        String eventId = event.getEventId();
-        
-        // Check idempotency
-        if (isAlreadyProcessed(eventId)) {
-            return null;
-        }
-        
-        // Parse payload
-        ExperimentCompletedPayload payload = parsePayload(event);
-        
-        // Fetch experiment details
-        ExperimentDto experiment = experimentClient.getExperiment(payload.getExperimentId());
-        
-        // Get notification recipients
-        List<User> recipients = getRecipients(experiment);
-        
-        // Send email notifications
-        recipients.forEach(user -> sendExperimentCompletedEmail(user, experiment));
-        
-        // Send webhook notifications
-        sendWebhookNotifications(experiment.getOrganizationId(), "experiment.completed", payload);
-        
-        // Mark as processed
-        markAsProcessed(eventId);
-        
-        return null;
-    }
-}
+    # Check idempotency
+    if is_already_processed(event_id):
+        return {'statusCode': 200, 'body': 'Already processed'}
+    
+    # Parse payload
+    detail = event['detail']
+    experiment_id = detail['experimentId']
+    
+    # Fetch experiment details
+    experiment = experiment_client.get_experiment(experiment_id)
+    
+    # Get notification recipients
+    recipients = get_recipients(experiment)
+    
+    # Send email notifications
+    for user in recipients:
+        send_experiment_completed_email(user, experiment)
+    
+    # Send webhook notifications
+    send_webhook_notifications(
+        experiment['organizationId'],
+        'experiment.completed',
+        detail
+    )
+    
+    # Mark as processed
+    mark_as_processed(event_id, 'ExperimentCompleted', len(recipients))
+    
+    return {'statusCode': 200, 'body': 'Success'}
 ```
 
 ---
@@ -103,40 +106,44 @@ public class ExperimentCompletedNotificationHandler implements Function<EventBri
 **Recipients**: Experiment creator and organization admins
 
 **Handler Logic**:
-```java
-@Component
-public class ReportGeneratedNotificationHandler implements Function<EventBridgeEvent, Void> {
+```python
+import json
+from typing import Dict, Any
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle ReportGenerated event from EventBridge"""
+    event_id = event['id']
     
-    @Override
-    public Void apply(EventBridgeEvent event) {
-        String eventId = event.getEventId();
-        
-        // Check idempotency
-        if (isAlreadyProcessed(eventId)) {
-            return null;
-        }
-        
-        // Parse payload
-        ReportGeneratedPayload payload = parsePayload(event);
-        
-        // Fetch experiment and report details
-        ExperimentDto experiment = experimentClient.getExperiment(payload.getExperimentId());
-        
-        // Get notification recipients
-        List<User> recipients = getRecipients(experiment);
-        
-        // Send email notifications with report link
-        recipients.forEach(user -> sendReportReadyEmail(user, experiment, payload.getReportLocation()));
-        
-        // Send webhook notifications
-        sendWebhookNotifications(experiment.getOrganizationId(), "report.generated", payload);
-        
-        // Mark as processed
-        markAsProcessed(eventId);
-        
-        return null;
-    }
-}
+    # Check idempotency
+    if is_already_processed(event_id):
+        return {'statusCode': 200, 'body': 'Already processed'}
+    
+    # Parse payload
+    detail = event['detail']
+    experiment_id = detail['experimentId']
+    report_location = detail['reportLocation']
+    
+    # Fetch experiment details
+    experiment = experiment_client.get_experiment(experiment_id)
+    
+    # Get notification recipients
+    recipients = get_recipients(experiment)
+    
+    # Send email notifications with report link
+    for user in recipients:
+        send_report_ready_email(user, experiment, report_location)
+    
+    # Send webhook notifications
+    send_webhook_notifications(
+        experiment['organizationId'],
+        'report.generated',
+        detail
+    )
+    
+    # Mark as processed
+    mark_as_processed(event_id, 'ReportGenerated', len(recipients))
+    
+    return {'statusCode': 200, 'body': 'Success'}
 ```
 
 ---
@@ -150,32 +157,34 @@ public class ReportGeneratedNotificationHandler implements Function<EventBridgeE
 **Recipients**: New member
 
 **Handler Logic**:
-```java
-@Component
-public class MemberAddedNotificationHandler implements Function<EventBridgeEvent, Void> {
+```python
+import json
+from typing import Dict, Any
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle MemberAdded event from EventBridge"""
+    event_id = event['id']
     
-    @Override
-    public Void apply(EventBridgeEvent event) {
-        String eventId = event.getEventId();
-        
-        if (isAlreadyProcessed(eventId)) {
-            return null;
-        }
-        
-        MemberAddedPayload payload = parsePayload(event);
-        
-        // Fetch user and organization details
-        User user = userClient.getUser(payload.getUserId());
-        Organization org = organizationClient.getOrganization(payload.getOrganizationId());
-        
-        // Send welcome email
-        sendWelcomeEmail(user, org);
-        
-        markAsProcessed(eventId);
-        
-        return null;
-    }
-}
+    # Check idempotency
+    if is_already_processed(event_id):
+        return {'statusCode': 200, 'body': 'Already processed'}
+    
+    # Parse payload
+    detail = event['detail']
+    user_id = detail['userId']
+    organization_id = detail['organizationId']
+    
+    # Fetch user and organization details
+    user = user_client.get_user(user_id)
+    organization = organization_client.get_organization(organization_id)
+    
+    # Send welcome email
+    send_welcome_email(user, organization)
+    
+    # Mark as processed
+    mark_as_processed(event_id, 'MemberAdded', 1)
+    
+    return {'statusCode': 200, 'body': 'Success'}
 ```
 
 ---
@@ -184,9 +193,9 @@ public class MemberAddedNotificationHandler implements Function<EventBridgeEvent
 
 ### Email Templates
 
-**Template Engine**: Thymeleaf
+**Template Engine**: Jinja2
 
-**Template Location**: `src/main/resources/email-templates/`
+**Template Location**: `templates/email/`
 
 **Templates**:
 - `experiment-completed.html`: Experiment completion notification
@@ -201,35 +210,35 @@ public class MemberAddedNotificationHandler implements Function<EventBridgeEvent
 **Subject**: "Experiment Completed: {experiment.name}"
 
 **Template Variables**:
-```java
-Map<String, Object> variables = Map.of(
-    "userName", user.getName(),
-    "experimentName", experiment.getName(),
-    "outcome", experiment.getResult().getOutcome(),
-    "summary", experiment.getResult().getSummary(),
-    "experimentUrl", buildExperimentUrl(experiment.getId()),
-    "organizationName", organization.getName()
-);
+```python
+variables = {
+    'user_name': user['name'],
+    'experiment_name': experiment['name'],
+    'outcome': experiment['result']['outcome'],
+    'summary': experiment['result']['summary'],
+    'experiment_url': build_experiment_url(experiment['id']),
+    'organization_name': organization['name']
+}
 ```
 
 **Email Content**:
 ```html
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <title>Experiment Completed</title>
 </head>
 <body>
     <h1>Experiment Completed</h1>
-    <p>Hi <span th:text="${userName}">User</span>,</p>
+    <p>Hi {{ user_name }},</p>
     
-    <p>Your experiment "<strong th:text="${experimentName}">Experiment Name</strong>" has been completed.</p>
+    <p>Your experiment "<strong>{{ experiment_name }}</strong>" has been completed.</p>
     
-    <p><strong>Outcome:</strong> <span th:text="${outcome}">VALIDATED</span></p>
-    <p><strong>Summary:</strong> <span th:text="${summary}">Summary</span></p>
+    <p><strong>Outcome:</strong> {{ outcome }}</p>
+    <p><strong>Summary:</strong> {{ summary }}</p>
     
     <p>
-        <a th:href="${experimentUrl}">View Experiment Details</a>
+        <a href="{{ experiment_url }}">View Experiment Details</a>
     </p>
     
     <p>Best regards,<br/>The Turaf Team</p>
@@ -244,13 +253,13 @@ Map<String, Object> variables = Map.of(
 **Subject**: "Report Ready: {experiment.name}"
 
 **Template Variables**:
-```java
-Map<String, Object> variables = Map.of(
-    "userName", user.getName(),
-    "experimentName", experiment.getName(),
-    "reportUrl", buildReportDownloadUrl(reportLocation),
-    "experimentUrl", buildExperimentUrl(experiment.getId())
-);
+```python
+variables = {
+    'user_name': user['name'],
+    'experiment_name': experiment['name'],
+    'report_url': build_report_download_url(report_location),
+    'experiment_url': build_experiment_url(experiment['id'])
+}
 ```
 
 ---
@@ -258,39 +267,37 @@ Map<String, Object> variables = Map.of(
 ### Email Sending
 
 **Amazon SES Integration**:
-```java
-@Service
-public class EmailService {
+```python
+import boto3
+from jinja2 import Environment, FileSystemLoader
+import logging
+
+logger = logging.getLogger(__name__)
+ses_client = boto3.client('ses')
+
+def send_email(to: str, subject: str, template_name: str, variables: dict):
+    """Send email using Amazon SES with Jinja2 template"""
+    # Render template
+    env = Environment(loader=FileSystemLoader('templates/email'))
+    template = env.get_template(f'{template_name}.html')
+    html_body = template.render(**variables)
     
-    private final AmazonSimpleEmailService sesClient;
-    private final TemplateEngine templateEngine;
-    
-    public void sendEmail(String to, String subject, String templateName, Map<String, Object> variables) {
-        // Render template
-        Context context = new Context();
-        context.setVariables(variables);
-        String htmlBody = templateEngine.process(templateName, context);
-        
-        // Create email message
-        Message message = new Message()
-            .withSubject(new Content(subject))
-            .withBody(new Body().withHtml(new Content(htmlBody)));
-        
-        // Send email
-        SendEmailRequest request = new SendEmailRequest()
-            .withSource("notifications@turaf.com")
-            .withDestination(new Destination().withToAddresses(to))
-            .withMessage(message);
-        
-        try {
-            SendEmailResult result = sesClient.sendEmail(request);
-            log.info("Email sent to {}, messageId: {}", to, result.getMessageId());
-        } catch (Exception e) {
-            log.error("Failed to send email to {}", to, e);
-            throw new EmailSendException("Failed to send email", e);
-        }
-    }
-}
+    # Send email
+    try:
+        response = ses_client.send_email(
+            Source='notifications@turaf.com',
+            Destination={'ToAddresses': [to]},
+            Message={
+                'Subject': {'Data': subject},
+                'Body': {'Html': {'Data': html_body}}
+            }
+        )
+        message_id = response['MessageId']
+        logger.info(f'Email sent to {to}, messageId: {message_id}')
+        return message_id
+    except Exception as e:
+        logger.error(f'Failed to send email to {to}: {str(e)}')
+        raise EmailSendException(f'Failed to send email: {str(e)}')
 ```
 
 ---
@@ -338,42 +345,54 @@ X-Turaf-Delivery: {deliveryId}
 ```
 
 **Signature Calculation**:
-```java
-private String calculateSignature(String payload, String secret) {
-    Mac mac = Mac.getInstance("HmacSHA256");
-    SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
-    mac.init(secretKey);
-    byte[] hash = mac.doFinal(payload.getBytes());
-    return Hex.encodeHexString(hash);
-}
+```python
+import hmac
+import hashlib
+
+def calculate_signature(payload: str, secret: str) -> str:
+    """Calculate HMAC-SHA256 signature for webhook payload"""
+    signature = hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    return signature
 ```
 
 **Webhook Sending**:
-```java
-@Service
-public class WebhookService {
+```python
+import requests
+import json
+import uuid
+import logging
+
+logger = logging.getLogger(__name__)
+
+def send_webhook(webhook: dict, event_type: str, payload: dict):
+    """Send webhook notification with signature"""
+    payload_json = json.dumps(payload)
+    signature = calculate_signature(payload_json, webhook['secret'])
+    delivery_id = str(uuid.uuid4())
     
-    private final WebClient webClient;
-    
-    public void sendWebhook(Webhook webhook, String eventType, Object payload) {
-        String payloadJson = toJson(payload);
-        String signature = calculateSignature(payloadJson, webhook.getSecret());
-        String deliveryId = UUID.randomUUID().toString();
-        
-        webClient.post()
-            .uri(webhook.getUrl())
-            .header("Content-Type", "application/json")
-            .header("X-Turaf-Signature", "sha256=" + signature)
-            .header("X-Turaf-Event", eventType)
-            .header("X-Turaf-Delivery", deliveryId)
-            .bodyValue(payloadJson)
-            .retrieve()
-            .toBodilessEntity()
-            .doOnSuccess(response -> log.info("Webhook delivered: {}", deliveryId))
-            .doOnError(error -> log.error("Webhook delivery failed: {}", deliveryId, error))
-            .subscribe();
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Turaf-Signature': f'sha256={signature}',
+        'X-Turaf-Event': event_type,
+        'X-Turaf-Delivery': delivery_id
     }
-}
+    
+    try:
+        response = requests.post(
+            webhook['url'],
+            data=payload_json,
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+        logger.info(f'Webhook delivered: {delivery_id}')
+    except Exception as e:
+        logger.error(f'Webhook delivery failed: {delivery_id}, error: {str(e)}')
+        raise
 ```
 
 ---
@@ -387,15 +406,16 @@ public class WebhookService {
 - No retry on 4xx errors (client errors)
 
 **Implementation**:
-```java
-@Retryable(
-    value = {WebhookDeliveryException.class},
-    maxAttempts = 5,
-    backoff = @Backoff(delay = 1000, multiplier = 2)
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=16)
 )
-public void sendWebhookWithRetry(Webhook webhook, String eventType, Object payload) {
-    sendWebhook(webhook, eventType, payload);
-}
+def send_webhook_with_retry(webhook: dict, event_type: str, payload: dict):
+    """Send webhook with exponential backoff retry"""
+    send_webhook(webhook, event_type, payload)
 ```
 
 ---
@@ -421,14 +441,13 @@ public void sendWebhookWithRetry(Webhook webhook, String eventType, Object paylo
 ```
 
 **Preference Checking**:
-```java
-private boolean shouldSendNotification(User user, String notificationType) {
-    NotificationPreferences prefs = preferencesRepository.findByUserId(user.getId());
-    if (prefs == null) {
-        return true; // Default: send all notifications
-    }
-    return prefs.isEnabled(notificationType);
-}
+```python
+def should_send_notification(user: dict, notification_type: str) -> bool:
+    """Check if user wants to receive this notification type"""
+    prefs = preferences_repository.find_by_user_id(user['id'])
+    if not prefs:
+        return True  # Default: send all notifications
+    return prefs.get('emailNotifications', {}).get(notification_type, True)
 ```
 
 ---
@@ -443,25 +462,31 @@ private boolean shouldSendNotification(User user, String notificationType) {
 - Users can opt-out via preferences
 
 **Implementation**:
-```java
-private List<User> getRecipients(ExperimentDto experiment) {
-    List<User> recipients = new ArrayList<>();
+```python
+def get_recipients(experiment: dict) -> list:
+    """Get list of users who should receive notifications"""
+    recipients = []
     
-    // Add experiment creator
-    User creator = userClient.getUser(experiment.getCreatedBy());
-    if (shouldSendNotification(creator, "experimentCompleted")) {
-        recipients.add(creator);
-    }
+    # Add experiment creator
+    creator = user_client.get_user(experiment['createdBy'])
+    if should_send_notification(creator, 'experimentCompleted'):
+        recipients.append(creator)
     
-    // Add organization admins
-    List<User> admins = organizationClient.getAdmins(experiment.getOrganizationId());
-    admins.stream()
-        .filter(admin -> shouldSendNotification(admin, "experimentCompleted"))
-        .forEach(recipients::add);
+    # Add organization admins
+    admins = organization_client.get_admins(experiment['organizationId'])
+    for admin in admins:
+        if should_send_notification(admin, 'experimentCompleted'):
+            recipients.append(admin)
     
-    // Remove duplicates
-    return recipients.stream().distinct().collect(Collectors.toList());
-}
+    # Remove duplicates by user ID
+    seen = set()
+    unique_recipients = []
+    for user in recipients:
+        if user['id'] not in seen:
+            seen.add(user['id'])
+            unique_recipients.append(user)
+    
+    return unique_recipients
 ```
 
 ---
@@ -477,15 +502,14 @@ private List<User> getRecipients(ExperimentDto experiment) {
 - Email bounced or rejected
 
 **Handling**:
-```java
-try {
-    emailService.sendEmail(user.getEmail(), subject, template, variables);
-} catch (EmailSendException e) {
-    log.error("Failed to send email to {}", user.getEmail(), e);
-    // Record failure in database
-    recordNotificationFailure(user.getId(), "email", e.getMessage());
-    // Don't throw - continue processing other recipients
-}
+```python
+try:
+    email_service.send_email(user['email'], subject, template, variables)
+except EmailSendException as e:
+    logger.error(f"Failed to send email to {user['email']}: {str(e)}")
+    # Record failure in database
+    record_notification_failure(user['id'], 'email', str(e))
+    # Don't raise - continue processing other recipients
 ```
 
 ---
@@ -513,27 +537,29 @@ try {
 **Idempotency Key**: EventBridge eventId
 
 **Implementation**:
-```java
-@Entity
-@Table(name = "processed_notification_events")
-public class ProcessedNotificationEvent {
-    @Id
-    private String eventId;
-    private String eventType;
-    private Instant processedAt;
-    private Integer recipientCount;
-}
+```python
+import boto3
+from datetime import datetime
+from typing import Optional
 
-private boolean isAlreadyProcessed(String eventId) {
-    return processedEventRepository.existsById(eventId);
-}
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('processed_notification_events')
 
-private void markAsProcessed(String eventId, String eventType, int recipientCount) {
-    ProcessedNotificationEvent event = new ProcessedNotificationEvent(
-        eventId, eventType, Instant.now(), recipientCount
-    );
-    processedEventRepository.save(event);
-}
+def is_already_processed(event_id: str) -> bool:
+    """Check if event has already been processed"""
+    response = table.get_item(Key={'eventId': event_id})
+    return 'Item' in response
+
+def mark_as_processed(event_id: str, event_type: str, recipient_count: int):
+    """Mark event as processed in DynamoDB"""
+    table.put_item(
+        Item={
+            'eventId': event_id,
+            'eventType': event_type,
+            'processedAt': datetime.utcnow().isoformat(),
+            'recipientCount': recipient_count
+        }
+    )
 ```
 
 ---

@@ -15,15 +15,21 @@ Implement email sending service using Amazon SES with template support.
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/java/com/turaf/notification/service/EmailService.java`
-- `services/notification-service/src/main/java/com/turaf/notification/service/SesEmailSender.java`
-- `services/notification-service/src/main/java/com/turaf/notification/model/EmailMessage.java`
+- `services/notification-service/services/email_service.py`
+- `services/notification-service/services/ses_client.py`
+- `services/notification-service/config.py`
 
 ## Implementation Details
 
 ### Email Service
 
-```java
+```python
+import os
+from typing import List, Dict
+from email.message import EmailMessage
+from email.utils import make_msgid
+import boto3
+from jinja2 import Template
 public class EmailService {
     private final SesEmailSender emailSender;
     private final TemplateService templateService;

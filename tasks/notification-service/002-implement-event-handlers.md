@@ -15,83 +15,90 @@ Implement EventBridge event handlers for various domain events that trigger noti
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/java/com/turaf/notification/handler/EventRouter.java`
-- `services/notification-service/src/main/java/com/turaf/notification/handler/ExperimentCompletedHandler.java`
-- `services/notification-service/src/main/java/com/turaf/notification/handler/ReportGeneratedHandler.java`
-- `services/notification-service/src/main/java/com/turaf/notification/handler/MemberAddedHandler.java`
+- `services/notification-service/handlers/experiment_completed.py`
+- `services/notification-service/handlers/report_generated.py`
+- `services/notification-service/handlers/member_added.py`
+- `services/notification-service/services/idempotency.py`
 
 ## Implementation Details
 
-### Event Router
+### Main Lambda Handler
 
-```java
-public class EventRouter implements RequestHandler<EventBridgeEvent, Void> {
-    private final Map<String, EventHandler> handlers;
-    private final IdempotencyService idempotencyService;
-    
-    public EventRouter() {
-        this.handlers = Map.of(
-            "ExperimentCompleted", new ExperimentCompletedHandler(),
-            "ReportGenerated", new ReportGeneratedHandler(),
-            "MemberAdded", new MemberAddedHandler()
-        );
-        this.idempotencyService = new IdempotencyService();
-    }
-    
-    @Override
-    public Void handleRequest(EventBridgeEvent event, Context context) {
-        LambdaLogger logger = context.getLogger();
+```python
+import json
+from typing import Dict, Any
+import logging
+from services.idempotency import is_already_processed, mark_as_processed
+
+logger = logging.getLogger(__name__)
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Route EventBridge events to appropriate handlers"""
+    try:
+        event_type = event.get('detail-type')
+        event_id = event['id']
         
-        try {
-            String eventType = event.getDetailType();
-            String eventId = extractEventId(event);
-            
-            // Check idempotency
-            if (idempotencyService.isProcessed(eventId)) {
-                logger.log("Event already processed: " + eventId);
-                return null;
-            }
-            
-            // Route to appropriate handler
-            EventHandler handler = handlers.get(eventType);
-            if (handler != null) {
-                handler.handle(event, context);
-                idempotencyService.markProcessed(eventId);
-            } else {
-                logger.log("No handler for event type: " + eventType);
-            }
-        } catch (Exception e) {
-            logger.log("Error processing event: " + e.getMessage());
-            throw new RuntimeException("Failed to process event", e);
-        }
+        # Check idempotency
+        if is_already_processed(event_id):
+            logger.info(f'Event already processed: {event_id}')
+            return {'statusCode': 200, 'body': 'Already processed'}
         
-        return null;
-    }
-    
-    private String extractEventId(EventBridgeEvent event) {
-        Map<String, Object> detail = (Map<String, Object>) event.getDetail();
-        return (String) detail.get("eventId");
-    }
-}
+        # Route to appropriate handler
+        if event_type == 'ExperimentCompleted':
+            from handlers.experiment_completed import handle_experiment_completed
+            result = handle_experiment_completed(event, context)
+        elif event_type == 'ReportGenerated':
+            from handlers.report_generated import handle_report_generated
+            result = handle_report_generated(event, context)
+        elif event_type == 'MemberAdded':
+            from handlers.member_added import handle_member_added
+            result = handle_member_added(event, context)
+        else:
+            logger.warning(f'No handler for event type: {event_type}')
+            return {'statusCode': 400, 'body': 'Unknown event type'}
+        
+        # Mark as processed
+        mark_as_processed(event_id, event_type)
+        return result
+        
+    except Exception as e:
+        logger.error(f'Error processing event: {str(e)}', exc_info=True)
+        raise
 ```
 
 ### Experiment Completed Handler
 
-```java
-public class ExperimentCompletedHandler implements EventHandler {
-    private final EmailService emailService;
+```python
+from typing import Dict, Any
+import logging
+from services.email_service import send_experiment_completed_email
+from services.webhook_service import send_webhooks
+from clients.experiment_client import get_experiment
+from clients.user_client import get_recipients
+
+logger = logging.getLogger(__name__)
+
+def handle_experiment_completed(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Handle ExperimentCompleted event"""
+    detail = event['detail']
+    experiment_id = detail['experimentId']
+    organization_id = detail['organizationId']
     
-    @Override
-    public void handle(EventBridgeEvent event, Context context) {
-        ExperimentCompletedEvent experimentEvent = parseEvent(event);
-        
-        // Send notification to experiment owner
-        emailService.sendExperimentCompletedEmail(
-            experimentEvent.getOrganizationId(),
-            experimentEvent.getExperimentId()
-        );
-    }
-}
+    # Fetch experiment details
+    experiment = get_experiment(experiment_id)
+    
+    # Get notification recipients
+    recipients = get_recipients(experiment)
+    
+    # Send email notifications
+    for user in recipients:
+        send_experiment_completed_email(user, experiment)
+    
+    # Send webhook notifications
+    send_webhooks(organization_id, 'experiment.completed', detail)
+    
+    logger.info(f'Sent notifications for experiment {experiment_id}')
+    return {'statusCode': 200, 'body': 'Success'}
 ```
 
 ## Acceptance Criteria
@@ -110,8 +117,8 @@ public class ExperimentCompletedHandler implements EventHandler {
 - Test idempotency
 
 **Test Files to Create**:
-- `EventRouterTest.java`
-- `ExperimentCompletedHandlerTest.java`
+- `test_lambda_handler.py`
+- `test_experiment_completed_handler.py`
 
 ## References
 

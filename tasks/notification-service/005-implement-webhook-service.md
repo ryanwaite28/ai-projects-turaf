@@ -15,15 +15,21 @@ Implement webhook delivery service with retry logic for external integrations.
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/java/com/turaf/notification/service/WebhookService.java`
-- `services/notification-service/src/main/java/com/turaf/notification/service/WebhookDeliveryService.java`
-- `services/notification-service/src/main/java/com/turaf/notification/model/WebhookPayload.java`
+- `services/notification-service/services/webhook_service.py`
+- `services/notification-service/services/webhook_signer.py`
+- `services/notification-service/clients/webhook_client.py`
 
 ## Implementation Details
 
 ### Webhook Service
 
-```java
+```python
+import requests
+import json
+import hmac
+import hashlib
+import time
+from typing import Dict, List
 public class WebhookService {
     private final WebhookDeliveryService deliveryService;
     private final WebhookConfigService configService;
@@ -140,7 +146,7 @@ public class WebhookDeliveryService {
 - Test signature generation
 
 **Test Files to Create**:
-- `WebhookServiceTest.java`
+- `test_webhook_service.py`
 - `WebhookDeliveryServiceTest.java`
 
 ## References

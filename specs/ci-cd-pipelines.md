@@ -456,16 +456,16 @@ deploy-lambda:
   steps:
     - uses: actions/checkout@v4
     
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
       with:
-        java-version: '17'
-        distribution: 'temurin'
+        python-version: '3.11'
     
     - name: Build Lambda function
       run: |
         cd services/${{ matrix.function }}
-        mvn clean package
+        pip install -r requirements.txt -t .
+        zip -r ${{ matrix.function }}.zip .
     
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -477,7 +477,7 @@ deploy-lambda:
       run: |
         aws lambda update-function-code \
           --function-name turaf-${{ matrix.function }}-dev \
-          --zip-file fileb://services/${{ matrix.function }}/target/${{ matrix.function }}.jar
+          --zip-file fileb://services/${{ matrix.function }}/${{ matrix.function }}.zip
     
     - name: Wait for update to complete
       run: |

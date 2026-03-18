@@ -29,7 +29,7 @@ Create comprehensive unit tests for all notification service components.
 - [ ] All components tested
 - [ ] Code coverage > 80%
 - [ ] All edge cases covered
-- [ ] Mock AWS services properly
+- [ ] unittest.mock AWS services properly
 
 ## Testing Requirements
 

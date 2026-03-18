@@ -73,7 +73,7 @@ These specifications break down the comprehensive PROJECT.md into focused, human
 - Batch processing and time-series queries
 
 **`reporting-service.md`**
-- Event-driven report generation (AWS Lambda)
+- Event-driven report generation (AWS Lambda - Python 3.11)
 - Report workflow (fetch data, calculate aggregations, generate PDF)
 - S3 storage structure
 - Event handlers (ExperimentCompleted)
@@ -187,7 +187,7 @@ All specifications follow these principles:
 **Frontend**: Angular 17.x, NgRx, Angular Material/PrimeNG  
 **Database**: PostgreSQL (RDS)  
 **Event Bus**: AWS EventBridge  
-**Compute**: ECS Fargate, AWS Lambda  
+**Compute**: ECS Fargate (Java services), AWS Lambda (Python 3.11)  
 **Storage**: Amazon S3  
 **IaC**: Terraform  
 **CI/CD**: GitHub Actions  

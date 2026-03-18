@@ -15,9 +15,9 @@ Create HTML email templates for various notification types.
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/resources/templates/experiment-completed.html`
-- `services/notification-service/src/main/resources/templates/report-generated.html`
-- `services/notification-service/src/main/resources/templates/member-added.html`
+- `services/notification-service/templates/email/experiment-completed.html`
+- `services/notification-service/templates/email/report-generated.html`
+- `services/notification-service/templates/email/member-added.html`
 - `services/notification-service/src/main/java/com/turaf/notification/template/TemplateService.java`
 
 ## Implementation Details
@@ -45,9 +45,9 @@ Create HTML email templates for various notification types.
         </div>
         <div class="content">
             <p>Your experiment has been completed successfully.</p>
-            <p><strong>Experiment ID:</strong> {{experimentId}}</p>
+            <p><strong>Experiment ID:</strong> {{ experimentId }}</p>
             <p>A report is being generated and will be available shortly.</p>
-            <a href="https://app.turaf.com/experiments/{{experimentId}}" class="button">View Experiment</a>
+            <a href="https://app.turaf.com/experiments/{{ experimentId }}" class="button">View Experiment</a>
         </div>
     </div>
 </body>
@@ -58,16 +58,16 @@ Create HTML email templates for various notification types.
 
 ```java
 public class TemplateService {
-    private final Handlebars handlebars;
+    private final TemplateEngine templateEngine;
     
     public TemplateService() {
-        this.handlebars = new Handlebars();
+        this.templateEngine = new Jinja2TemplateEngine();
     }
     
     public String render(String templateName, Map<String, Object> data) {
         try {
-            Template template = handlebars.compile("templates/" + templateName);
-            return template.apply(data);
+            Template template = templateEngine.getTemplate(templateName);
+            return template.render(data);
         } catch (IOException e) {
             throw new TemplateRenderException("Failed to render template: " + templateName, e);
         }
@@ -90,7 +90,7 @@ public class TemplateService {
 - Test data binding
 
 **Test Files to Create**:
-- `TemplateServiceTest.java`
+- `test_template_engine.py`
 
 ## References
 

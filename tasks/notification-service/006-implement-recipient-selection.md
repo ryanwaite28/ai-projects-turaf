@@ -15,14 +15,17 @@ Implement recipient selection logic based on notification preferences and organi
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/src/main/java/com/turaf/notification/service/RecipientService.java`
-- `services/notification-service/src/main/java/com/turaf/notification/client/OrganizationServiceClient.java`
-- `services/notification-service/src/main/java/com/turaf/notification/model/NotificationPreference.java`
+- `services/notification-service/services/recipient_service.py`
+- `services/notification-service/clients/user_client.py`
+- `services/notification-service/models/notification_preference.py`
 
 ## Implementation Details
 
 ### Recipient Service
 
+```python
+import requests
+from typing import List
 ```java
 public class RecipientService {
     private final OrganizationServiceClient organizationClient;
@@ -96,7 +99,7 @@ public class OrganizationServiceClient {
 - Test member fetching
 
 **Test Files to Create**:
-- `RecipientServiceTest.java`
+- `test_recipient_service.py`
 
 ## References
 

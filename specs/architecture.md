@@ -357,7 +357,7 @@ User Action → API Service → Domain Logic → Domain Event → Event Bus → 
 **Frontend**: Angular 17.x  
 **Database**: PostgreSQL (RDS)  
 **Event Bus**: AWS EventBridge  
-**Compute**: ECS Fargate, AWS Lambda  
+**Compute**: ECS Fargate, AWS Lambda (Python 3.11)  
 **Storage**: Amazon S3  
 **IaC**: Terraform  
 **CI/CD**: GitHub Actions  

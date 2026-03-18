@@ -104,14 +104,14 @@ resource "aws_ecs_task_definition" "service" {
 **Functions**:
 
 1. **reporting-service**
-   - Runtime: Java 17
+   - Runtime: Python 3.11
    - Memory: 1024 MB
    - Timeout: 60 seconds
    - Reserved Concurrency: 10
    - Trigger: EventBridge (ExperimentCompleted)
 
 2. **notification-service**
-   - Runtime: Java 17
+   - Runtime: Python 3.11
    - Memory: 512 MB
    - Timeout: 30 seconds
    - Reserved Concurrency: 20
@@ -122,14 +122,14 @@ resource "aws_ecs_task_definition" "service" {
 resource "aws_lambda_function" "reporting_service" {
   function_name    = "turaf-reporting-service-${var.environment}"
   role             = aws_iam_role.lambda_execution_role.arn
-  handler          = "org.springframework.cloud.function.adapter.aws.FunctionInvoker"
-  runtime          = "java17"
+  handler          = "reporting_handler.lambda_handler"
+  runtime          = "python3.11"
   memory_size      = 1024
   timeout          = 60
   reserved_concurrent_executions = 10
   
-  filename         = "reporting-service.jar"
-  source_code_hash = filebase64sha256("reporting-service.jar")
+  filename         = "reporting-service.zip"
+  source_code_hash = filebase64sha256("reporting-service.zip")
   
   environment {
     variables = {

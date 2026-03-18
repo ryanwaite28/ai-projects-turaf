@@ -6,81 +6,69 @@
 
 ## Objective
 
-Setup AWS Lambda project structure for the Notification Service using Java and Maven.
+Setup AWS Lambda project structure for the Notification Service using Python 3.11.
 
 ## Prerequisites
 
 - [x] Task 001: Clean Architecture layers established
-- [x] AWS Lambda Java runtime knowledge
+- [x] AWS Lambda Python runtime knowledge
 
 ## Scope
 
 **Files to Create**:
-- `services/notification-service/pom.xml`
-- `services/notification-service/src/main/java/com/turaf/notification/NotificationHandler.java`
-- `services/notification-service/src/main/resources/application.properties`
+- `services/notification-service/requirements.txt`
+- `services/notification-service/notification_handler.py`
+- `services/notification-service/config.py`
 
 ## Implementation Details
 
-### Maven POM
+### Requirements File
 
-```xml
-<project>
-    <artifactId>notification-service</artifactId>
-    <packaging>jar</packaging>
+```txt
+boto3==1.34.0
+jinja2==3.1.3
+requests==2.31.0
+tenacity==8.2.3
+python-json-logger==2.0.7
+```
+
+### Lambda Handler
+
+```python
+import json
+import os
+from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Main Lambda handler for notification events"""
+    logger.info(f'Processing event: {event["detail-type"]}')
     
-    <dependencies>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-            <version>3.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>ses</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.jknack</groupId>
-            <artifactId>handlebars</artifactId>
-            <version>4.3.1</version>
-        </dependency>
-    </dependencies>
+    event_type = event.get('detail-type')
     
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <configuration>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</project>
+    if event_type == 'ExperimentCompleted':
+        from handlers.experiment_completed import handle_experiment_completed
+        return handle_experiment_completed(event, context)
+    elif event_type == 'ReportGenerated':
+        from handlers.report_generated import handle_report_generated
+        return handle_report_generated(event, context)
+    elif event_type == 'MemberAdded':
+        from handlers.member_added import handle_member_added
+        return handle_member_added(event, context)
+    else:
+        logger.warning(f'Unknown event type: {event_type}')
+        return {'statusCode': 400, 'body': 'Unknown event type'}
 ```
 
 ## Acceptance Criteria
 
-- [ ] Maven project configured
-- [ ] Lambda dependencies added
-- [ ] Shade plugin configured
-- [ ] Handler class created
-- [ ] Project builds successfully
+- [ ] Python project configured
+- [ ] Lambda dependencies added to requirements.txt
+- [ ] Handler function created
+- [ ] Project structure established
+- [ ] Dependencies install successfully
 
 ## Testing Requirements
 
@@ -88,7 +76,7 @@ Setup AWS Lambda project structure for the Notification Service using Java and M
 - Test handler initialization
 
 **Test Files to Create**:
-- `NotificationHandlerTest.java`
+- `test_notification_handler.py`
 
 ## References
 
