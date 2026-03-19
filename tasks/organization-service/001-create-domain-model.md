@@ -181,14 +181,14 @@ public interface OrganizationMemberRepository {
 
 ## Acceptance Criteria
 
-- [ ] Organization entity extends AggregateRoot
-- [ ] Organization validates name and slug
-- [ ] OrganizationMember entity created
-- [ ] MemberRole enum defined
-- [ ] Domain events created for organization lifecycle
-- [ ] Repository interfaces defined
-- [ ] All domain invariants enforced
-- [ ] Unit tests pass
+- [x] Organization entity extends AggregateRoot
+- [x] Organization validates name and slug
+- [x] OrganizationMember entity created
+- [x] MemberRole enum defined
+- [x] Domain events created for organization lifecycle
+- [x] Repository interfaces defined
+- [x] All domain invariants enforced
+- [x] Unit tests pass
 
 ## Testing Requirements
 

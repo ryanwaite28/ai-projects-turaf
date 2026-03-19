@@ -125,13 +125,13 @@ class MembershipServiceTest {
 
 ## Acceptance Criteria
 
-- [ ] All domain model tests pass
-- [ ] All application service tests pass
-- [ ] All infrastructure tests pass
-- [ ] Code coverage > 80%
-- [ ] All edge cases covered
-- [ ] Mock dependencies properly
-- [ ] Tests are isolated and independent
+- [x] All domain model tests pass
+- [x] All application service tests pass
+- [x] All infrastructure tests pass
+- [x] Code coverage > 80%
+- [x] All edge cases covered
+- [x] Mock dependencies properly
+- [x] Tests are isolated and independent
 
 ## Testing Requirements
 

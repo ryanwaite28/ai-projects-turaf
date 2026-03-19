@@ -138,13 +138,13 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
 
 ## Acceptance Criteria
 
-- [ ] JPA entities created with proper mappings
-- [ ] Database migrations create correct schema
-- [ ] Indexes created for performance
-- [ ] Unique constraint on organization slug
-- [ ] Foreign key constraints enforced
-- [ ] Repository implementations work correctly
-- [ ] Integration tests pass
+- [x] JPA entities created with proper mappings
+- [x] Database migrations create correct schema
+- [x] Indexes created for performance
+- [x] Unique constraint on organization slug
+- [x] Foreign key constraints enforced
+- [x] Repository implementations work correctly
+- [x] Integration tests pass
 
 ## Testing Requirements
 

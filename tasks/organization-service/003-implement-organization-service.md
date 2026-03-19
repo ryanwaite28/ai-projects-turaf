@@ -133,14 +133,14 @@ public class OrganizationDto {
 
 ## Acceptance Criteria
 
-- [ ] Create organization validates slug uniqueness
-- [ ] Get organization by ID works
-- [ ] Get organization by slug works
-- [ ] Update organization works
-- [ ] Delete organization works
-- [ ] Domain events published on creation
-- [ ] All validation rules enforced
-- [ ] Unit tests pass
+- [x] Create organization validates slug uniqueness
+- [x] Get organization by ID works
+- [x] Get organization by slug works
+- [x] Update organization works
+- [x] Delete organization works
+- [x] Domain events published on creation
+- [x] All validation rules enforced
+- [x] Unit tests pass
 
 ## Testing Requirements
 

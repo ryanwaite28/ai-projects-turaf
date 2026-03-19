@@ -142,14 +142,14 @@ public class MemberDto {
 
 ## Acceptance Criteria
 
-- [ ] Add member validates organization exists
-- [ ] Add member prevents duplicates
-- [ ] Get members returns all organization members
-- [ ] Remove member works correctly
-- [ ] isMember check works
-- [ ] isAdmin check works
-- [ ] Domain events published
-- [ ] Unit tests pass
+- [x] Add member validates organization exists
+- [x] Add member prevents duplicates
+- [x] Get members returns all organization members
+- [x] Remove member works correctly
+- [x] isMember check works
+- [x] isAdmin check works
+- [x] Domain events published
+- [x] Unit tests pass
 
 ## Testing Requirements
 

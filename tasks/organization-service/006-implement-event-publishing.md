@@ -131,13 +131,13 @@ aws:
 
 ## Acceptance Criteria
 
-- [ ] EventPublisher interface defined
-- [ ] EventBridge publisher implementation works
-- [ ] Events published with correct envelope structure
-- [ ] Event mapper serializes events correctly
-- [ ] EventBridge client configured
-- [ ] Failed events logged
-- [ ] Integration tests pass
+- [x] EventPublisher interface defined
+- [x] EventBridge publisher implementation works
+- [x] Events published with correct envelope structure
+- [x] Event mapper serializes events correctly
+- [x] EventBridge client configured
+- [x] Failed events logged
+- [x] Integration tests pass
 
 ## Testing Requirements
 

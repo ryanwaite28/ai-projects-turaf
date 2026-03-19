@@ -153,16 +153,16 @@ public class GlobalExceptionHandler {
 
 ## Acceptance Criteria
 
-- [ ] POST /api/v1/organizations endpoint works
-- [ ] GET /api/v1/organizations/{id} endpoint works
-- [ ] GET /api/v1/organizations/slug/{slug} endpoint works
-- [ ] PUT /api/v1/organizations/{id} endpoint works
-- [ ] DELETE /api/v1/organizations/{id} endpoint works
-- [ ] POST /api/v1/organizations/{id}/members endpoint works
-- [ ] GET /api/v1/organizations/{id}/members endpoint works
-- [ ] DELETE /api/v1/organizations/{id}/members/{userId} endpoint works
-- [ ] Authorization checks enforced
-- [ ] All endpoints documented with OpenAPI
+- [x] POST /api/v1/organizations endpoint works
+- [x] GET /api/v1/organizations/{id} endpoint works
+- [x] GET /api/v1/organizations/slug/{slug} endpoint works
+- [x] PUT /api/v1/organizations/{id} endpoint works
+- [x] DELETE /api/v1/organizations/{id} endpoint works
+- [x] POST /api/v1/organizations/{id}/members endpoint works
+- [x] GET /api/v1/organizations/{id}/members endpoint works
+- [x] DELETE /api/v1/organizations/{id}/members/{userId} endpoint works
+- [x] Authorization checks enforced
+- [x] All endpoints documented with OpenAPI
 
 ## Testing Requirements
 

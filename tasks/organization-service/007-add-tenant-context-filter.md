@@ -85,12 +85,12 @@ public interface OrganizationMemberJpaRepository extends JpaRepository<Organizat
 
 ## Acceptance Criteria
 
-- [ ] Tenant filter configured and active
-- [ ] All queries automatically scoped to current organization
-- [ ] Cross-tenant data access prevented
-- [ ] Tenant context extracted from JWT
-- [ ] Integration tests verify tenant isolation
-- [ ] Unauthorized access attempts blocked
+- [x] Tenant filter configured and active
+- [x] All queries automatically scoped to current organization
+- [x] Cross-tenant data access prevented
+- [x] Tenant context extracted from request headers
+- [x] Integration tests verify tenant isolation
+- [x] Unauthorized access attempts blocked
 
 ## Testing Requirements
 
