@@ -19,7 +19,89 @@ This repository is intended to serve as a **portfolio-quality engineering projec
 
 ---
 
-# 2. Project Objectives
+# 2. AWS Account Architecture
+
+This project utilizes a **multi-account AWS architecture** following AWS best practices for security, isolation, and cost management.
+
+## AWS Organization Structure
+
+**Organization ID**: `o-l3zk5a91yj`  
+**Root Account**: `072456928432`  
+**Management Account ARN**: `arn:aws:organizations::072456928432:root/o-l3zk5a91yj/r-gs6r`
+
+## AWS Accounts
+
+| Account Name | Account ID | Email | Purpose |
+|--------------|------------|-------|---------|
+| **root** | 072456928432 | aws@turafapp.com | Management account for AWS Organizations |
+| **Ops** | 146072879609 | aws-ops@turafapp.com | DevOps tooling, CI/CD infrastructure, centralized logging |
+| **dev** | 801651112319 | aws-dev@turafapp.com | Development environment for feature development |
+| **qa** | 965932217544 | aws-qa@turafapp.com | QA/Staging environment for integration testing |
+| **prod** | 811783768245 | aws-prod@turafapp.com | Production environment for live workloads |
+
+## Account Isolation Strategy
+
+**Security Boundaries**:
+- Each environment runs in a separate AWS account
+- Network isolation via separate VPCs per account
+- IAM policies scoped to account boundaries
+- Blast radius limitation for security incidents
+
+**Cross-Account Access**:
+- GitHub Actions OIDC roles per account
+- Cross-account ECR image sharing (optional)
+- Centralized logging aggregation in Ops account
+- CloudTrail logs aggregated to root account
+
+**Cost Management**:
+- Cost allocation tags per account
+- Separate billing for each environment
+- Budget alerts configured per account
+- Resource tagging enforced via SCPs
+
+For detailed account information, see [AWS_ACCOUNTS.md](AWS_ACCOUNTS.md).
+
+---
+
+# 3. GitHub Repository
+
+**Repository URL**: https://github.com/ryanwaite28/ai-projects-turaf  
+**Repository Owner**: ryanwaite28  
+**Repository Name**: ai-projects-turaf  
+**Repository Type**: Monorepo
+
+## Repository Structure
+
+The project follows a monorepo architecture containing all services, infrastructure, and documentation:
+
+```
+ai-projects-turaf/
+├── services/               # Backend microservices (Spring Boot)
+├── frontend/               # Angular web application
+├── infrastructure/         # Terraform infrastructure as code
+├── libs/                   # Shared libraries and domain models
+├── .github/workflows/      # GitHub Actions CI/CD pipelines
+├── docs/                   # Architecture documentation
+├── specs/                  # Technical specifications
+└── tasks/                  # Implementation task breakdown
+```
+
+## Branch Strategy
+
+- **main** - Production-ready code, deploys to PROD account (811783768245)
+- **develop** - Development branch, deploys to DEV account (801651112319)
+- **release/*** - Release candidates, deploy to QA account (965932217544)
+- **feature/*** - Feature development, CI validation only
+
+## CI/CD Integration
+
+All CI/CD pipelines use **GitHub Actions** with **AWS OIDC authentication** for secure, credential-free deployments to AWS accounts.
+
+For detailed GitHub configuration and DevOps practices, see [GITHUB.md](GITHUB.md).
+
+---
+
+# 4. Project Objectives
 
 The objective of this project is to build a **multi-tenant SaaS experimentation platform** that allows organizations to:
 
@@ -1624,13 +1706,16 @@ No additional specification documents should be required to begin development.
 
 This project must demonstrate **production-grade DevOps practices** consistent with modern cloud-native engineering teams.
 
-The platform will be deployed on **AWS** and must support automated CI/CD, infrastructure as code, secure credential management, and multi-environment deployments.
+The platform will be deployed on **AWS** using a **multi-account architecture** and must support automated CI/CD, infrastructure as code, secure credential management, and multi-environment deployments.
+
+**GitHub Repository**: https://github.com/ryanwaite28/ai-projects-turaf  
+**CI/CD Platform**: GitHub Actions with AWS OIDC authentication
 
 ---
 
 ## Deployment Platform
 
-All infrastructure and runtime environments will be deployed on AWS.
+All infrastructure and runtime environments will be deployed on AWS across multiple accounts for security isolation.
 
 Primary platform services include:
 
@@ -1664,36 +1749,65 @@ Monitoring
 
 # 48. Environment Strategy
 
-The platform must support multiple deployment environments.
+The platform must support multiple deployment environments, each deployed to a separate AWS account for maximum isolation.
 
-Environments include:
+## Environment-to-Account Mapping
 
-DEV
-QA
-PROD
+| Environment | AWS Account ID | Account Name | Branch Mapping | Purpose |
+|-------------|---------------|--------------|----------------|---------|
+| **DEV** | 801651112319 | dev | `develop` | Feature development and testing |
+| **QA** | 965932217544 | qa | `release/*` | Integration testing and staging |
+| **PROD** | 811783768245 | prod | `main` | Production workloads |
+| **Ops** | 146072879609 | Ops | N/A | DevOps tooling and CI/CD infrastructure |
 
-Each environment should be fully isolated using separate infrastructure stacks.
+## Environment Characteristics
 
-Example environment architecture:
+**DEV (Account: 801651112319)**:
+- Used by engineers for feature development and testing
+- Automatic deployment on push to `develop` branch
+- Smaller instance sizes for cost optimization
+- Single-AZ deployments acceptable
+- Fargate Spot instances enabled
 
-DEV
+**QA (Account: 965932217544)**:
+- Used for integration testing and staging validation
+- Automatic deployment on push to `release/*` branches
+- Production-like configuration
+- Multi-AZ for high availability testing
+- Integration and E2E test execution
 
-Used by engineers for feature development and testing.
+**PROD (Account: 811783768245)**:
+- Production environment used by real users
+- Manual deployment with approval gates
+- Multi-AZ for high availability
+- Auto-scaling enabled
+- Enhanced monitoring and alerting
 
-QA
+**Ops (Account: 146072879609)**:
+- Centralized DevOps tooling
+- CI/CD pipeline infrastructure
+- Centralized logging and monitoring aggregation
+- Cross-account IAM roles for deployments
 
-Used for integration testing and staging validation.
+## Environment Isolation Strategies
 
-PROD
+**Account-Level Isolation**:
+- Separate AWS accounts per environment
+- Dedicated VPCs per account
+- Account-specific IAM policies
+- Separate billing and cost tracking
 
-Production environment used by real users.
+**Infrastructure Isolation**:
+- Separate Terraform state per environment
+- Environment-specific infrastructure stacks
+- Isolated databases and storage
+- Separate secrets in AWS Secrets Manager
 
-Environment isolation strategies:
-
-- separate infrastructure stacks
-- environment specific configuration
-- separate databases
-- separate secrets
+**Network Isolation**:
+- No VPC peering between environments
+- API Gateway endpoints per environment
+- Separate CloudFront distributions
+- Environment-specific DNS records
 
 ---
 

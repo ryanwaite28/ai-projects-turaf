@@ -9,9 +9,29 @@ This specification defines the complete CI/CD pipeline architecture using GitHub
 ## Pipeline Overview
 
 **CI/CD Platform**: GitHub Actions  
+**GitHub Repository**: https://github.com/ryanwaite28/ai-projects-turaf  
 **Workflow Location**: `.github/workflows/`  
 **Environments**: DEV, QA, PROD  
 **AWS Authentication**: OIDC Federation  
+
+---
+
+## AWS Account Mapping
+
+All deployments target specific AWS accounts based on the environment:
+
+| Environment | AWS Account ID | Account Name | GitHub Branch | Deployment Trigger |
+|-------------|---------------|--------------|---------------|-------------------|
+| **DEV** | 801651112319 | dev | `develop` | Automatic on push |
+| **QA** | 965932217544 | qa | `release/*` | Automatic on push |
+| **PROD** | 811783768245 | prod | `main` | Manual with approval |
+| **Ops** | 146072879609 | Ops | N/A | Infrastructure tooling |
+
+**IAM Roles for GitHub Actions**:
+- DEV: `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
+- QA: `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
+- PROD: `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
+- Ops: `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
 
 ---
 
@@ -874,12 +894,21 @@ apply-prod:
 
 ### GitHub OIDC Provider
 
-**AWS Console Setup**:
-1. Create OIDC provider
-2. Provider URL: `https://token.actions.githubusercontent.com`
-3. Audience: `sts.amazonaws.com`
+**AWS Console Setup** (Required in each AWS account):
 
-### IAM Role for GitHub Actions
+The OIDC provider must be created in each AWS account (DEV, QA, PROD, Ops):
+
+1. Navigate to IAM → Identity providers → Add provider
+2. Provider type: OpenID Connect
+3. Provider URL: `https://token.actions.githubusercontent.com`
+4. Audience: `sts.amazonaws.com`
+5. Thumbprint: `6938fd4d98bab03faadb97b34396831e3780aea1`
+
+### IAM Roles per AWS Account
+
+**DEV Account (801651112319)**:
+
+Role Name: `GitHubActionsRole-Dev`
 
 **Trust Policy**:
 ```json
@@ -889,7 +918,7 @@ apply-prod:
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+        "Federated": "arn:aws:iam::801651112319:oidc-provider/token.actions.githubusercontent.com"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
@@ -897,7 +926,7 @@ apply-prod:
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
         },
         "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:OWNER/REPO:*"
+          "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:ref:refs/heads/develop"
         }
       }
     }
@@ -905,26 +934,157 @@ apply-prod:
 }
 ```
 
-**Permissions Policy**:
-- ECR: Push/pull images
-- ECS: Update services
-- Lambda: Update function code
-- S3: Upload to buckets
-- CloudFront: Create invalidations
-- Terraform: Full infrastructure management
+**QA Account (965932217544)**:
+
+Role Name: `GitHubActionsRole-QA`
+
+**Trust Policy**:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::965932217544:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:ref:refs/heads/release/*"
+        }
+      }
+    }
+  ]
+}
+```
+
+**PROD Account (811783768245)**:
+
+Role Name: `GitHubActionsRole-Prod`
+
+**Trust Policy**:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::811783768245:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:ref:refs/heads/main"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Ops Account (146072879609)**:
+
+Role Name: `GitHubActionsRole-Ops`
+
+**Trust Policy** (allows all branches for cross-account tooling):
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::146072879609:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:*"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Permissions Policy (All Accounts)
+
+**Managed Policies**:
+- `AmazonEC2ContainerRegistryPowerUser` - ECR push/pull
+- `AmazonECS_FullAccess` - ECS service updates
+- Custom policy for Lambda, S3, CloudFront, Terraform
+
+**Custom Policy Example**:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction",
+        "lambda:PublishVersion"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:turaf-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::turaf-*",
+        "arn:aws:s3:::turaf-*/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 ---
 
 ## GitHub Secrets
 
-**Required Secrets**:
-- `AWS_ACCOUNT_ID`: AWS account ID
-- `SONAR_TOKEN`: SonarQube token
+**Repository Secrets**:
+- `SONAR_TOKEN`: SonarQube authentication token
 - `SONAR_HOST_URL`: SonarQube server URL
-- `SLACK_WEBHOOK_URL`: Slack notifications
-- `CLOUDFRONT_DISTRIBUTION_ID_DEV`: CloudFront distribution ID
-- `CLOUDFRONT_DISTRIBUTION_ID_QA`: CloudFront distribution ID
-- `CLOUDFRONT_DISTRIBUTION_ID_PROD`: CloudFront distribution ID
+- `SLACK_WEBHOOK_URL`: Slack notifications webhook
+
+**Environment Secrets** (per environment: dev-environment, qa-environment, prod-environment):
+
+**DEV Environment**:
+- `AWS_ACCOUNT_ID`: `801651112319`
+- `CLOUDFRONT_DISTRIBUTION_ID`: CloudFront distribution ID for DEV
+
+**QA Environment**:
+- `AWS_ACCOUNT_ID`: `965932217544`
+- `CLOUDFRONT_DISTRIBUTION_ID`: CloudFront distribution ID for QA
+
+**PROD Environment**:
+- `AWS_ACCOUNT_ID`: `811783768245`
+- `CLOUDFRONT_DISTRIBUTION_ID`: CloudFront distribution ID for PROD
 
 ---
 

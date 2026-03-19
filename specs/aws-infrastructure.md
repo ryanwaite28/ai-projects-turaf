@@ -11,7 +11,53 @@ This specification defines the complete AWS infrastructure for the Turaf platfor
 **Cloud Provider**: Amazon Web Services (AWS)  
 **Infrastructure as Code**: Terraform  
 **Deployment Regions**: us-east-1 (primary)  
-**Environments**: DEV, QA, PROD  
+**Architecture**: Multi-Account AWS Organization  
+**GitHub Repository**: https://github.com/ryanwaite28/ai-projects-turaf  
+
+---
+
+## AWS Organization Structure
+
+**Organization ID**: `o-l3zk5a91yj`  
+**Root Account**: `072456928432`  
+**Management Account ARN**: `arn:aws:organizations::072456928432:root/o-l3zk5a91yj/r-gs6r`
+
+### Member Accounts
+
+| Account Name | Account ID | Email | ARN | Purpose |
+|--------------|------------|-------|-----|---------|
+| **root** | 072456928432 | aws@turafapp.com | `arn:aws:organizations::072456928432:account/o-l3zk5a91yj/072456928432` | Management account |
+| **Ops** | 146072879609 | aws-ops@turafapp.com | `arn:aws:organizations::072456928432:account/o-l3zk5a91yj/146072879609` | DevOps tooling |
+| **dev** | 801651112319 | aws-dev@turafapp.com | `arn:aws:organizations::072456928432:account/o-l3zk5a91yj/801651112319` | Development environment |
+| **qa** | 965932217544 | aws-qa@turafapp.com | `arn:aws:organizations::072456928432:account/o-l3zk5a91yj/965932217544` | QA/Staging environment |
+| **prod** | 811783768245 | aws-prod@turafapp.com | `arn:aws:organizations::072456928432:account/o-l3zk5a91yj/811783768245` | Production environment |
+
+### Account-Level Security Controls
+
+**Service Control Policies (SCPs)**:
+- Prevent deletion of CloudTrail logs
+- Enforce encryption at rest for all storage
+- Restrict resource creation to specific regions (us-east-1)
+- Require MFA for sensitive operations
+- Block public S3 bucket access by default
+
+**Cross-Account IAM Roles**:
+- GitHub Actions OIDC roles per account
+- Cross-account logging role (all accounts → Ops account)
+- Cross-account audit role (all accounts → root account)
+
+---
+
+## Environment Deployment Strategy
+
+Each environment is deployed to a dedicated AWS account:
+
+| Environment | AWS Account | Infrastructure Scope |
+|-------------|-------------|---------------------|
+| **DEV** | 801651112319 | Single-AZ, cost-optimized, Fargate Spot |
+| **QA** | 965932217544 | Multi-AZ, production-like configuration |
+| **PROD** | 811783768245 | Multi-AZ, auto-scaling, enhanced monitoring |
+| **Ops** | 146072879609 | Centralized tooling, logging aggregation |
 
 ---
 

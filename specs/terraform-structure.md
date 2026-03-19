@@ -11,7 +11,19 @@ This specification defines the Terraform module organization and structure for i
 **IaC Tool**: Terraform  
 **Provider**: AWS  
 **State Backend**: S3 with DynamoDB locking  
-**Workspaces**: One per environment (dev, qa, prod)  
+**Architecture**: Multi-Account AWS Organization  
+**GitHub Repository**: https://github.com/ryanwaite28/ai-projects-turaf  
+
+### AWS Account Mapping
+
+| Environment | AWS Account ID | State Bucket | State Key Prefix |
+|-------------|---------------|--------------|------------------|
+| **DEV** | 801651112319 | `turaf-terraform-state-dev` | `dev/` |
+| **QA** | 965932217544 | `turaf-terraform-state-qa` | `qa/` |
+| **PROD** | 811783768245 | `turaf-terraform-state-prod` | `prod/` |
+| **Ops** | 146072879609 | `turaf-terraform-state-ops` | `ops/` |
+
+**Note**: Each AWS account has its own S3 bucket for Terraform state to maintain account isolation.
 
 ---
 
@@ -706,38 +718,75 @@ ecs_services = {
 
 ### Backend Configuration
 
-**File**: `backend.tf`
+Each environment has its own backend configuration in the respective AWS account.
+
+**DEV Environment** (`environments/dev/backend.tf`):
 
 ```hcl
 terraform {
   backend "s3" {
-    bucket         = "turaf-terraform-state"
-    key            = "infrastructure/terraform.tfstate"
+    bucket         = "turaf-terraform-state-dev"
+    key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "turaf-terraform-locks"
-    kms_key_id     = "arn:aws:kms:us-east-1:ACCOUNT_ID:key/KEY_ID"
+    dynamodb_table = "turaf-terraform-locks-dev"
+    kms_key_id     = "arn:aws:kms:us-east-1:801651112319:key/KEY_ID"
+  }
+}
+```
+
+**QA Environment** (`environments/qa/backend.tf`):
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "turaf-terraform-state-qa"
+    key            = "qa/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "turaf-terraform-locks-qa"
+    kms_key_id     = "arn:aws:kms:us-east-1:965932217544:key/KEY_ID"
+  }
+}
+```
+
+**PROD Environment** (`environments/prod/backend.tf`):
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "turaf-terraform-state-prod"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "turaf-terraform-locks-prod"
+    kms_key_id     = "arn:aws:kms:us-east-1:811783768245:key/KEY_ID"
   }
 }
 ```
 
 ### State Bucket Setup
 
-**Manual Setup** (one-time):
+**Manual Setup** (one-time per AWS account):
+
+**DEV Account (801651112319)**:
 ```bash
+# Assume role or configure credentials for DEV account
+export AWS_PROFILE=turaf-dev
+
 # Create S3 bucket for state
 aws s3api create-bucket \
-  --bucket turaf-terraform-state \
+  --bucket turaf-terraform-state-dev \
   --region us-east-1
 
 # Enable versioning
 aws s3api put-bucket-versioning \
-  --bucket turaf-terraform-state \
+  --bucket turaf-terraform-state-dev \
   --versioning-configuration Status=Enabled
 
 # Enable encryption
 aws s3api put-bucket-encryption \
-  --bucket turaf-terraform-state \
+  --bucket turaf-terraform-state-dev \
   --server-side-encryption-configuration '{
     "Rules": [{
       "ApplyServerSideEncryptionByDefault": {
@@ -746,13 +795,21 @@ aws s3api put-bucket-encryption \
     }]
   }'
 
+# Block public access
+aws s3api put-public-access-block \
+  --bucket turaf-terraform-state-dev \
+  --public-access-block-configuration \
+    "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
 # Create DynamoDB table for locking
 aws dynamodb create-table \
-  --table-name turaf-terraform-locks \
+  --table-name turaf-terraform-locks-dev \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST
 ```
+
+**Repeat for QA (965932217544) and PROD (811783768245) accounts** with respective bucket names and table names.
 
 ---
 
