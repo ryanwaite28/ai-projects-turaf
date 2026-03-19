@@ -15,77 +15,142 @@ Implement EventBridge event publishing for ReportGenerated events.
 ## Scope
 
 **Files to Create**:
-- `services/reporting-service/src/main/java/com/turaf/reporting/event/EventPublisher.java`
-- `services/reporting-service/src/main/java/com/turaf/reporting/event/ReportGeneratedEvent.java`
+- `services/reporting-service/src/events/event_publisher.py`
+- `services/reporting-service/src/models/events.py`
 
 ## Implementation Details
 
 ### Event Publisher
 
-```java
-public class EventPublisher {
-    private final EventBridgeClient eventBridgeClient;
-    private final String eventBusName;
+```python
+import boto3
+import json
+import os
+import logging
+import uuid
+from datetime import datetime
+from typing import Dict, Any
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger(__name__)
+
+class EventPublisher:
+    """Publisher for EventBridge events"""
     
-    public EventPublisher() {
-        this.eventBridgeClient = EventBridgeClient.builder()
-            .region(Region.US_EAST_1)
-            .build();
-        this.eventBusName = System.getenv("EVENT_BUS_NAME");
-    }
+    def __init__(self):
+        self.eventbridge_client = boto3.client('events')
+        self.event_bus_name = os.environ.get('EVENT_BUS_NAME', 'turaf-event-bus-dev')
+        
+        logger.info(f"Event publisher initialized with bus: {self.event_bus_name}")
     
-    public void publishReportGenerated(String organizationId, String experimentId, String reportUrl) {
-        ReportGeneratedEvent event = new ReportGeneratedEvent(
-            UUID.randomUUID().toString(),
-            organizationId,
-            experimentId,
-            reportUrl,
-            Instant.now()
-        );
+    def publish_report_generated(self, organization_id: str, experiment_id: str, 
+                                report_id: str, report_location: str):
+        """
+        Publish ReportGenerated event to EventBridge.
         
-        String eventJson = serializeEvent(event);
-        
-        PutEventsRequestEntry entry = PutEventsRequestEntry.builder()
-            .eventBusName(eventBusName)
-            .source("turaf.reporting-service")
-            .detailType("ReportGenerated")
-            .detail(eventJson)
-            .build();
-        
-        PutEventsRequest request = PutEventsRequest.builder()
-            .entries(entry)
-            .build();
-        
-        eventBridgeClient.putEvents(request);
-    }
+        Args:
+            organization_id: Organization identifier
+            experiment_id: Experiment identifier
+            report_id: Generated report identifier
+            report_location: S3 location of report
+        """
+        try:
+            # Create event payload
+            event_payload = {
+                'reportId': report_id,
+                'experimentId': experiment_id,
+                'reportLocation': report_location,
+                'reportFormat': 'PDF',
+                'generatedAt': datetime.utcnow().isoformat()
+            }
+            
+            # Create event envelope
+            event = {
+                'eventId': str(uuid.uuid4()),
+                'eventType': 'ReportGenerated',
+                'eventVersion': 1,
+                'timestamp': datetime.utcnow().isoformat(),
+                'sourceService': 'reporting-service',
+                'organizationId': organization_id,
+                'payload': event_payload
+            }
+            
+            # Publish to EventBridge
+            response = self.eventbridge_client.put_events(
+                Entries=[
+                    {
+                        'EventBusName': self.event_bus_name,
+                        'Source': 'turaf.reporting-service',
+                        'DetailType': 'ReportGenerated',
+                        'Detail': json.dumps(event)
+                    }
+                ]
+            )
+            
+            # Check for failures
+            if response.get('FailedEntryCount', 0) > 0:
+                failed_entries = response.get('Entries', [])
+                logger.error(f"Failed to publish event: {failed_entries}")
+                raise Exception(f"Event publishing failed: {failed_entries}")
+            
+            logger.info(f"Published ReportGenerated event for experiment {experiment_id}")
+            
+        except ClientError as e:
+            logger.error(f"Failed to publish event: {str(e)}")
+            raise Exception(f"Event publishing failed: {str(e)}")
+```
+
+### Event Models
+
+```python
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Optional
+import json
+
+@dataclass
+class ReportGeneratedEvent:
+    """Model for ReportGenerated event"""
+    event_id: str
+    organization_id: str
+    experiment_id: str
+    report_id: str
+    report_location: str
+    report_format: str
+    generated_at: datetime
     
-    private String serializeEvent(ReportGeneratedEvent event) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(event);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize event", e);
-        }
-    }
-}
+    def to_dict(self) -> dict:
+        """Convert event to dictionary"""
+        data = asdict(self)
+        data['generated_at'] = self.generated_at.isoformat()
+        return data
+    
+    def to_json(self) -> str:
+        """Convert event to JSON string"""
+        return json.dumps(self.to_dict())
 ```
 
 ## Acceptance Criteria
 
-- [ ] Event publisher implemented
-- [ ] ReportGenerated events published
-- [ ] Event structure correct
-- [ ] Error handling implemented
-- [ ] Unit tests pass
+- [x] Event publisher implemented
+- [x] ReportGenerated events published
+- [x] Event structure correct (envelope + payload)
+- [x] Event source set to "turaf.reporting-service"
+- [x] Failed entry count checked
+- [x] Error handling implemented
+- [x] Unit tests pass
 
 ## Testing Requirements
 
 **Unit Tests**:
-- Test event publishing
+- Test event publishing success
 - Test event serialization
+- Test failed entry handling
+- Test event structure
+- Use moto for EventBridge mocking
 
 **Test Files to Create**:
-- `EventPublisherTest.java`
+- `tests/test_event_publisher.py`
 
 ## References
 

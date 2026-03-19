@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Report - {{ experiment.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 40px;
+            background-color: #fff;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #34495e;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        .report-meta {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+            page-break-inside: avoid;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .metric {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+        
+        .trend-stable {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .trend-increasing {
+            color: #e67e22;
+            font-weight: 600;
+        }
+        
+        .trend-decreasing {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        li {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-left: 3px solid #3498db;
+            border-radius: 3px;
+        }
+        
+        li:before {
+            content: "✓ ";
+            color: #3498db;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        
+        @media print {
+            body {
+                margin: 20px;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Experiment Report</h1>
+        <div class="report-meta">
+            Generated on {{ experiment.completedAt }}
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Problem Statement</h2>
+        <div class="info-grid">
+            <div class="info-label">Title:</div>
+            <div class="info-value">{{ problem.title }}</div>
+            
+            <div class="info-label">Description:</div>
+            <div class="info-value">{{ problem.description }}</div>
+            
+            {% if problem.context %}
+            <div class="info-label">Context:</div>
+            <div class="info-value">{{ problem.context }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Hypothesis</h2>
+        <div class="info-grid">
+            <div class="info-label">Statement:</div>
+            <div class="info-value">{{ hypothesis.statement }}</div>
+            
+            {% if hypothesis.expectedOutcome %}
+            <div class="info-label">Expected Outcome:</div>
+            <div class="info-value">{{ hypothesis.expectedOutcome }}</div>
+            {% endif %}
+            
+            {% if hypothesis.criteria %}
+            <div class="info-label">Success Criteria:</div>
+            <div class="info-value">{{ hypothesis.criteria }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Experiment Details</h2>
+        <div class="info-grid">
+            {% if experiment.name %}
+            <div class="info-label">Name:</div>
+            <div class="info-value">{{ experiment.name }}</div>
+            {% endif %}
+            
+            <div class="info-label">Duration:</div>
+            <div class="info-value">{{ duration }}</div>
+            
+            <div class="info-label">Started:</div>
+            <div class="info-value">{{ experiment.startedAt }}</div>
+            
+            <div class="info-label">Completed:</div>
+            <div class="info-value">{{ experiment.completedAt }}</div>
+            
+            {% if experiment.status %}
+            <div class="info-label">Status:</div>
+            <div class="info-value">{{ experiment.status }}</div>
+            {% endif %}
+            
+            {% if experiment.result %}
+            <div class="info-label">Result:</div>
+            <div class="info-value">{{ experiment.result }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if metricSummaries %}
+    <div class="section">
+        <h2>Metrics Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric Name</th>
+                    <th>Count</th>
+                    <th>Average</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Range</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in metricSummaries.values() %}
+                <tr>
+                    <td>{{ summary.name }}</td>
+                    <td>{{ summary.count }}</td>
+                    <td>{{ "%.2f"|format(summary.average) }}</td>
+                    <td>{{ "%.2f"|format(summary.min_value) }}</td>
+                    <td>{{ "%.2f"|format(summary.max_value) }}</td>
+                    <td>{{ "%.2f"|format(summary.max_value - summary.min_value) }}</td>
+                    <td class="trend-{{ summary.trend|lower }}">{{ summary.trend }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    {% if insights %}
+    <div class="section">
+        <h2>Key Insights</h2>
+        <ul>
+            {% for insight in insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>This report was automatically generated by the Turaf Experimentation Platform</p>
+        <p>Experiment ID: {{ experiment.id }}</p>
+    </div>
+</body>
+</html>

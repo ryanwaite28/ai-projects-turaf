@@ -6,102 +6,119 @@
 
 ## Objective
 
-Setup AWS Lambda project structure for the Reporting Service using Java and Maven.
+Setup AWS Lambda project structure for the Reporting Service using Python 3.11.
 
 ## Prerequisites
 
 - [x] Task 001: Clean Architecture layers established
-- [x] AWS Lambda Java runtime knowledge
+- [x] AWS Lambda Python runtime knowledge
 
 ## Scope
 
 **Files to Create**:
-- `services/reporting-service/pom.xml`
-- `services/reporting-service/src/main/java/com/turaf/reporting/ReportingHandler.java`
-- `services/reporting-service/src/main/resources/application.properties`
+- `services/reporting-service/requirements.txt`
+- `services/reporting-service/requirements-dev.txt`
+- `services/reporting-service/src/lambda_handler.py`
+- `services/reporting-service/src/__init__.py`
 
 ## Implementation Details
 
-### Maven POM
+### Python Dependencies (requirements.txt)
 
-```xml
-<project>
-    <artifactId>reporting-service</artifactId>
-    <packaging>jar</packaging>
-    
-    <dependencies>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-            <version>3.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>itext7-core</artifactId>
-            <version>7.2.5</version>
-        </dependency>
-    </dependencies>
-    
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <configuration>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</project>
+```txt
+boto3>=1.28.0
+jinja2>=3.1.0
+weasyprint>=59.0
+requests>=2.31.0
+python-json-logger>=2.0.0
+tenacity>=8.2.0
+```
+
+### Development Dependencies (requirements-dev.txt)
+
+```txt
+pytest>=7.4.0
+pytest-mock>=3.11.0
+pytest-cov>=4.1.0
+moto>=4.2.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
 ```
 
 ### Lambda Handler
 
-```java
-public class ReportingHandler implements RequestHandler<EventBridgeEvent, Void> {
+```python
+import json
+import logging
+from typing import Dict, Any
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """
+    Main Lambda handler for EventBridge events.
     
-    @Override
-    public Void handleRequest(EventBridgeEvent event, Context context) {
-        context.getLogger().log("Received event: " + event);
-        return null;
-    }
-}
+    Args:
+        event: EventBridge event payload
+        context: Lambda context object
+        
+    Returns:
+        Response dictionary with statusCode and body
+    """
+    logger.info(f"Received event: {json.dumps(event)}")
+    
+    try:
+        # Event processing will be implemented in subsequent tasks
+        event_id = event.get('id')
+        detail_type = event.get('detail-type')
+        
+        logger.info(f"Processing event {event_id} of type {detail_type}")
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Event received successfully'})
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing event: {str(e)}", exc_info=True)
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+```
+
+### Project Structure
+
+```
+services/reporting-service/
+├── requirements.txt
+├── requirements-dev.txt
+├── src/
+│   ├── __init__.py
+│   └── lambda_handler.py
+└── tests/
+    └── __init__.py
 ```
 
 ## Acceptance Criteria
 
-- [ ] Maven project configured
-- [ ] Lambda dependencies added
-- [ ] Shade plugin configured
-- [ ] Handler class created
-- [ ] Project builds successfully
+- [x] Python dependencies configured
+- [x] Lambda handler created
+- [x] Project structure established
+- [x] Handler logs events correctly
+- [x] Basic error handling implemented
 
 ## Testing Requirements
 
 **Unit Tests**:
 - Test handler initialization
+- Test event logging
+- Test error handling
 
 **Test Files to Create**:
-- `ReportingHandlerTest.java`
+- `tests/test_lambda_handler.py`
 
 ## References
 

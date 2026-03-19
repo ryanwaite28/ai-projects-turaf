@@ -15,8 +15,8 @@ Create HTML templates for experiment reports that will be converted to PDF.
 ## Scope
 
 **Files to Create**:
-- `services/reporting-service/src/main/resources/templates/experiment-report.html`
-- `services/reporting-service/src/main/java/com/turaf/reporting/template/TemplateEngine.java`
+- `services/reporting-service/src/templates/experiment-report.html`
+- `services/reporting-service/src/services/template_engine.py`
 
 ## Implementation Details
 
@@ -72,25 +72,25 @@ Create HTML templates for experiment reports that will be converted to PDF.
                 <th>Max</th>
                 <th>Trend</th>
             </tr>
-            {{#each metricSummaries}}
+            {% for summary in metricSummaries.values() %}
             <tr>
-                <td>{{this.name}}</td>
-                <td>{{this.count}}</td>
-                <td>{{this.average}}</td>
-                <td>{{this.min}}</td>
-                <td>{{this.max}}</td>
-                <td>{{this.trend}}</td>
+                <td>{{ summary.name }}</td>
+                <td>{{ summary.count }}</td>
+                <td>{{ "%.2f"|format(summary.average) }}</td>
+                <td>{{ "%.2f"|format(summary.min_value) }}</td>
+                <td>{{ "%.2f"|format(summary.max_value) }}</td>
+                <td>{{ summary.trend }}</td>
             </tr>
-            {{/each}}
+            {% endfor %}
         </table>
     </div>
     
     <div class="section">
         <h2>Key Insights</h2>
         <ul>
-            {{#each insights}}
-            <li>{{this}}</li>
-            {{/each}}
+            {% for insight in insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
         </ul>
     </div>
 </body>
@@ -99,52 +99,82 @@ Create HTML templates for experiment reports that will be converted to PDF.
 
 ### Template Engine
 
-```java
-public class TemplateEngine {
-    private final Handlebars handlebars;
+```python
+import os
+import logging
+from typing import Dict, Any
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from models.aggregated_data import AggregatedReportData
+
+logger = logging.getLogger(__name__)
+
+class TemplateEngine:
+    """Engine for rendering report templates using Jinja2"""
     
-    public TemplateEngine() {
-        this.handlebars = new Handlebars();
-    }
-    
-    public String renderReport(AggregatedReportData data) throws IOException {
-        Template template = handlebars.compile("templates/experiment-report");
+    def __init__(self, template_dir: str = None):
+        """
+        Initialize template engine.
         
-        Map<String, Object> context = new HashMap<>();
-        context.put("problem", data.getProblem());
-        context.put("hypothesis", data.getHypothesis());
-        context.put("experiment", data.getExperiment());
-        context.put("duration", formatDuration(data.getDuration()));
-        context.put("metricSummaries", data.getMetricSummaries().values());
-        context.put("insights", data.getInsights());
+        Args:
+            template_dir: Directory containing templates (defaults to src/templates)
+        """
+        if template_dir is None:
+            # Default to templates directory relative to this file
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            template_dir = os.path.join(os.path.dirname(current_dir), 'templates')
         
-        return template.apply(context);
-    }
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        
+        logger.info(f"Template engine initialized with directory: {template_dir}")
     
-    private String formatDuration(Duration duration) {
-        long hours = duration.toHours();
-        long minutes = duration.toMinutesPart();
-        return String.format("%d hours, %d minutes", hours, minutes);
-    }
-}
+    def render_report(self, data: AggregatedReportData) -> str:
+        """
+        Render experiment report from template.
+        
+        Args:
+            data: Aggregated report data
+            
+        Returns:
+            Rendered HTML string
+        """
+        template = self.env.get_template('experiment-report.html')
+        
+        context = {
+            'problem': data.problem,
+            'hypothesis': data.hypothesis,
+            'experiment': data.experiment,
+            'duration': data.get_duration_string(),
+            'metricSummaries': data.metric_summaries,
+            'insights': data.insights
+        }
+        
+        logger.info(f"Rendering report for experiment {data.experiment.get('id')}")
+        
+        return template.render(**context)
 ```
 
 ## Acceptance Criteria
 
-- [ ] HTML template created
-- [ ] Template engine renders correctly
-- [ ] All data fields populated
-- [ ] Styling applied
-- [ ] Unit tests pass
+- [x] HTML template created with Jinja2 syntax
+- [x] Template engine renders correctly
+- [x] All data fields populated
+- [x] Styling applied
+- [x] Jinja2 filters used for formatting
+- [x] Unit tests pass
 
 ## Testing Requirements
 
 **Unit Tests**:
 - Test template rendering
 - Test data binding
+- Test template context
+- Test missing data handling
 
 **Test Files to Create**:
-- `TemplateEngineTest.java`
+- `tests/test_template_engine.py`
 
 ## References
 

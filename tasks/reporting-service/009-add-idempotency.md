@@ -15,71 +15,120 @@ Implement idempotency tracking using DynamoDB to prevent duplicate report genera
 ## Scope
 
 **Files to Create**:
-- `services/reporting-service/src/main/java/com/turaf/reporting/service/IdempotencyService.java`
+- `services/reporting-service/src/services/idempotency.py`
 
 ## Implementation Details
 
 ### Idempotency Service
 
-```java
-public class IdempotencyService {
-    private final DynamoDbClient dynamoDbClient;
-    private final String tableName;
+```python
+import boto3
+import os
+import logging
+from datetime import datetime, timedelta
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+class IdempotencyService:
+    """Service for tracking processed events to prevent duplicates"""
     
-    public IdempotencyService() {
-        this.dynamoDbClient = DynamoDbClient.builder()
-            .region(Region.US_EAST_1)
-            .build();
-        this.tableName = System.getenv("IDEMPOTENCY_TABLE_NAME");
-    }
+    def __init__(self):
+        self.dynamodb = boto3.resource('dynamodb')
+        self.table_name = os.environ.get('IDEMPOTENCY_TABLE_NAME', 'processed_events')
+        self.table = self.dynamodb.Table(self.table_name)
     
-    public boolean isProcessed(String eventId) {
-        GetItemRequest request = GetItemRequest.builder()
-            .tableName(tableName)
-            .key(Map.of("eventId", AttributeValue.builder().s(eventId).build()))
-            .build();
+    def is_processed(self, event_id: str) -> bool:
+        """
+        Check if event has already been processed.
         
-        GetItemResponse response = dynamoDbClient.getItem(request);
-        return response.hasItem();
-    }
+        Args:
+            event_id: Unique event identifier
+            
+        Returns:
+            True if event was already processed, False otherwise
+        """
+        try:
+            response = self.table.get_item(
+                Key={'eventId': event_id}
+            )
+            
+            exists = 'Item' in response
+            
+            if exists:
+                logger.info(f"Event {event_id} already processed")
+            
+            return exists
+            
+        except Exception as e:
+            logger.error(f"Error checking idempotency for {event_id}: {str(e)}")
+            # Fail open - allow processing if check fails
+            return False
     
-    public void markProcessed(String eventId) {
-        PutItemRequest request = PutItemRequest.builder()
-            .tableName(tableName)
-            .item(Map.of(
-                "eventId", AttributeValue.builder().s(eventId).build(),
-                "processedAt", AttributeValue.builder().s(Instant.now().toString()).build(),
-                "ttl", AttributeValue.builder().n(String.valueOf(getTtl())).build()
-            ))
-            .build();
+    def mark_processed(self, event_id: str, report_id: Optional[str] = None):
+        """
+        Mark event as processed in DynamoDB.
         
-        dynamoDbClient.putItem(request);
-    }
+        Args:
+            event_id: Unique event identifier
+            report_id: Optional report ID that was generated
+        """
+        try:
+            item = {
+                'eventId': event_id,
+                'processedAt': datetime.utcnow().isoformat(),
+                'ttl': self._calculate_ttl()
+            }
+            
+            if report_id:
+                item['reportId'] = report_id
+            
+            self.table.put_item(Item=item)
+            
+            logger.info(f"Marked event {event_id} as processed")
+            
+        except Exception as e:
+            logger.error(f"Error marking event {event_id} as processed: {str(e)}")
+            # Don't raise - idempotency tracking failure shouldn't block processing
     
-    private long getTtl() {
-        // 30 days from now
-        return Instant.now().plus(30, ChronoUnit.DAYS).getEpochSecond();
-    }
-}
+    def _calculate_ttl(self) -> int:
+        """
+        Calculate TTL for DynamoDB item (30 days from now).
+        
+        Returns:
+            Unix timestamp for TTL
+        """
+        ttl_date = datetime.utcnow() + timedelta(days=30)
+        return int(ttl_date.timestamp())
+```
+
+### Environment Configuration
+
+```python
+# Environment variables required:
+# IDEMPOTENCY_TABLE_NAME - DynamoDB table name for idempotency tracking
 ```
 
 ## Acceptance Criteria
 
-- [ ] Idempotency check works
-- [ ] Events marked as processed
-- [ ] TTL configured
-- [ ] Duplicate processing prevented
-- [ ] Unit tests pass
+- [x] Idempotency check works
+- [x] Events marked as processed
+- [x] TTL configured (30 days)
+- [x] Duplicate processing prevented
+- [x] Graceful error handling
+- [x] Unit tests pass
 
 ## Testing Requirements
 
 **Unit Tests**:
-- Test idempotency check
+- Test idempotency check (event exists)
+- Test idempotency check (event doesn't exist)
 - Test mark processed
 - Test TTL calculation
+- Test error handling
 
 **Test Files to Create**:
-- `IdempotencyServiceTest.java`
+- `tests/test_idempotency.py`
 
 ## References
 
