@@ -1,6 +1,6 @@
 package com.turaf.organization.domain;
 
-import com.turaf.organization.domain.common.Repository;
+import com.turaf.common.domain.Repository;
 
 import java.util.Optional;
 

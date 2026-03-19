@@ -1,0 +1,44 @@
+spring:
+  profiles:
+    active: integration-test
+
+cors:
+  allowed-origins: http://localhost:4200
+
+jwt:
+  secret-key: test-secret-key-that-is-long-enough-for-hmac-sha256-algorithm
+
+services:
+  identity:
+    base-url: http://localhost:8089
+  organization:
+    base-url: http://localhost:8089
+  experiment:
+    base-url: http://localhost:8089
+  metrics:
+    base-url: http://localhost:8089
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+  
+  ratelimiter:
+    instances:
+      default:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+      public:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1m
+
+logging:
+  level:
+    com.turaf.bff: DEBUG
+    com.github.tomakehurst.wiremock: WARN
+    org.springframework.web: INFO
+    org.springframework.security: INFO

@@ -188,15 +188,15 @@ public class TenantConfiguration {
 
 ## Acceptance Criteria
 
-- [ ] TenantContext stores organizationId and userId
-- [ ] TenantContextHolder provides thread-safe access to context
-- [ ] TenantFilter extracts tenant info from JWT and sets context
-- [ ] TenantInterceptor automatically sets organizationId on entities
-- [ ] TenantAware interface defined for entities
-- [ ] Context is cleared after each request
-- [ ] TenantException thrown when context is missing
-- [ ] All tests pass
-- [ ] Documentation explains multi-tenant strategy
+- [x] TenantContext stores organizationId and userId
+- [x] TenantContextHolder provides thread-safe access to context
+- [x] TenantFilter extracts tenant info from JWT and sets context
+- [x] TenantInterceptor automatically sets organizationId on entities
+- [x] TenantAware interface defined for entities
+- [x] Context is cleared after each request
+- [x] TenantException thrown when context is missing
+- [x] All tests pass
+- [x] Documentation explains multi-tenant strategy
 
 ## Testing Requirements
 

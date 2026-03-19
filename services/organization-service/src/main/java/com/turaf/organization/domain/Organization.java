@@ -1,6 +1,7 @@
 package com.turaf.organization.domain;
 
-import com.turaf.organization.domain.common.AggregateRoot;
+import com.turaf.common.domain.AggregateRoot;
+import com.turaf.common.tenant.TenantAware;
 import com.turaf.organization.domain.event.OrganizationCreated;
 import com.turaf.organization.domain.event.OrganizationUpdated;
 
@@ -13,8 +14,10 @@ import java.util.regex.Pattern;
  * Organization aggregate root.
  * Represents a multi-tenant organization in the system.
  * Enforces all business rules and invariants for organizations.
+ * 
+ * Note: Organization IS the tenant, so organizationId equals getId().getValue()
  */
-public class Organization extends AggregateRoot<OrganizationId> {
+public class Organization extends AggregateRoot<OrganizationId> implements TenantAware {
     
     private static final int MIN_NAME_LENGTH = 1;
     private static final int MAX_NAME_LENGTH = 100;
@@ -166,6 +169,31 @@ public class Organization extends AggregateRoot<OrganizationId> {
     
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+    
+    /**
+     * Gets the organization ID for tenant context.
+     * For Organization entity, this is the same as getId().getValue()
+     * since Organization IS the tenant.
+     *
+     * @return The organization ID
+     */
+    @Override
+    public String getOrganizationId() {
+        return getId().getValue();
+    }
+    
+    /**
+     * Sets the organization ID for tenant context.
+     * For Organization entity, this is a no-op since the ID is immutable
+     * and set during construction.
+     *
+     * @param organizationId The organization ID (ignored)
+     */
+    @Override
+    public void setOrganizationId(String organizationId) {
+        // No-op: Organization ID is immutable and equals getId().getValue()
+        // This method exists only to satisfy TenantAware interface
     }
     
     public UserId getCreatedBy() {

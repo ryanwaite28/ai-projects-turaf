@@ -1,6 +1,6 @@
 package com.turaf.organization.domain.event;
 
-import com.turaf.organization.domain.common.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 
 import java.time.Instant;
 import java.util.Objects;

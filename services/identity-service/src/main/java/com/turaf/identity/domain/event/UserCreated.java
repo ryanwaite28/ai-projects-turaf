@@ -3,28 +3,54 @@ package com.turaf.identity.domain.event;
 import com.turaf.common.domain.DomainEvent;
 
 import java.time.Instant;
+import java.util.Objects;
 
-public class UserCreated extends DomainEvent {
+public class UserCreated implements DomainEvent {
     
+    private final String eventId;
     private final String userId;
+    private final String organizationId;
     private final String email;
     private final String name;
-
-    public UserCreated(String eventId, String userId, String email, String name) {
-        super(eventId, Instant.now());
-        this.userId = userId;
-        this.email = email;
-        this.name = name;
+    private final Instant timestamp;
+    
+    public UserCreated(String eventId, String userId, String organizationId, String email, String name) {
+        this.eventId = Objects.requireNonNull(eventId, "Event ID cannot be null");
+        this.userId = Objects.requireNonNull(userId, "User ID cannot be null");
+        this.organizationId = Objects.requireNonNull(organizationId, "Organization ID cannot be null");
+        this.email = Objects.requireNonNull(email, "Email cannot be null");
+        this.name = Objects.requireNonNull(name, "Name cannot be null");
+        this.timestamp = Instant.now();
     }
 
+    @Override
+    public String getEventId() {
+        return eventId;
+    }
+    
+    @Override
+    public String getEventType() {
+        return "UserCreated";
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+    
+    @Override
+    public String getOrganizationId() {
+        return organizationId;
+    }
+    
     public String getUserId() {
         return userId;
     }
-
+    
     public String getEmail() {
         return email;
     }
-
+    
     public String getName() {
         return name;
     }

@@ -1,0 +1,6 @@
+internal:
+  alb:
+    url: http://internal-alb.qa.turafapp.com
+
+cors:
+  allowed-origins: https://app.qa.turafapp.com

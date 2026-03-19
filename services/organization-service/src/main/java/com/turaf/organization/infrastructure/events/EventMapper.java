@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.turaf.organization.domain.common.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;

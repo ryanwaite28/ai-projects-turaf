@@ -57,12 +57,12 @@ export const environment = {
 
 ## Acceptance Criteria
 
-- [ ] Angular project created
-- [ ] Angular Material installed
-- [ ] Routing configured
-- [ ] Environment files created
-- [ ] Project builds successfully
-- [ ] Development server runs
+- [x] Angular project created
+- [x] Angular Material installed
+- [x] Routing configured
+- [x] Environment files created
+- [x] Project builds successfully
+- [x] Development server runs
 
 ## Testing Requirements
 

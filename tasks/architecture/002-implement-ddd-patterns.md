@@ -154,16 +154,16 @@ Create a shared `common` module that all services depend on:
 
 ## Acceptance Criteria
 
-- [ ] Common module created with base DDD classes
-- [ ] Entity base class implements identity equality
-- [ ] AggregateRoot manages domain events
-- [ ] ValueObject implements value equality
-- [ ] DomainEvent interface defined
-- [ ] Repository interface follows DDD pattern
-- [ ] DomainException provides error context
-- [ ] All services can depend on common module
-- [ ] Maven build succeeds
-- [ ] Unit tests for base classes pass
+- [x] Common module created with base DDD classes
+- [x] Entity base class implements identity equality
+- [x] AggregateRoot manages domain events
+- [x] ValueObject implements value equality
+- [x] DomainEvent interface defined
+- [x] Repository interface follows DDD pattern
+- [x] DomainException provides error context
+- [x] All services can depend on common module
+- [x] Maven build succeeds
+- [x] Unit tests for base classes pass
 
 ## Testing Requirements
 

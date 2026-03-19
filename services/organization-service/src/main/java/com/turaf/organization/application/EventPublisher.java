@@ -1,6 +1,6 @@
 package com.turaf.organization.application;
 
-import com.turaf.organization.domain.common.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 
 /**
  * Interface for publishing domain events.

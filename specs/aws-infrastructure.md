@@ -182,7 +182,7 @@ resource "aws_lambda_function" "reporting_service" {
       ENVIRONMENT           = var.environment
       S3_BUCKET_NAME       = aws_s3_bucket.reports.id
       EVENT_BUS_NAME       = aws_cloudwatch_event_bus.turaf.name
-      EXPERIMENT_SERVICE_URL = "https://api.${var.environment}.turaf.com"
+      EXPERIMENT_SERVICE_URL = "https://api.${var.environment}.turafapp.com"
     }
   }
   
@@ -267,7 +267,7 @@ resource "aws_nat_gateway" "main" {
 - Scheme: Internet-facing
 - Subnets: Public subnets (2 AZs)
 - Security Group: ALB security group
-- SSL Certificate: ACM certificate for `*.turaf.com`
+- SSL Certificate: ACM certificate for `*.turafapp.com`
 
 **Target Groups** (one per service):
 - identity-service: `/api/v1/auth/*`
@@ -647,12 +647,12 @@ resource "aws_sqs_queue" "reporting_dlq" {
 
 ### Amazon Route 53
 
-**Hosted Zone**: turaf.com
+**Hosted Zone**: turafapp.com
 
 **Records**:
-- `api.{env}.turaf.com` → ALB
-- `app.{env}.turaf.com` → CloudFront
-- `*.{env}.turaf.com` → Wildcard certificate
+- `api.{env}.turafapp.com` → ALB
+- `app.{env}.turafapp.com` → CloudFront
+- `*.{env}.turafapp.com` → Wildcard certificate
 
 ---
 

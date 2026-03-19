@@ -1,6 +1,6 @@
 package com.turaf.organization.infrastructure.config;
 
-import com.turaf.organization.infrastructure.tenant.TenantFilter;
+import com.turaf.common.tenant.TenantFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +8,7 @@ import org.springframework.core.Ordered;
 
 /**
  * Configuration for tenant context filter.
- * Registers the TenantFilter to extract tenant information from requests.
+ * Registers the TenantFilter from common module to extract tenant information from requests.
  */
 @Configuration
 public class TenantFilterConfig {

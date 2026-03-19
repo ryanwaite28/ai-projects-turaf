@@ -6,7 +6,7 @@ import com.turaf.organization.application.dto.UpdateOrganizationRequest;
 import com.turaf.organization.application.exception.OrganizationAlreadyExistsException;
 import com.turaf.organization.application.exception.OrganizationNotFoundException;
 import com.turaf.organization.domain.*;
-import com.turaf.organization.domain.common.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 import com.turaf.organization.domain.event.OrganizationCreated;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

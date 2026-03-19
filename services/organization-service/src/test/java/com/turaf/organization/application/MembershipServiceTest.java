@@ -6,7 +6,7 @@ import com.turaf.organization.application.exception.MemberAlreadyExistsException
 import com.turaf.organization.application.exception.MemberNotFoundException;
 import com.turaf.organization.application.exception.OrganizationNotFoundException;
 import com.turaf.organization.domain.*;
-import com.turaf.organization.domain.common.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 import com.turaf.organization.domain.event.MemberAdded;
 import com.turaf.organization.domain.event.MemberRemoved;
 import org.junit.jupiter.api.BeforeEach;

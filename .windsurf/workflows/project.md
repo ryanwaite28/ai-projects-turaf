@@ -175,13 +175,14 @@ After each task or feature:
 2. Organization Service
 3. Experiment Service
 4. Metrics Service
-5. Event Infrastructure
-6. Reporting Service
-7. Notification Service
-8. Angular Frontend
-9. DevOps Infrastructure
+5. BFF API (Backend for Frontend)
+6. Event Infrastructure
+7. Reporting Service
+8. Notification Service
+9. Angular Frontend (updated to use BFF API)
+10. DevOps Infrastructure (including dual ALB setup)
 
-> Prevents circular dependencies and ensures smooth incremental builds.
+> Prevents circular dependencies and ensures smooth incremental builds. BFF API must be built after microservices since it depends on them.
 
 ---
 

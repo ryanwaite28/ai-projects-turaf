@@ -1,0 +1,8 @@
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/tenant/TenantContextTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/domain/AggregateRootTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/tenant/TenantFilterTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/domain/ValueObjectTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/tenant/TenantInterceptorTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/domain/DomainExceptionTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/tenant/TenantContextHolderTest.java
+/Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/common/src/test/java/com/turaf/common/domain/EntityTest.java

@@ -63,6 +63,89 @@ For detailed account information, see [AWS_ACCOUNTS.md](AWS_ACCOUNTS.md).
 
 ---
 
+# 2a. Domain and DNS Architecture
+
+## Purchased Domain
+
+**Primary Domain**: `turafapp.com`
+
+This domain is used for all production and non-production environments. All DNS names are subdomains of `turafapp.com`.
+
+## DNS Naming Convention
+
+### Environment-Specific Subdomains
+
+All services use environment-specific subdomains following the pattern: `{service}.{env}.turafapp.com`
+
+**Environments**:
+- `dev` - Development environment
+- `qa` - QA/Staging environment
+- `prod` - Production environment (may omit `.prod` for brevity)
+
+### DNS Records Structure
+
+**Public-Facing Services**:
+- `api.dev.turafapp.com` → Public ALB (BFF API) - Development
+- `api.qa.turafapp.com` → Public ALB (BFF API) - QA
+- `api.turafapp.com` → Public ALB (BFF API) - Production
+- `app.dev.turafapp.com` → CloudFront (Angular Frontend) - Development
+- `app.qa.turafapp.com` → CloudFront (Angular Frontend) - QA
+- `app.turafapp.com` → CloudFront (Angular Frontend) - Production
+
+**Internal Services** (Private Hosted Zone):
+- `internal-alb.dev.turafapp.com` → Internal ALB - Development
+- `internal-alb.qa.turafapp.com` → Internal ALB - QA
+- `internal-alb.prod.turafapp.com` → Internal ALB - Production
+
+**Service-Specific Internal Routes** (via Internal ALB path-based routing):
+- `http://internal-alb.{env}.turafapp.com/identity/*` → Identity Service
+- `http://internal-alb.{env}.turafapp.com/organization/*` → Organization Service
+- `http://internal-alb.{env}.turafapp.com/experiment/*` → Experiment Service
+- `http://internal-alb.{env}.turafapp.com/metrics/*` → Metrics Service
+
+### SSL/TLS Certificates
+
+**AWS Certificate Manager (ACM)**:
+- Wildcard certificate: `*.turafapp.com` (covers all subdomains)
+- Environment-specific wildcards: `*.dev.turafapp.com`, `*.qa.turafapp.com`, `*.prod.turafapp.com`
+
+### Route53 Hosted Zones
+
+**Public Hosted Zone**: `turafapp.com`
+- Manages public DNS records for frontend and API
+- A records point to CloudFront and ALB
+- CNAME records for www redirect
+
+**Private Hosted Zones** (per environment):
+- `turafapp.com` (private, per VPC)
+- Manages internal service discovery
+- A records point to Internal ALB
+- Only accessible within VPC
+
+### Email Configuration
+
+**AWS Account Emails**:
+- Root: `aws@turafapp.com`
+- Ops: `aws-ops@turafapp.com`
+- Dev: `aws-dev@turafapp.com`
+- QA: `aws-qa@turafapp.com`
+- Prod: `aws-prod@turafapp.com`
+
+**Application Emails** (Amazon SES):
+- Notifications: `notifications@turafapp.com`
+- Support: `support@turafapp.com`
+- No-reply: `noreply@turafapp.com`
+
+### DNS Management
+
+**Registrar**: (To be specified)  
+**DNS Provider**: Amazon Route 53  
+**TTL Settings**:
+- Production records: 300 seconds (5 minutes)
+- Development records: 60 seconds (1 minute)
+
+---
+
 # 3. GitHub Repository
 
 **Repository URL**: https://github.com/ryanwaite28/ai-projects-turaf  
@@ -354,9 +437,91 @@ Storage
 Relational database
 Object storage
 
-Infrastructure
+Networking
 
-Infrastructure as Code templates
+VPC
+Security Groups
+Application Load Balancers (Public + Internal)
+
+---
+
+# 10a. Network Architecture
+
+The system uses a **dual Application Load Balancer (ALB)** architecture to provide secure, scalable routing between the frontend, BFF API, and microservices.
+
+## Application Load Balancers
+
+### Public ALB (Internet-Facing)
+
+**Purpose**: Routes frontend traffic to BFF API
+
+**Configuration**:
+- Name: `turaf-public-alb-{env}`
+- Scheme: internet-facing
+- Subnets: Public subnets in 2 availability zones
+- Security Group: Allow HTTPS (443) from internet, HTTP (80) for redirect
+
+**Listeners**:
+- Port 443 (HTTPS): SSL termination with ACM certificate, forward to BFF API
+- Port 80 (HTTP): Redirect to HTTPS
+
+**DNS**: `api.{env}.turafapp.com` (Route53 A record → Public ALB)
+
+**Target Group**: BFF API ECS tasks (health check: `/actuator/health`)
+
+### Internal ALB (Private)
+
+**Purpose**: Routes BFF API traffic to microservices
+
+**Configuration**:
+- Name: `turaf-internal-alb-{env}`
+- Scheme: internal
+- Subnets: Private subnets in 2 availability zones
+- Security Group: Allow HTTP (80) from BFF API security group only
+
+**Path-Based Routing**:
+- `/identity/*` → Identity Service target group
+- `/organization/*` → Organization Service target group
+- `/experiment/*` → Experiment Service target group
+- `/metrics/*` → Metrics Service target group
+
+**DNS**: `internal-alb.{env}.turafapp.com` (Route53 private hosted zone)
+
+**Target Groups**: One per microservice (health check: `/actuator/health`)
+
+## Traffic Flow
+
+```
+Internet
+  ↓
+CloudFront (Static Assets: Angular SPA)
+  ↓
+Public ALB (HTTPS - api.turafapp.com)
+  ↓
+BFF API (Spring Boot REST - ECS Fargate)
+  ↓
+Internal ALB (HTTP - internal-alb.turafapp.com)
+  ↓
+Microservices (ECS Fargate)
+  ├── Identity Service
+  ├── Organization Service
+  ├── Experiment Service
+  └── Metrics Service
+```
+
+## Security Model
+
+**Defense in Depth**:
+1. CloudFront → Public ALB: HTTPS only, WAF rules
+2. Public ALB → BFF API: Security group restricts to ALB only
+3. BFF API → Internal ALB: Security group restricts to BFF only
+4. Internal ALB → Services: Security group restricts to ALB only
+5. Services → RDS: Security group restricts to service tasks only
+
+**Network Segmentation**:
+- Public subnets: Public ALB only
+- Private subnets: BFF API, Internal ALB, microservices, RDS
+- No direct internet access for services (NAT Gateway for outbound)
 
 ---
 
@@ -1297,6 +1462,47 @@ reportLocation
 # 40. Service Implementation Specifications
 
 This section defines the responsibilities of each microservice.
+
+---
+
+## BFF API Service
+
+**Type**: Backend for Frontend (Spring Boot REST API)
+
+Responsibilities:
+
+Unified REST API for frontend
+JWT token validation
+Request orchestration and aggregation
+Service-to-service communication via internal ALB
+CORS configuration
+Rate limiting
+Error handling
+
+APIs:
+
+GET /api/v1/dashboard/overview
+GET /api/v1/experiments/{id}/full
+GET /api/v1/organizations/{id}/summary
+
+Proxy endpoints (all /api/v1/* routes):
+- /api/v1/auth/* → Identity Service
+- /api/v1/organizations/* → Organization Service
+- /api/v1/experiments/* → Experiment Service
+- /api/v1/metrics/* → Metrics Service
+
+Technology:
+
+Spring Boot 3.2.0
+RestTemplate/WebClient for service calls
+Spring Security for JWT validation
+Deployed on ECS Fargate behind Public ALB
+
+Communication:
+
+Calls microservices via Internal ALB
+URL: http://internal-alb.{env}.turafapp.com/{service}/*
+Adds user context headers (X-User-Id, X-Organization-Id)
 
 ---
 

@@ -16,6 +16,10 @@ Establish the foundational Clean Architecture layer structure across all microse
 
 ## Scope
 
+**Java/Spring Boot Services Only**:
+
+This task applies only to services using Java/Spring Boot with Clean Architecture. The reporting-service and notification-service use a different architecture (Python Lambda) and are excluded from this task.
+
 **Directory Structure to Create**:
 ```
 services/
@@ -51,8 +55,6 @@ services/
 - `services/organization-service/pom.xml`
 - `services/experiment-service/pom.xml`
 - `services/metrics-service/pom.xml`
-- `services/reporting-service/pom.xml`
-- `services/notification-service/pom.xml`
 
 ## Implementation Details
 
@@ -107,8 +109,7 @@ services/
         <module>organization-service</module>
         <module>experiment-service</module>
         <module>metrics-service</module>
-        <module>reporting-service</module>
-        <module>notification-service</module>
+        <!-- reporting-service and notification-service are Python Lambda functions -->
     </modules>
     
     <properties>
@@ -125,15 +126,39 @@ Each service should have:
 - Dependencies: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-validation
 - Build plugins: spring-boot-maven-plugin, maven-compiler-plugin
 
+### Services Excluded from Clean Architecture
+
+The following services use a different architecture pattern:
+
+**Reporting Service** (`services/reporting-service/`):
+- **Architecture**: Event-driven AWS Lambda (Python 3.11)
+- **Reason**: Serverless event processor, no REST API needed
+- **Build Tool**: pip (requirements.txt)
+- **See**: `specs/reporting-service.md` and `tasks/reporting-service/`
+
+**Notification Service** (`services/notification-service/`):
+- **Architecture**: Event-driven AWS Lambda (Python 3.11)
+- **Reason**: Serverless event processor, no REST API needed
+- **Build Tool**: pip (requirements.txt)
+- **See**: `specs/notification-service.md` and `tasks/notification-service/`
+
+**Why Python Lambda for These Services?**
+1. Event-driven nature (only respond to EventBridge events)
+2. No REST API endpoints required
+3. Serverless benefits (auto-scaling, pay-per-use)
+4. Simpler deployment model
+5. Appropriate complexity for focused event processing
+
 ## Acceptance Criteria
 
-- [ ] All service directories created with proper layer structure
-- [ ] Parent POM configured with all modules
-- [ ] Each service has its own POM with correct dependencies
-- [ ] Package structure follows naming convention: `com.turaf.{service}.{layer}`
-- [ ] README.md created in each service explaining layer responsibilities
-- [ ] Maven build succeeds: `mvn clean install`
-- [ ] No circular dependencies between layers
+- [x] All Java service directories created with proper layer structure (4 services)
+- [x] Parent POM configured with Java modules only (excludes Python Lambda services)
+- [x] Each Java service has its own POM with correct dependencies
+- [x] Package structure follows naming convention: `com.turaf.{service}.{layer}`
+- [x] README.md created in each Java service explaining layer responsibilities
+- [x] Maven build succeeds: `mvn clean install` (requires Maven 3.8+ installation)
+- [x] No circular dependencies between layers
+- [x] Python Lambda services (reporting, notification) excluded from this task
 
 ## Testing Requirements
 
