@@ -49,11 +49,11 @@ const routes: Routes = [
 
 ## Acceptance Criteria
 
-- [ ] Routing configured
-- [ ] Lazy loading works
-- [ ] Guards protect routes
-- [ ] Navigation works
-- [ ] Deep linking works
+- [x] Routing configured
+- [x] Lazy loading works
+- [x] Guards protect routes
+- [x] Navigation works
+- [x] Deep linking works
 
 ## References
 

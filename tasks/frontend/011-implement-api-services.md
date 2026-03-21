@@ -55,11 +55,11 @@ export class ExperimentService {
 
 ## Acceptance Criteria
 
-- [ ] All API services implemented
-- [ ] HTTP methods correct
-- [ ] Error handling implemented
-- [ ] Type safety enforced
-- [ ] Services tested
+- [x] All API services implemented
+- [x] HTTP methods correct
+- [x] Error handling implemented
+- [x] Type safety enforced
+- [x] Services tested
 
 ## References
 

@@ -51,7 +51,11 @@ This specification defines the overall system architecture for the Turaf event-d
 - Metric aggregation
 
 ### Data Storage
-- Amazon RDS PostgreSQL (transactional data)
+- Amazon RDS PostgreSQL (single instance with schema-based isolation per service)
+  - `identity_schema` - User authentication data
+  - `organization_schema` - Organization and membership data
+  - `experiment_schema` - Problems, hypotheses, experiments
+  - `metrics_schema` - Metrics and aggregations
 - Amazon S3 (reports, artifacts)
 - Multi-AZ deployment for high availability
 
@@ -199,6 +203,35 @@ Infrastructure → Domain
 - Middleware validates organization access
 - Users can only access their organization's data
 - Cross-organization requests blocked
+
+---
+
+## Database Schema Isolation Strategy
+
+**Single Database, Multi-Schema Design**:
+- Single RDS PostgreSQL instance per environment
+- One schema per microservice for data isolation
+- One database user per service with schema-scoped permissions
+- No cross-schema foreign keys or references
+
+**Schema Ownership**:
+- `identity_schema` owned by `identity_user`
+- `organization_schema` owned by `organization_user`
+- `experiment_schema` owned by `experiment_user`
+- `metrics_schema` owned by `metrics_user`
+
+**Microservice Boundaries Maintained**:
+- Each service connects only to its own schema
+- Services cannot access other schemas (enforced by database permissions)
+- BFF aggregates data via service APIs, not database joins
+- Each service manages its own schema migrations independently
+
+**Rationale**:
+- Simplified infrastructure for early-stage development
+- Lower operational costs compared to separate database instances
+- Easier local development and testing
+- Clear migration path to separate databases when scaling requires it
+- Maintains microservice principles through strict schema isolation
 
 ---
 

@@ -1,5 +1,8 @@
+-- Create schema if not exists
+CREATE SCHEMA IF NOT EXISTS metrics_schema;
+
 -- Create metrics table for time-series data
-CREATE TABLE metrics (
+CREATE TABLE IF NOT EXISTS metrics (
     id VARCHAR(36) PRIMARY KEY,
     organization_id VARCHAR(36) NOT NULL,
     experiment_id VARCHAR(36) NOT NULL,
@@ -12,12 +15,12 @@ CREATE TABLE metrics (
 );
 
 -- Create indexes for optimized time-series queries
-CREATE INDEX idx_metrics_org_id ON metrics(organization_id);
-CREATE INDEX idx_metrics_experiment_id ON metrics(experiment_id);
-CREATE INDEX idx_metrics_timestamp ON metrics(timestamp DESC);
-CREATE INDEX idx_metrics_experiment_name ON metrics(experiment_id, name);
-CREATE INDEX idx_metrics_experiment_time ON metrics(experiment_id, timestamp DESC);
-CREATE INDEX idx_metrics_org_time ON metrics(organization_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_org_id ON metrics(organization_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_experiment_id ON metrics(experiment_id);
+CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_experiment_name ON metrics(experiment_id, name);
+CREATE INDEX IF NOT EXISTS idx_metrics_experiment_time ON metrics(experiment_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_org_time ON metrics(organization_id, timestamp DESC);
 
 -- Add comments for documentation
 COMMENT ON TABLE metrics IS 'Time-series metrics data for experiments';

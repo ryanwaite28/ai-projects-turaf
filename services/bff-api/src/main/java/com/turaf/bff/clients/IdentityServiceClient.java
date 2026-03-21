@@ -3,19 +3,22 @@ package com.turaf.bff.clients;
 import com.turaf.bff.dto.LoginRequest;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class IdentityServiceClient {
     
     private final WebClient webClient;
     private static final String SERVICE_PATH = "/identity";
+    
+    public IdentityServiceClient(@Qualifier("identityWebClient") WebClient webClient) {
+        this.webClient = webClient;
+    }
     
     public Mono<UserDto> login(LoginRequest request) {
         log.debug("Calling Identity Service: POST /auth/login");

@@ -1,0 +1,232 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with multi-schema architecture
+  postgres:
+    image: postgres:15.3-alpine
+    container_name: turaf-postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME:-turaf}
+      - POSTGRES_USER=${DB_ADMIN_USER:-turaf_admin}
+      - POSTGRES_PASSWORD=${DB_ADMIN_PASSWORD:-admin_password_change_me}
+      - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
+      - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
+      - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
+      - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - turaf-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER:-turaf_admin} -d ${DB_NAME:-turaf}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # LocalStack for AWS service mocking
+  localstack:
+    image: localstack/localstack:latest
+    container_name: turaf-localstack
+    environment:
+      - SERVICES=s3,sqs,sns,events,secretsmanager,lambda
+      - DEBUG=${LOCALSTACK_DEBUG:-0}
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
+      - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
+      - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
+      - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+    volumes:
+      - localstack_data:/tmp/localstack
+      - ./infrastructure/docker/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "4566:4566"  # LocalStack gateway
+      - "4571:4571"  # LocalStack web UI (optional)
+    networks:
+      - turaf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # Identity Service
+  identity-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: identity-service
+    container_name: turaf-identity-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=${DB_NAME:-turaf}
+      - DB_USERNAME=identity_user
+      - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+    ports:
+      - "${IDENTITY_SERVICE_PORT:-8081}:8081"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Organization Service
+  organization-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: organization-service
+    container_name: turaf-organization-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=${DB_NAME:-turaf}
+      - DB_USERNAME=organization_user
+      - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
+    ports:
+      - "${ORGANIZATION_SERVICE_PORT:-8082}:8082"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Experiment Service
+  experiment-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: experiment-service
+    container_name: turaf-experiment-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=${DB_NAME:-turaf}
+      - DB_USERNAME=experiment_user
+      - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
+    ports:
+      - "${EXPERIMENT_SERVICE_PORT:-8083}:8083"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Metrics Service
+  metrics-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: metrics-service
+    container_name: turaf-metrics-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=${DB_NAME:-turaf}
+      - DB_USERNAME=metrics_user
+      - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+    ports:
+      - "${METRICS_SERVICE_PORT:-8084}:8084"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # BFF API Service
+  bff-api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: bff-api
+    container_name: turaf-bff-api
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+    ports:
+      - "${BFF_API_PORT:-8080}:8080"
+    networks:
+      - turaf-network
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      organization-service:
+        condition: service_healthy
+      experiment-service:
+        condition: service_healthy
+      metrics-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # PgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: turaf-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@turaf.local}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+
+networks:
+  turaf-network:
+    driver: bridge
+    name: turaf-network
+
+volumes:
+  postgres_data:
+    name: turaf-postgres-data
+  localstack_data:
+    name: turaf-localstack-data
+  pgadmin_data:
+    name: turaf-pgadmin-data

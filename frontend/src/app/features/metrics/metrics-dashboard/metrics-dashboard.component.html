@@ -1,0 +1,83 @@
+<div class="metrics-dashboard-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Metrics Dashboard</h1>
+    <div class="header-actions">
+      <mat-slide-toggle
+        [checked]="realTimeEnabled$ | async"
+        (change)="toggleRealTime($event.checked)"
+        matTooltip="Enable real-time updates">
+        Real-time
+      </mat-slide-toggle>
+      <button mat-icon-button (click)="refresh()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button 
+        mat-stroked-button 
+        (click)="toggleAggregatedView()"
+        [color]="showAggregated ? 'primary' : ''">
+        <mat-icon>{{ showAggregated ? 'table_chart' : 'analytics' }}</mat-icon>
+        {{ showAggregated ? 'Show Raw' : 'Show Aggregated' }}
+      </button>
+    </div>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Summary Cards -->
+  <div class="summary-section" *ngIf="summary$ | async as summary">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon">
+          <mat-icon>assessment</mat-icon>
+        </div>
+        <div class="summary-info">
+          <div class="summary-value">{{ summary.totalMetrics }}</div>
+          <div class="summary-label">Total Metrics</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="summary-card" *ngFor="let type of getMetricTypes(summary)">
+      <mat-card-content>
+        <div class="summary-icon" [class]="'type-' + type.toLowerCase()">
+          <mat-icon>show_chart</mat-icon>
+        </div>
+        <div class="summary-info">
+          <div class="summary-value">{{ summary.metricsByType[type] || 0 }}</div>
+          <div class="summary-label">{{ type }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Charts Section -->
+  <div class="charts-section" *ngIf="selectedMetricName && (timeSeriesData$ | async) as timeSeriesData">
+    <app-metrics-chart
+      *ngIf="timeSeriesData[selectedMetricName]"
+      [data]="timeSeriesData[selectedMetricName]"
+      [config]="chartConfig">
+    </app-metrics-chart>
+  </div>
+  
+  <!-- No Metric Selected -->
+  <div *ngIf="!selectedMetricName" class="no-selection">
+    <mat-icon>show_chart</mat-icon>
+    <p>Select a metric from the table below to view its time-series chart</p>
+  </div>
+  
+  <!-- Metrics Table -->
+  <div class="table-section">
+    <app-metrics-table
+      [metrics]="metrics$ | async"
+      [aggregatedMetrics]="aggregatedMetrics$ | async"
+      [showAggregated]="showAggregated"
+      [loading]="loading$ | async"
+      (metricSelected)="onMetricSelected($event.name)">
+    </app-metrics-table>
+  </div>
+</div>

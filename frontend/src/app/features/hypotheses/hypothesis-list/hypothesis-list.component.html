@@ -1,0 +1,152 @@
+<div class="hypothesis-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Hypotheses</h1>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="createHypothesis()">
+      <mat-icon>add</mat-icon>
+      Create Hypothesis
+    </button>
+  </div>
+  
+  <!-- Filter Info -->
+  <div *ngIf="(filters$ | async)?.problemId" class="filter-info">
+    <mat-chip-set>
+      <mat-chip>
+        <mat-icon>filter_list</mat-icon>
+        Filtered by Problem
+      </mat-chip>
+    </mat-chip-set>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading hypotheses...</p>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Hypotheses Table -->
+  <mat-card *ngIf="!(loading$ | async)" class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table 
+          mat-table 
+          [dataSource]="hypotheses$ | async" 
+          class="hypotheses-table">
+          
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Title</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              <div class="title-cell">
+                <strong>{{ hypothesis.title }}</strong>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Problem Column -->
+          <ng-container matColumnDef="problem">
+            <th mat-header-cell *matHeaderCellDef>Problem ID</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              <span class="problem-id">{{ hypothesis.problemId | slice:0:8 }}...</span>
+            </td>
+          </ng-container>
+          
+          <!-- Expected Outcome Column -->
+          <ng-container matColumnDef="expectedOutcome">
+            <th mat-header-cell *matHeaderCellDef>Expected Outcome</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              <div class="outcome-cell">
+                {{ hypothesis.expectedOutcome | slice:0:80 }}{{ hypothesis.expectedOutcome.length > 80 ? '...' : '' }}
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              <span 
+                class="status-badge" 
+                [ngClass]="getStatusClass(hypothesis.status)">
+                {{ hypothesis.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Created At Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              {{ hypothesis.createdAt | date:'MMM d, y' }}
+            </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let hypothesis">
+              <button 
+                mat-icon-button 
+                [matMenuTriggerFor]="menu"
+                (click)="$event.stopPropagation()"
+                matTooltip="More actions">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="editHypothesis(hypothesis, $event)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit</span>
+                </button>
+                <button mat-menu-item (click)="viewExperiments(hypothesis, $event)">
+                  <mat-icon>science</mat-icon>
+                  <span>View Experiments</span>
+                </button>
+                <button mat-menu-item (click)="deleteHypothesis(hypothesis, $event)">
+                  <mat-icon color="warn">delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr 
+            mat-row 
+            *matRowDef="let row; columns: displayedColumns;"
+            class="hypothesis-row">
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="(hypotheses$ | async)?.length === 0" class="empty-state">
+        <mat-icon>psychology</mat-icon>
+        <h3>No Hypotheses Yet</h3>
+        <p>Create your first hypothesis to start testing your ideas</p>
+        <button mat-raised-button color="primary" (click)="createHypothesis()">
+          <mat-icon>add</mat-icon>
+          Create Hypothesis
+        </button>
+      </div>
+      
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="(pagination$ | async) as pagination"
+        [length]="pagination.total"
+        [pageSize]="pagination.limit"
+        [pageIndex]="pagination.page - 1"
+        (page)="onPageChange($event.pageIndex + 1)"
+        [pageSizeOptions]="[5, 10, 25, 50]">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -3,8 +3,8 @@ package com.turaf.bff.clients;
 import com.turaf.bff.dto.CreateOrganizationRequest;
 import com.turaf.bff.dto.MemberDto;
 import com.turaf.bff.dto.OrganizationDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -12,11 +12,14 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class OrganizationServiceClient {
     
     private final WebClient webClient;
     private static final String SERVICE_PATH = "/organization";
+    
+    public OrganizationServiceClient(@Qualifier("organizationWebClient") WebClient webClient) {
+        this.webClient = webClient;
+    }
     
     public Flux<OrganizationDto> getOrganizations(String userId) {
         log.debug("Calling Organization Service: GET /organizations for user: {}", userId);

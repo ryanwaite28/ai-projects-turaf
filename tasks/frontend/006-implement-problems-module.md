@@ -78,13 +78,13 @@ export class ProblemListComponent implements OnInit {
 
 ## Acceptance Criteria
 
-- [ ] Problems module created
-- [ ] List view implemented
-- [ ] Create form implemented
-- [ ] Edit form implemented
-- [ ] Detail view implemented
-- [ ] CRUD operations work
-- [ ] NgRx integration complete
+- [x] Problems module created
+- [x] List view implemented
+- [x] Create form implemented
+- [x] Edit form implemented
+- [x] Detail view implemented
+- [x] CRUD operations work
+- [x] NgRx integration complete
 
 ## Testing Requirements
 

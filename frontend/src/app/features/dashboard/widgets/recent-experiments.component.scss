@@ -1,0 +1,163 @@
+.recent-experiments-widget {
+  height: 100%;
+  
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    mat-card-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+  
+  .experiment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .experiment-item {
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:hover {
+      border-color: #1976d2;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateX(4px);
+    }
+    
+    .experiment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      
+      .experiment-info {
+        flex: 1;
+        
+        .experiment-name {
+          margin: 0 0 4px 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+        }
+        
+        .problem-name {
+          margin: 0;
+          font-size: 13px;
+          color: rgba(0, 0, 0, 0.6);
+        }
+      }
+      
+      .experiment-status {
+        .status-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 12px;
+          border-radius: 16px;
+          color: white;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+        }
+      }
+    }
+    
+    .experiment-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+      
+      .metric-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.7);
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          color: rgba(0, 0, 0, 0.5);
+        }
+      }
+    }
+    
+    mat-progress-bar {
+      height: 6px;
+      border-radius: 3px;
+    }
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: rgba(0, 0, 0, 0.4);
+    
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      margin: 0 0 16px 0;
+      font-size: 14px;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .recent-experiments-widget {
+    mat-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .experiment-item {
+      .experiment-header {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .experiment-metrics {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  }
+}

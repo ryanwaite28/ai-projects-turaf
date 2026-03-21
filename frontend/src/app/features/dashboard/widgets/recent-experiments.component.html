@@ -1,0 +1,70 @@
+<mat-card class="recent-experiments-widget">
+  <mat-card-header>
+    <mat-card-title>Recent Experiments</mat-card-title>
+    <button mat-button color="primary" (click)="viewAllExperiments()">
+      View All
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div *ngIf="experiments && experiments.length > 0; else noData">
+      <div class="experiment-list">
+        <div 
+          *ngFor="let experiment of experiments" 
+          class="experiment-item"
+          (click)="viewExperiment(experiment.id)">
+          
+          <div class="experiment-header">
+            <div class="experiment-info">
+              <h3 class="experiment-name">{{ experiment.name }}</h3>
+              <p class="problem-name">{{ experiment.problemName }}</p>
+            </div>
+            
+            <div class="experiment-status">
+              <span 
+                class="status-badge" 
+                [style.background-color]="getStatusColor(experiment.status)">
+                <mat-icon>{{ getStatusIcon(experiment.status) }}</mat-icon>
+                {{ experiment.status }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="experiment-metrics">
+            <div class="metric-item">
+              <mat-icon>event</mat-icon>
+              <span>{{ experiment.startDate | date:'MMM d, y' }}</span>
+            </div>
+            
+            <div class="metric-item" *ngIf="experiment.endDate">
+              <mat-icon>event_available</mat-icon>
+              <span>{{ experiment.endDate | date:'MMM d, y' }}</span>
+            </div>
+            
+            <div class="metric-item">
+              <mat-icon>analytics</mat-icon>
+              <span>{{ experiment.successMetrics }}/{{ experiment.totalMetrics }} metrics</span>
+            </div>
+          </div>
+          
+          <mat-progress-bar 
+            mode="determinate" 
+            [value]="getSuccessPercentage(experiment)"
+            [color]="getSuccessPercentage(experiment) >= 70 ? 'primary' : 'warn'">
+          </mat-progress-bar>
+        </div>
+      </div>
+    </div>
+    
+    <ng-template #noData>
+      <div class="no-data">
+        <mat-icon>science</mat-icon>
+        <p>No recent experiments</p>
+        <button mat-raised-button color="primary" routerLink="/experiments/new">
+          Create Experiment
+        </button>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

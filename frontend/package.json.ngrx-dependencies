@@ -1,0 +1,17 @@
+{
+  "comment": "Add these dependencies to package.json",
+  "dependencies": {
+    "@ngrx/store": "^17.0.0",
+    "@ngrx/effects": "^17.0.0",
+    "@ngrx/store-devtools": "^17.0.0"
+  },
+  "devDependencies": {
+    "@ngrx/schematics": "^17.0.0"
+  },
+  "installation_commands": [
+    "npm install @ngrx/store@^17.0.0",
+    "npm install @ngrx/effects@^17.0.0",
+    "npm install @ngrx/store-devtools@^17.0.0",
+    "npm install --save-dev @ngrx/schematics@^17.0.0"
+  ]
+}

@@ -1079,19 +1079,58 @@ Object storage for reports and artifacts.
 
 # 27. Data Architecture
 
-## Primary Database
+## Database Strategy
 
-Stores core domain entities.
+**Single Database, Multi-Schema Architecture**
 
-Tables include:
+The platform uses a **single PostgreSQL database** with **isolated schemas per service**. This design balances microservice principles with infrastructure simplicity for early-stage development.
 
-organizations
-users
-problems
-hypotheses
-experiments
-metrics
-reports
+### Database Instance
+
+- **Name**: `turaf-db-{env}` (single RDS PostgreSQL instance per environment)
+- **Engine**: PostgreSQL 15.3+
+- **Isolation**: Schema-level separation per service
+
+### Schema Organization
+
+Each microservice owns its dedicated schema:
+
+- **identity_schema**: User authentication, refresh tokens
+- **organization_schema**: Organizations, memberships, settings
+- **experiment_schema**: Problems, hypotheses, experiments, results
+- **metrics_schema**: Metrics, aggregations, time-series data
+
+### Database Users
+
+One database user per service with schema-scoped permissions:
+
+- **identity_user** → Full access to `identity_schema` only
+- **organization_user** → Full access to `organization_schema` only
+- **experiment_user** → Full access to `experiment_schema` only
+- **metrics_user** → Full access to `metrics_schema` only
+
+### Microservice Principles
+
+**Maintained Boundaries:**
+- ✅ Each service owns its data (schema isolation)
+- ✅ No cross-schema foreign keys or references
+- ✅ Services remain independently deployable
+- ✅ BFF aggregates data via service APIs (not database joins)
+- ✅ Each service manages its own schema migrations
+
+**Rationale:**
+- Simplified infrastructure for early-stage development
+- Lower operational costs (single RDS instance)
+- Easier local development setup
+- Clear migration path to separate databases when scaling requires it
+
+### Migration Management
+
+Each service manages its own schema migrations using Flyway:
+- Migrations run independently per service
+- Schema-scoped migration history
+- No migration conflicts between services
+- Version-controlled migration scripts per service
 
 ---
 
@@ -2165,7 +2204,7 @@ AWS Secrets Manager
 
 Examples of stored secrets:
 
-Database credentials
+Database credentials (one per service: identity_user, organization_user, experiment_user, metrics_user)
 API keys
 Webhook tokens
 
@@ -2181,7 +2220,7 @@ Encryption requirements:
 
 Encryption at rest
 
-- RDS encryption
+- RDS encryption (single database instance with all schemas encrypted)
 - S3 encryption
 
 Encryption in transit

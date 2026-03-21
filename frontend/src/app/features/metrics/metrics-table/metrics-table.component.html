@@ -1,0 +1,145 @@
+<mat-card class="table-card">
+  <mat-card-content>
+    <!-- Loading Indicator -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading metrics...</p>
+    </div>
+    
+    <!-- Regular Metrics Table -->
+    <div *ngIf="!loading && !showAggregated" class="table-container">
+      <table mat-table [dataSource]="metrics" class="metrics-table">
+        
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let metric">
+            <strong>{{ metric.name }}</strong>
+          </td>
+        </ng-container>
+        
+        <!-- Type Column -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="type-badge" [ngClass]="getTypeBadgeClass(metric.type)">
+              {{ metric.type }}
+            </span>
+          </td>
+        </ng-container>
+        
+        <!-- Value Column -->
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef>Value</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="metric-value">{{ formatValue(metric.value, metric.unit) }}</span>
+          </td>
+        </ng-container>
+        
+        <!-- Timestamp Column -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="timestamp">{{ metric.timestamp | date:'short' }}</span>
+          </td>
+        </ng-container>
+        
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let metric">
+            <button 
+              mat-icon-button 
+              (click)="onDeleteMetric(metric, $event)"
+              matTooltip="Delete metric">
+              <mat-icon color="warn">delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr 
+          mat-row 
+          *matRowDef="let row; columns: displayedColumns;"
+          (click)="onMetricClick(row)"
+          class="metric-row">
+        </tr>
+      </table>
+      
+      <!-- Empty State -->
+      <div *ngIf="metrics.length === 0" class="empty-state">
+        <mat-icon>assessment</mat-icon>
+        <h3>No Metrics</h3>
+        <p>No metrics have been recorded yet</p>
+      </div>
+    </div>
+    
+    <!-- Aggregated Metrics Table -->
+    <div *ngIf="!loading && showAggregated" class="table-container">
+      <table mat-table [dataSource]="aggregatedMetrics" class="metrics-table">
+        
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let metric">
+            <strong>{{ metric.name }}</strong>
+          </td>
+        </ng-container>
+        
+        <!-- Type Column -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="type-badge" [ngClass]="getTypeBadgeClass(metric.type)">
+              {{ metric.type }}
+            </span>
+          </td>
+        </ng-container>
+        
+        <!-- Aggregation Column -->
+        <ng-container matColumnDef="aggregation">
+          <th mat-header-cell *matHeaderCellDef>Aggregation</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="agg-badge" [ngClass]="getAggregationBadgeClass(metric.aggregation)">
+              {{ metric.aggregation }}
+            </span>
+          </td>
+        </ng-container>
+        
+        <!-- Value Column -->
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef>Value</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="metric-value">{{ formatValue(metric.value, metric.unit) }}</span>
+          </td>
+        </ng-container>
+        
+        <!-- Count Column -->
+        <ng-container matColumnDef="count">
+          <th mat-header-cell *matHeaderCellDef>Count</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="count">{{ metric.count }}</span>
+          </td>
+        </ng-container>
+        
+        <!-- Stats Column -->
+        <ng-container matColumnDef="stats">
+          <th mat-header-cell *matHeaderCellDef>Statistics</th>
+          <td mat-cell *matCellDef="let metric">
+            <span class="stats">{{ formatStats(metric) }}</span>
+          </td>
+        </ng-container>
+        
+        <tr mat-header-row *matHeaderRowDef="aggregatedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: aggregatedColumns;"></tr>
+      </table>
+      
+      <!-- Empty State -->
+      <div *ngIf="aggregatedMetrics.length === 0" class="empty-state">
+        <mat-icon>assessment</mat-icon>
+        <h3>No Aggregated Metrics</h3>
+        <p>No aggregated metrics available</p>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

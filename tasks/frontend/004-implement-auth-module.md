@@ -68,12 +68,12 @@ export class LoginComponent {
 
 ## Acceptance Criteria
 
-- [ ] Auth module created
-- [ ] Login component implemented
-- [ ] Register component implemented
-- [ ] Forms validated
-- [ ] NgRx integration working
-- [ ] Routing configured
+- [x] Auth module created
+- [x] Login component implemented
+- [x] Register component implemented
+- [x] Forms validated
+- [x] NgRx integration working
+- [x] Routing configured
 
 ## Testing Requirements
 

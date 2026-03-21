@@ -72,12 +72,12 @@ export class AuthInterceptor implements HttpInterceptor {
 
 ## Acceptance Criteria
 
-- [ ] Core module created
-- [ ] Auth guard implemented
-- [ ] Auth interceptor implemented
-- [ ] Error interceptor implemented
-- [ ] Guards protect routes
-- [ ] Interceptors work correctly
+- [x] Core module created
+- [x] Auth guard implemented
+- [x] Auth interceptor implemented
+- [x] Error interceptor implemented
+- [x] Guards protect routes
+- [x] Interceptors work correctly
 
 ## Testing Requirements
 

@@ -22,12 +22,12 @@ Implement experiments module with state management, list, detail, and control vi
 
 ## Acceptance Criteria
 
-- [ ] Experiments module created
-- [ ] List view with status filtering
-- [ ] Detail view with metrics
-- [ ] Start/complete controls
-- [ ] State transitions work
-- [ ] Real-time updates
+- [x] Experiments module created
+- [x] List view with status filtering
+- [x] Detail view with metrics
+- [x] Start/complete controls
+- [x] State transitions work
+- [x] Real-time updates
 
 ## References
 

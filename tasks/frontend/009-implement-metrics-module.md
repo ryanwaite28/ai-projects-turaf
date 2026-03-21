@@ -21,11 +21,11 @@ Implement metrics module with charts, aggregation views, and metric recording.
 
 ## Acceptance Criteria
 
-- [ ] Metrics module created
-- [ ] Charts display time-series data
-- [ ] Aggregation views implemented
-- [ ] Metric recording works
-- [ ] Real-time updates
+- [x] Metrics module created
+- [x] Charts display time-series data
+- [x] Aggregation views implemented
+- [x] Metric recording works
+- [x] Real-time updates
 
 ## References
 

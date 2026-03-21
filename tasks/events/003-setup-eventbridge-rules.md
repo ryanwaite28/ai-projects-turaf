@@ -114,12 +114,12 @@ resource "aws_lambda_permission" "allow_eventbridge_notification" {
 
 ## Acceptance Criteria
 
-- [ ] EventBridge rules created for all event types
-- [ ] Rules route to correct targets
-- [ ] Retry policies configured
-- [ ] DLQ configured for failed events
-- [ ] Lambda permissions granted
-- [ ] terraform apply succeeds
+- [x] EventBridge rules created for all event types
+- [x] Rules route to correct targets
+- [x] Retry policies configured
+- [x] DLQ configured for failed events
+- [x] Lambda permissions granted
+- [x] terraform apply succeeds
 
 ## Testing Requirements
 

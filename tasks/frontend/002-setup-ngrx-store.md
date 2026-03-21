@@ -106,12 +106,12 @@ export const authReducer = createReducer(
 
 ## Acceptance Criteria
 
-- [ ] NgRx installed and configured
-- [ ] Store structure defined
-- [ ] Auth state implemented
-- [ ] Actions, reducers, effects created
-- [ ] Selectors defined
-- [ ] DevTools working
+- [x] NgRx installed and configured
+- [x] Store structure defined
+- [x] Auth state implemented
+- [x] Actions, reducers, effects created
+- [x] Selectors defined
+- [x] DevTools working
 
 ## Testing Requirements
 

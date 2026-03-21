@@ -152,13 +152,13 @@ public class EventSerializer {
 
 ## Acceptance Criteria
 
-- [ ] Event publisher interface defined
-- [ ] EventBridge publisher implemented
-- [ ] Batch publishing supported
-- [ ] Event serialization works
-- [ ] Error handling implemented
-- [ ] Logging added
-- [ ] Unit tests pass
+- [x] Event publisher interface defined
+- [x] EventBridge publisher implemented
+- [x] Batch publishing supported
+- [x] Event serialization works
+- [x] Error handling implemented
+- [x] Logging added
+- [x] Unit tests pass
 
 ## Testing Requirements
 

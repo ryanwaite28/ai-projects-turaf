@@ -21,11 +21,11 @@ Implement hypotheses module with list, create, and edit functionality.
 
 ## Acceptance Criteria
 
-- [ ] Hypotheses module created
-- [ ] List view implemented
-- [ ] Create/edit form implemented
-- [ ] Problem association works
-- [ ] CRUD operations work
+- [x] Hypotheses module created
+- [x] List view implemented
+- [x] Create/edit form implemented
+- [x] Problem association works
+- [x] CRUD operations work
 
 ## References
 

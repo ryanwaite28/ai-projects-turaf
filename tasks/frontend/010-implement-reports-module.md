@@ -20,10 +20,10 @@ Implement reports module with list and download functionality.
 
 ## Acceptance Criteria
 
-- [ ] Reports module created
-- [ ] List view implemented
-- [ ] Download functionality works
-- [ ] Report preview available
+- [x] Reports module created
+- [x] List view implemented
+- [x] Download functionality works
+- [x] Report preview available
 
 ## References
 

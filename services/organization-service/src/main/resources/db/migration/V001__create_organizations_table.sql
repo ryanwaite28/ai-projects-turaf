@@ -1,5 +1,8 @@
+-- Create schema if not exists
+CREATE SCHEMA IF NOT EXISTS organization_schema;
+
 -- Create organizations table
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
     id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(50) NOT NULL UNIQUE,
@@ -12,7 +15,7 @@ CREATE TABLE organizations (
 );
 
 -- Create index on slug for fast lookups
-CREATE INDEX idx_organizations_slug ON organizations(slug);
+CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
 
 -- Create index on created_by for user's organizations lookup
-CREATE INDEX idx_organizations_created_by ON organizations(created_by);
+CREATE INDEX IF NOT EXISTS idx_organizations_created_by ON organizations(created_by);

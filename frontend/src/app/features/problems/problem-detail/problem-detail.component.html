@@ -1,0 +1,121 @@
+<div class="problem-detail-container">
+  <!-- Loading Indicator -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading problem details...</p>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Problem Details -->
+  <div *ngIf="(problem$ | async) as problem" class="problem-content">
+    <!-- Header -->
+    <div class="page-header">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ problem.title }}</h1>
+      <div class="actions">
+        <button mat-raised-button color="primary" (click)="editProblem()">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-raised-button color="warn" (click)="deleteProblem()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </div>
+    
+    <!-- Status Badge -->
+    <div class="status-section">
+      <span 
+        class="status-badge" 
+        [class.active]="problem.status === 'ACTIVE'"
+        [class.draft]="problem.status === 'DRAFT'"
+        [class.archived]="problem.status === 'ARCHIVED'">
+        {{ problem.status }}
+      </span>
+    </div>
+    
+    <!-- Main Content -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>Description</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="description">{{ problem.description }}</p>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Metadata -->
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Created</span>
+              <span class="info-value">{{ problem.createdAt | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon>update</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Last Updated</span>
+              <span class="info-value">{{ problem.updatedAt | date:'MMM d, y, h:mm a' }}</span>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon>business</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Organization ID</span>
+              <span class="info-value">{{ problem.organizationId }}</span>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon>person</mat-icon>
+            <div class="info-content">
+              <span class="info-label">Created By</span>
+              <span class="info-value">{{ problem.createdBy }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Tags -->
+    <mat-card class="detail-card" *ngIf="problem.tags && problem.tags.length > 0">
+      <mat-card-header>
+        <mat-card-title>Tags</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="tags-container">
+          <mat-chip-set>
+            <mat-chip *ngFor="let tag of problem.tags">{{ tag }}</mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Metadata -->
+    <mat-card class="detail-card" *ngIf="problem.metadata">
+      <mat-card-header>
+        <mat-card-title>Additional Metadata</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <pre class="metadata-content">{{ problem.metadata | json }}</pre>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

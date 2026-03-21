@@ -1,5 +1,8 @@
+-- Create schema if not exists
+CREATE SCHEMA IF NOT EXISTS identity_schema;
+
 -- Create users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -9,7 +12,7 @@ CREATE TABLE users (
 );
 
 -- Create index on email for faster lookups
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Add comments for documentation
 COMMENT ON TABLE users IS 'Stores user account information';

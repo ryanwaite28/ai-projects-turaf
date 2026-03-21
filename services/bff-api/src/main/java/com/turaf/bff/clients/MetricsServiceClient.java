@@ -2,8 +2,8 @@ package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.MetricDto;
 import com.turaf.bff.dto.RecordMetricRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -11,11 +11,14 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MetricsServiceClient {
     
     private final WebClient webClient;
     private static final String SERVICE_PATH = "/metrics";
+    
+    public MetricsServiceClient(@Qualifier("metricsWebClient") WebClient webClient) {
+        this.webClient = webClient;
+    }
     
     public Mono<MetricDto> recordMetric(RecordMetricRequest request, String userId, String organizationId) {
         log.debug("Calling Metrics Service: POST /metrics for experiment: {}", request.getExperimentId());

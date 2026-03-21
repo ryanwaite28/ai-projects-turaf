@@ -121,12 +121,12 @@ resource "aws_dynamodb_table" "idempotency" {
 
 ## Acceptance Criteria
 
-- [ ] Idempotency service implemented
-- [ ] DynamoDB table created
-- [ ] TTL configured for automatic cleanup
-- [ ] Conditional writes prevent duplicates
-- [ ] Record retrieval works
-- [ ] Unit tests pass
+- [x] Idempotency service implemented
+- [x] DynamoDB table created
+- [x] TTL configured for automatic cleanup
+- [x] Conditional writes prevent duplicates
+- [x] Record retrieval works
+- [x] Unit tests pass
 
 ## Testing Requirements
 

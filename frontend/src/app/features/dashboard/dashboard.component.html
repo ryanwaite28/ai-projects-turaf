@@ -1,0 +1,46 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <button 
+      mat-icon-button 
+      (click)="onRefresh()" 
+      [disabled]="loading$ | async"
+      matTooltip="Refresh Dashboard">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading dashboard...</p>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Dashboard Grid -->
+  <div class="dashboard-grid" *ngIf="!(loading$ | async)">
+    <!-- Stats Widget -->
+    <app-stats-widget 
+      [stats]="stats$ | async"
+      class="grid-item stats">
+    </app-stats-widget>
+    
+    <!-- Recent Experiments Widget -->
+    <app-recent-experiments 
+      [experiments]="recentExperiments$ | async"
+      class="grid-item experiments">
+    </app-recent-experiments>
+    
+    <!-- Metrics Chart Widget -->
+    <app-metrics-chart 
+      [metrics]="metrics$ | async"
+      class="grid-item metrics">
+    </app-metrics-chart>
+  </div>
+</div>

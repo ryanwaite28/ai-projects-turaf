@@ -1,0 +1,211 @@
+<div class="report-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Reports</h1>
+  </div>
+  
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon completed">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ completedCount$ | async }}</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon pending">
+          <mat-icon>autorenew</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ pendingCount$ | async }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Type:</label>
+      <mat-chip-set>
+        <mat-chip 
+          [class.selected]="!selectedType"
+          (click)="filterByType(null)">
+          All
+        </mat-chip>
+        <mat-chip 
+          *ngFor="let type of reportTypes"
+          [class.selected]="selectedType === type"
+          (click)="filterByType(type)">
+          {{ type.replace('_', ' ') }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+    
+    <div class="filter-group">
+      <label>Status:</label>
+      <mat-chip-set>
+        <mat-chip 
+          [class.selected]="!selectedStatus"
+          (click)="filterByStatus(null)">
+          All
+        </mat-chip>
+        <mat-chip 
+          *ngFor="let status of reportStatuses"
+          [class.selected]="selectedStatus === status"
+          (click)="filterByStatus(status)">
+          {{ status }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading reports...</p>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Reports Table -->
+  <mat-card *ngIf="!(loading$ | async)" class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table 
+          mat-table 
+          [dataSource]="reports$ | async" 
+          class="reports-table">
+          
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let report">
+              <div class="name-cell" (click)="viewReport(report)">
+                <mat-icon>{{ getTypeIcon(report.type) }}</mat-icon>
+                <div>
+                  <strong>{{ report.name }}</strong>
+                  <small *ngIf="report.description">{{ report.description | slice:0:50 }}{{ report.description.length > 50 ? '...' : '' }}</small>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let report">
+              <span class="type-badge">{{ report.type.replace('_', ' ') }}</span>
+            </td>
+          </ng-container>
+          
+          <!-- Format Column -->
+          <ng-container matColumnDef="format">
+            <th mat-header-cell *matHeaderCellDef>Format</th>
+            <td mat-cell *matCellDef="let report">
+              <span class="format-badge">{{ report.format }}</span>
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let report">
+              <div class="status-cell">
+                <span 
+                  class="status-badge" 
+                  [ngClass]="getStatusClass(report.status)">
+                  <mat-icon>{{ getStatusIcon(report.status) }}</mat-icon>
+                  {{ report.status }}
+                </span>
+                <mat-progress-bar 
+                  *ngIf="report.status === 'GENERATING' && (generationProgress$ | async) as progress"
+                  mode="determinate" 
+                  [value]="getProgress(report.id, progress)">
+                </mat-progress-bar>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Generated At Column -->
+          <ng-container matColumnDef="generatedAt">
+            <th mat-header-cell *matHeaderCellDef>Generated</th>
+            <td mat-cell *matCellDef="let report">
+              <span class="date">{{ report.generatedAt | date:'short' }}</span>
+            </td>
+          </ng-container>
+          
+          <!-- Size Column -->
+          <ng-container matColumnDef="size">
+            <th mat-header-cell *matHeaderCellDef>Size</th>
+            <td mat-cell *matCellDef="let report">
+              <span class="size">{{ formatFileSize(report.fileSize) }}</span>
+            </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let report">
+              <button 
+                mat-icon-button 
+                [disabled]="!canDownload(report)"
+                (click)="downloadReportFile(report, $event)"
+                matTooltip="Download report">
+                <mat-icon>download</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                (click)="viewReport(report)"
+                matTooltip="View preview">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                (click)="deleteReportItem(report, $event)"
+                matTooltip="Delete report">
+                <mat-icon color="warn">delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr 
+            mat-row 
+            *matRowDef="let row; columns: displayedColumns;"
+            class="report-row">
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="(reports$ | async)?.length === 0" class="empty-state">
+        <mat-icon>description</mat-icon>
+        <h3>No Reports</h3>
+        <p>No reports have been generated yet</p>
+      </div>
+      
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="(pagination$ | async) as pagination"
+        [length]="pagination.total"
+        [pageSize]="pagination.limit"
+        [pageIndex]="pagination.page - 1"
+        (page)="onPageChange($event.pageIndex + 1)"
+        [pageSizeOptions]="[10, 25, 50]">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

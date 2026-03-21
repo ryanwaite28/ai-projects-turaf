@@ -135,13 +135,13 @@ public class EventBridgeEventPublisher implements EventPublisher {
 
 ## Acceptance Criteria
 
-- [ ] Event validator implemented
-- [ ] All required fields validated
-- [ ] Event ID format validated (UUID)
-- [ ] Event type format validated (PascalCase)
-- [ ] Timestamp validated (not in future)
-- [ ] Validation integrated into publisher
-- [ ] Unit tests pass
+- [x] Event validator implemented
+- [x] All required fields validated
+- [x] Event ID format validated (UUID)
+- [x] Event type format validated (PascalCase)
+- [x] Timestamp validated (not in future)
+- [x] Validation integrated into publisher
+- [x] Unit tests pass
 
 ## Testing Requirements
 

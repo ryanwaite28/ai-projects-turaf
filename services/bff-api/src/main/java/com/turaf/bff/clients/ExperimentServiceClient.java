@@ -2,8 +2,8 @@ package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.CreateExperimentRequest;
 import com.turaf.bff.dto.ExperimentDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -11,11 +11,14 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ExperimentServiceClient {
     
     private final WebClient webClient;
     private static final String SERVICE_PATH = "/experiment";
+    
+    public ExperimentServiceClient(@Qualifier("experimentWebClient") WebClient webClient) {
+        this.webClient = webClient;
+    }
     
     public Flux<ExperimentDto> getExperiments(String organizationId, String userId) {
         log.debug("Calling Experiment Service: GET /experiments for organization: {}", organizationId);

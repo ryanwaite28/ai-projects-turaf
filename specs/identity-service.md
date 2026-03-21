@@ -33,7 +33,8 @@ This specification defines the Identity Service, responsible for user authentica
 **Framework**: Spring Boot 3.x  
 **Security**: Spring Security 6.x with JWT  
 **Persistence**: Spring Data JPA  
-**Database**: PostgreSQL (shared RDS instance)  
+**Database**: PostgreSQL schema `identity_schema` on shared RDS instance  
+**Database User**: `identity_user` (schema-scoped permissions)  
 **Build Tool**: Maven  
 **Java Version**: Java 17  
 
@@ -259,6 +260,23 @@ Authorization: Bearer {access-token}
 ---
 
 ## Database Schema
+
+**Schema**: `identity_schema`  
+**Connection Configuration**:
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/turaf?currentSchema=identity_schema
+    username: identity_user
+    password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        default_schema: identity_schema
+  flyway:
+    schemas: identity_schema
+    default-schema: identity_schema
+```
 
 ### users
 

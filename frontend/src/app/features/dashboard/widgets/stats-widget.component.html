@@ -1,0 +1,27 @@
+<div class="stats-widget">
+  <h2 class="widget-title">Overview</h2>
+  
+  <div class="stats-grid" *ngIf="stats; else noData">
+    <mat-card *ngFor="let card of statCards" class="stat-card">
+      <div class="stat-icon" [style.background-color]="card.color">
+        <mat-icon>{{ card.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ card.value }}</div>
+        <div class="stat-title">{{ card.title }}</div>
+      </div>
+      <div class="stat-trend" *ngIf="card.trend">
+        <mat-icon *ngIf="card.trend === 'up'" class="trend-up">arrow_upward</mat-icon>
+        <mat-icon *ngIf="card.trend === 'down'" class="trend-down">arrow_downward</mat-icon>
+        <mat-icon *ngIf="card.trend === 'neutral'" class="trend-neutral">remove</mat-icon>
+      </div>
+    </mat-card>
+  </div>
+  
+  <ng-template #noData>
+    <div class="no-data">
+      <mat-icon>info</mat-icon>
+      <p>No statistics available</p>
+    </div>
+  </ng-template>
+</div>

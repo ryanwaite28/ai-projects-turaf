@@ -324,6 +324,22 @@ resource "aws_lb_listener_rule" "identity_service" {
 
 ### Amazon RDS PostgreSQL
 
+**Architecture**: Single database instance with multi-schema isolation per service
+
+**Database Design**:
+- **Instance**: Single RDS PostgreSQL instance per environment
+- **Database Name**: `turaf`
+- **Schemas**: One schema per microservice
+  - `identity_schema` - User authentication data
+  - `organization_schema` - Organization and membership data
+  - `experiment_schema` - Problems, hypotheses, experiments
+  - `metrics_schema` - Metrics and aggregations
+- **Users**: One database user per service with schema-scoped permissions
+  - `identity_user` → `identity_schema`
+  - `organization_user` → `organization_schema`
+  - `experiment_user` → `experiment_schema`
+  - `metrics_user` → `metrics_schema`
+
 **Configuration**:
 
 **DEV**:
@@ -380,6 +396,86 @@ resource "aws_db_instance" "postgres" {
     Name        = "turaf-db-${var.environment}"
     Environment = var.environment
   }
+}
+```
+
+**Schema Initialization**:
+```hcl
+# Create database users and schemas
+resource "null_resource" "database_schemas" {
+  depends_on = [aws_db_instance.postgres]
+  
+  provisioner "local-exec" {
+    command = <<-EOT
+      psql -h ${aws_db_instance.postgres.endpoint} -U turaf_admin -d turaf <<SQL
+        -- Create schemas
+        CREATE SCHEMA IF NOT EXISTS identity_schema;
+        CREATE SCHEMA IF NOT EXISTS organization_schema;
+        CREATE SCHEMA IF NOT EXISTS experiment_schema;
+        CREATE SCHEMA IF NOT EXISTS metrics_schema;
+        
+        -- Create users
+        CREATE USER identity_user WITH PASSWORD '${random_password.identity_user.result}';
+        CREATE USER organization_user WITH PASSWORD '${random_password.organization_user.result}';
+        CREATE USER experiment_user WITH PASSWORD '${random_password.experiment_user.result}';
+        CREATE USER metrics_user WITH PASSWORD '${random_password.metrics_user.result}';
+        
+        -- Grant schema permissions
+        GRANT ALL PRIVILEGES ON SCHEMA identity_schema TO identity_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA identity_schema TO identity_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA identity_schema GRANT ALL ON TABLES TO identity_user;
+        
+        GRANT ALL PRIVILEGES ON SCHEMA organization_schema TO organization_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA organization_schema TO organization_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA organization_schema GRANT ALL ON TABLES TO organization_user;
+        
+        GRANT ALL PRIVILEGES ON SCHEMA experiment_schema TO experiment_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA experiment_schema TO experiment_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA experiment_schema GRANT ALL ON TABLES TO experiment_user;
+        
+        GRANT ALL PRIVILEGES ON SCHEMA metrics_schema TO metrics_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA metrics_schema TO metrics_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA metrics_schema GRANT ALL ON TABLES TO metrics_user;
+      SQL
+    EOT
+  }
+}
+
+# Store service user passwords in Secrets Manager
+resource "aws_secretsmanager_secret" "identity_user_password" {
+  name = "turaf/db/identity-user-password-${var.environment}"
+}
+
+resource "aws_secretsmanager_secret_version" "identity_user_password" {
+  secret_id     = aws_secretsmanager_secret.identity_user_password.id
+  secret_string = random_password.identity_user.result
+}
+
+resource "aws_secretsmanager_secret" "organization_user_password" {
+  name = "turaf/db/organization-user-password-${var.environment}"
+}
+
+resource "aws_secretsmanager_secret_version" "organization_user_password" {
+  secret_id     = aws_secretsmanager_secret.organization_user_password.id
+  secret_string = random_password.organization_user.result
+}
+
+resource "aws_secretsmanager_secret" "experiment_user_password" {
+  name = "turaf/db/experiment-user-password-${var.environment}"
+}
+
+resource "aws_secretsmanager_secret_version" "experiment_user_password" {
+  secret_id     = aws_secretsmanager_secret.experiment_user_password.id
+  secret_string = random_password.experiment_user.result
+}
+
+resource "aws_secretsmanager_secret" "metrics_user_password" {
+  name = "turaf/db/metrics-user-password-${var.environment}"
+}
+
+resource "aws_secretsmanager_secret_version" "metrics_user_password" {
+  secret_id     = aws_secretsmanager_secret.metrics_user_password.id
+  secret_string = random_password.metrics_user.result
 }
 ```
 

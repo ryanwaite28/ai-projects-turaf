@@ -31,7 +31,8 @@ This specification defines the Metrics Service, responsible for metric ingestion
 
 **Framework**: Spring Boot 3.x  
 **Persistence**: Spring Data JPA  
-**Database**: PostgreSQL (shared RDS instance)  
+**Database**: PostgreSQL schema `metrics_schema` on shared RDS instance  
+**Database User**: `metrics_user` (schema-scoped permissions)  
 **Events**: Spring Cloud AWS (EventBridge)  
 **Build Tool**: Maven  
 **Java Version**: Java 17  
@@ -240,6 +241,23 @@ X-Organization-Id: {organization-id}
 ---
 
 ## Database Schema
+
+**Schema**: `metrics_schema`  
+**Connection Configuration**:
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/turaf?currentSchema=metrics_schema
+    username: metrics_user
+    password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        default_schema: metrics_schema
+  flyway:
+    schemas: metrics_schema
+    default-schema: metrics_schema
+```
 
 ### metrics
 

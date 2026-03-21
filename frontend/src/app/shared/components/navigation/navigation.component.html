@@ -1,0 +1,73 @@
+<nav class="navigation" *ngIf="isAuthenticated$ | async">
+  <div class="nav-container">
+    <!-- Logo -->
+    <div class="nav-brand">
+      <a routerLink="/dashboard">
+        <h1>Turaf</h1>
+      </a>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <div class="nav-menu desktop-menu">
+      <a
+        *ngFor="let item of navItems"
+        [routerLink]="item.path"
+        class="nav-item"
+        [class.active]="isActive(item.path)"
+        [matTooltip]="item.label">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    </div>
+    
+    <!-- User Menu -->
+    <div class="nav-actions">
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="userMenu"
+        class="user-menu-button">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info" *ngIf="currentUser$ | async as user">
+          <div class="user-email">{{ user.email }}</div>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item routerLink="/settings">
+          <mat-icon>settings</mat-icon>
+          <span>Settings</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="onLogout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+      
+      <!-- Mobile Menu Toggle -->
+      <button
+        mat-icon-button
+        class="mobile-menu-toggle"
+        (click)="toggleMobileMenu()">
+        <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Mobile Navigation -->
+  <div class="nav-menu mobile-menu" [class.open]="isMobileMenuOpen">
+    <a
+      *ngFor="let item of navItems"
+      [routerLink]="item.path"
+      class="nav-item"
+      [class.active]="isActive(item.path)">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.label }}</span>
+    </a>
+  </div>
+</nav>

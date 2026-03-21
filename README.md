@@ -89,11 +89,39 @@ See [GITHUB.md](GITHUB.md) for complete CI/CD documentation.
 
 ### Local Development Setup
 
+**Quick Start with Docker Compose**:
+
 ```bash
 # Clone repository
 git clone https://github.com/ryanwaite28/ai-projects-turaf.git
 cd ai-projects-turaf
 
+# Setup environment
+cp .env.example .env
+
+# Start infrastructure (PostgreSQL + LocalStack)
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+
+# Run a service (example: identity-service)
+cd services/identity-service
+mvn spring-boot:run
+```
+
+**What's Included**:
+- **PostgreSQL 15.3** with multi-schema architecture (identity, organization, experiment, metrics)
+- **LocalStack** for AWS service mocking (S3, EventBridge, SQS, SNS, Secrets Manager)
+- **PgAdmin** (optional) for database management
+- **Auto-initialized schemas** and database users
+- **Idempotent migrations** safe to re-run
+
+**Complete Guide**: See [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md) for detailed setup, troubleshooting, and workflows.
+
+**Manual Setup** (without Docker):
+
+```bash
 # Backend setup (example for experiment-service)
 cd services/experiment-service
 ./mvnw clean install

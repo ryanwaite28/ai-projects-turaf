@@ -30,7 +30,8 @@ This specification defines the Organization Service, responsible for organizatio
 
 **Framework**: Spring Boot 3.x  
 **Persistence**: Spring Data JPA  
-**Database**: PostgreSQL (shared RDS instance)  
+**Database**: PostgreSQL schema `organization_schema` on shared RDS instance  
+**Database User**: `organization_user` (schema-scoped permissions)  
 **Events**: Spring Cloud AWS (EventBridge)  
 **Build Tool**: Maven  
 **Java Version**: Java 17  
@@ -328,6 +329,23 @@ Authorization: Bearer {access-token}
 ---
 
 ## Database Schema
+
+**Schema**: `organization_schema`  
+**Connection Configuration**:
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/turaf?currentSchema=organization_schema
+    username: organization_user
+    password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        default_schema: organization_schema
+  flyway:
+    schemas: organization_schema
+    default-schema: organization_schema
+```
 
 ### organizations
 

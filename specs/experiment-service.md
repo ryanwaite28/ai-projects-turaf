@@ -31,7 +31,8 @@ This specification defines the Experiment Service, responsible for problem manag
 
 **Framework**: Spring Boot 3.x  
 **Persistence**: Spring Data JPA  
-**Database**: PostgreSQL (shared RDS instance)  
+**Database**: PostgreSQL schema `experiment_schema` on shared RDS instance  
+**Database User**: `experiment_user` (schema-scoped permissions)  
 **Events**: Spring Cloud AWS (EventBridge)  
 **Build Tool**: Maven  
 **Java Version**: Java 17  
@@ -425,6 +426,23 @@ X-Organization-Id: {organization-id}
 ---
 
 ## Database Schema
+
+**Schema**: `experiment_schema`  
+**Connection Configuration**:
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/turaf?currentSchema=experiment_schema
+    username: experiment_user
+    password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        default_schema: experiment_schema
+  flyway:
+    schemas: experiment_schema
+    default-schema: experiment_schema
+```
 
 ### problems
 

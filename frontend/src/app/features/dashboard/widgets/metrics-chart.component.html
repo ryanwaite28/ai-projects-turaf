@@ -1,0 +1,70 @@
+<mat-card class="metrics-chart-widget">
+  <mat-card-header>
+    <mat-card-title>Metrics Overview</mat-card-title>
+    
+    <mat-button-toggle-group 
+      [value]="selectedView" 
+      (change)="changeView($event.value)"
+      class="view-toggle">
+      <mat-button-toggle value="trends">
+        <mat-icon>trending_up</mat-icon>
+        Trends
+      </mat-button-toggle>
+      <mat-button-toggle value="success">
+        <mat-icon>check_circle</mat-icon>
+        Success Rate
+      </mat-button-toggle>
+      <mat-button-toggle value="distribution">
+        <mat-icon>pie_chart</mat-icon>
+        Distribution
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div *ngIf="metrics; else noData" class="chart-container">
+      <!-- Placeholder for chart -->
+      <div class="chart-placeholder">
+        <mat-icon>insert_chart</mat-icon>
+        <h3>{{ selectedView | titlecase }} Chart</h3>
+        <p>{{ getChartSummary() }}</p>
+        <p class="integration-note">
+          Chart visualization will be displayed here.<br>
+          Integrate with Chart.js, ngx-charts, or similar library.
+        </p>
+      </div>
+      
+      <!-- Data Preview -->
+      <div class="data-preview" *ngIf="selectedView === 'distribution'">
+        <h4>Problem Distribution</h4>
+        <div class="distribution-list">
+          <div 
+            *ngFor="let item of metrics.problemDistribution" 
+            class="distribution-item">
+            <div class="item-header">
+              <span class="problem-name">{{ item.problemName }}</span>
+              <span class="success-rate">{{ item.successRate.toFixed(1) }}%</span>
+            </div>
+            <div class="item-bar">
+              <div 
+                class="bar-fill" 
+                [style.width.%]="item.successRate"
+                [class.high]="item.successRate >= 70"
+                [class.medium]="item.successRate >= 50 && item.successRate < 70"
+                [class.low]="item.successRate < 50">
+              </div>
+            </div>
+            <div class="item-count">{{ item.experimentCount }} experiments</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <ng-template #noData>
+      <div class="no-data">
+        <mat-icon>insert_chart_outlined</mat-icon>
+        <p>No metrics data available</p>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

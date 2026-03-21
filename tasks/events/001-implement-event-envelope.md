@@ -97,12 +97,12 @@ public interface DomainEvent {
 
 ## Acceptance Criteria
 
-- [ ] Event envelope structure defined
-- [ ] All required fields present
-- [ ] Event metadata support added
-- [ ] Versioning supported
-- [ ] Correlation/causation tracking enabled
-- [ ] Unit tests pass
+- [x] Event envelope structure defined
+- [x] All required fields present
+- [x] Event metadata support added
+- [x] Versioning supported
+- [x] Correlation/causation tracking enabled
+- [x] Unit tests pass
 
 ## Testing Requirements
 

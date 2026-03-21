@@ -50,12 +50,12 @@ export class DashboardComponent implements OnInit {
 
 ## Acceptance Criteria
 
-- [ ] Dashboard module created
-- [ ] Dashboard component implemented
-- [ ] Widgets created
-- [ ] Data loaded from store
-- [ ] Charts displayed
-- [ ] Responsive layout
+- [x] Dashboard module created
+- [x] Dashboard component implemented
+- [x] Widgets created
+- [x] Data loaded from store
+- [x] Charts displayed
+- [x] Responsive layout
 
 ## Testing Requirements
 

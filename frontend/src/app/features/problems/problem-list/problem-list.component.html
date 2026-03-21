@@ -1,0 +1,128 @@
+<div class="problem-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Problems</h1>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="createProblem()">
+      <mat-icon>add</mat-icon>
+      Create Problem
+    </button>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading problems...</p>
+  </div>
+  
+  <!-- Error Alert -->
+  <mat-error *ngIf="error$ | async as error" class="error-alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ error }}</span>
+  </mat-error>
+  
+  <!-- Problems Table -->
+  <mat-card *ngIf="!(loading$ | async)" class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table 
+          mat-table 
+          [dataSource]="problems$ | async" 
+          class="problems-table">
+          
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Title</th>
+            <td mat-cell *matCellDef="let problem">
+              <div class="title-cell">
+                <strong>{{ problem.title }}</strong>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let problem">
+              <div class="description-cell">
+                {{ problem.description | slice:0:100 }}{{ problem.description.length > 100 ? '...' : '' }}
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let problem">
+              <span 
+                class="status-badge" 
+                [class.active]="problem.status === 'ACTIVE'"
+                [class.draft]="problem.status === 'DRAFT'"
+                [class.archived]="problem.status === 'ARCHIVED'">
+                {{ problem.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Created At Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let problem">
+              {{ problem.createdAt | date:'MMM d, y' }}
+            </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let problem">
+              <button 
+                mat-icon-button 
+                (click)="viewProblem(problem)"
+                matTooltip="View Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                (click)="editProblem(problem, $event)"
+                matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr 
+            mat-row 
+            *matRowDef="let row; columns: displayedColumns;"
+            class="problem-row"
+            (click)="viewProblem(row)">
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="(problems$ | async)?.length === 0" class="empty-state">
+        <mat-icon>lightbulb_outline</mat-icon>
+        <h3>No Problems Yet</h3>
+        <p>Create your first problem to get started</p>
+        <button mat-raised-button color="primary" (click)="createProblem()">
+          <mat-icon>add</mat-icon>
+          Create Problem
+        </button>
+      </div>
+      
+      <!-- Pagination -->
+      <mat-paginator 
+        *ngIf="(pagination$ | async) as pagination"
+        [length]="pagination.total"
+        [pageSize]="pagination.limit"
+        [pageIndex]="pagination.page - 1"
+        (page)="onPageChange($event.pageIndex + 1)"
+        [pageSizeOptions]="[5, 10, 25, 50]">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

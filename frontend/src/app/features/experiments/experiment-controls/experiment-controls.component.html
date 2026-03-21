@@ -1,0 +1,59 @@
+<mat-card class="controls-card">
+  <mat-card-header>
+    <mat-card-title>Controls</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="controls-grid">
+      <button 
+        mat-raised-button 
+        color="primary"
+        [disabled]="!canStart()"
+        (click)="start()">
+        <mat-icon>play_arrow</mat-icon>
+        Start
+      </button>
+      
+      <button 
+        mat-raised-button
+        [disabled]="!canPause()"
+        (click)="pause()">
+        <mat-icon>pause</mat-icon>
+        Pause
+      </button>
+      
+      <button 
+        mat-raised-button
+        [disabled]="!canResume()"
+        (click)="resume()">
+        <mat-icon>play_arrow</mat-icon>
+        Resume
+      </button>
+      
+      <button 
+        mat-raised-button 
+        color="accent"
+        [disabled]="!canComplete()"
+        (click)="complete()">
+        <mat-icon>done_all</mat-icon>
+        Complete
+      </button>
+      
+      <button 
+        mat-stroked-button 
+        color="warn"
+        [disabled]="!canFail()"
+        (click)="fail()">
+        <mat-icon>error</mat-icon>
+        Mark Failed
+      </button>
+      
+      <button 
+        mat-stroked-button
+        [disabled]="!canCancel()"
+        (click)="cancel()">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

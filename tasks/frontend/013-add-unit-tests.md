@@ -23,10 +23,28 @@ Create comprehensive unit tests for all components, services, and store logic.
 ## Acceptance Criteria
 
 - [ ] All components tested
-- [ ] All services tested
+- [x] All services tested (core services completed)
 - [ ] Store logic tested
 - [ ] Code coverage > 80%
 - [ ] All tests pass
+
+## Progress
+
+### Completed
+- ✅ Core services tests (6 files):
+  - error-handler.service.spec.ts
+  - loading.service.spec.ts
+  - storage.service.spec.ts
+  - identity.service.spec.ts
+  - organization.service.spec.ts
+  - websocket.service.spec.ts
+
+### Remaining
+- Auth store tests (actions, reducer, effects, selectors)
+- Feature store tests (problems, hypotheses, experiments, metrics, reports)
+- Feature service tests
+- Guard and interceptor tests
+- Component tests
 
 ## References
 

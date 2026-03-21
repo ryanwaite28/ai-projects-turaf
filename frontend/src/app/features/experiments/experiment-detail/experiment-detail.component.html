@@ -1,0 +1,141 @@
+<div class="experiment-detail-container" *ngIf="experiment$ | async as experiment">
+  <div class="page-header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to list">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ experiment.name }}</h1>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button color="warn" (click)="deleteExperiment(experiment)">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </div>
+  
+  <div class="content-grid">
+    <div class="main-content">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>Overview</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <span class="label">Status:</span>
+            <span class="status-badge" [ngClass]="getStatusClass(experiment.status)">
+              <mat-icon>{{ getStatusIcon(experiment.status) }}</mat-icon>
+              {{ experiment.status }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Description:</span>
+            <span>{{ experiment.description }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Hypothesis ID:</span>
+            <span class="mono">{{ experiment.hypothesisId }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="metrics-card" *ngIf="experiment.metrics">
+        <mat-card-header>
+          <mat-card-title>Metrics</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <div class="metric-value">{{ experiment.metrics.totalRuns || 0 }}</div>
+              <div class="metric-label">Total Runs</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value">{{ experiment.metrics.successfulRuns || 0 }}</div>
+              <div class="metric-label">Successful</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value">{{ experiment.metrics.failedRuns || 0 }}</div>
+              <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value">{{ (experiment.metrics.successRate * 100).toFixed(1) }}%</div>
+              <div class="metric-label">Success Rate</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="results-card" *ngIf="experiment.results">
+        <mat-card-header>
+          <mat-card-title>Results</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row" *ngIf="experiment.results.outcome">
+            <span class="label">Outcome:</span>
+            <span class="outcome-badge" [class]="experiment.results.outcome.toLowerCase()">
+              {{ experiment.results.outcome }}
+            </span>
+          </div>
+          <div class="info-row" *ngIf="experiment.results.summary">
+            <span class="label">Summary:</span>
+            <span>{{ experiment.results.summary }}</span>
+          </div>
+          <div class="info-row" *ngIf="experiment.results.confidence">
+            <span class="label">Confidence:</span>
+            <span>{{ (experiment.results.confidence * 100).toFixed(1) }}%</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <div class="sidebar">
+      <app-experiment-controls [experiment]="experiment"></app-experiment-controls>
+      
+      <mat-card class="metadata-card">
+        <mat-card-header>
+          <mat-card-title>Metadata</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metadata-item">
+            <mat-icon>schedule</mat-icon>
+            <div>
+              <div class="metadata-label">Created</div>
+              <div class="metadata-value">{{ experiment.createdAt | date:'medium' }}</div>
+            </div>
+          </div>
+          <div class="metadata-item">
+            <mat-icon>update</mat-icon>
+            <div>
+              <div class="metadata-label">Updated</div>
+              <div class="metadata-value">{{ experiment.updatedAt | date:'medium' }}</div>
+            </div>
+          </div>
+          <div class="metadata-item" *ngIf="experiment.startDate">
+            <mat-icon>play_arrow</mat-icon>
+            <div>
+              <div class="metadata-label">Started</div>
+              <div class="metadata-value">{{ experiment.startDate | date:'medium' }}</div>
+            </div>
+          </div>
+          <div class="metadata-item" *ngIf="experiment.completedAt">
+            <mat-icon>done</mat-icon>
+            <div>
+              <div class="metadata-label">Completed</div>
+              <div class="metadata-value">{{ experiment.completedAt | date:'medium' }}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="loading$ | async" class="loading-container">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>Loading experiment...</p>
+</div>
+
+<mat-error *ngIf="error$ | async as error" class="error-alert">
+  <mat-icon>error</mat-icon>
+  <span>{{ error }}</span>
+</mat-error>
