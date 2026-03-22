@@ -86,6 +86,39 @@ These specifications break down the comprehensive PROJECT.md into focused, human
 - Webhook delivery with retry logic
 - Notification preferences
 
+**`communications-service.md`**
+- Real-time messaging and conversations
+- Domain model (Conversation, Message, Participant, ReadState)
+- API endpoints (conversations, messages, read state)
+- Database schema (communications_schema tables)
+- SQS consumer configuration (FIFO queues)
+- EventBridge event publishing (MessageDelivered)
+- Read-state strategy for unread counts
+
+**`ws-gateway.md`**
+- WebSocket gateway (NestJS)
+- JWT authentication for WebSocket connections
+- Redis Pub/Sub for horizontal scaling
+- SQS FIFO queue publishing
+- WebSocket events (messages, typing indicators)
+- Configuration-based Redis adapter
+- Stateless design for scalability
+
+**`communications-domain-model.md`**
+- Conversation aggregate (DDD patterns)
+- Message, Participant, ReadState entities
+- ConversationType and ParticipantRole value objects
+- Domain events (MessageDelivered, ConversationCreated)
+- Business rules and invariants
+- Repository interfaces
+
+**`communications-event-schemas.md`**
+- MessageDelivered event schema
+- ConversationCreated event schema
+- ParticipantAdded/Removed event schemas
+- Event versioning strategy
+- Integration with EventBridge
+
 ---
 
 ### Infrastructure Specifications
@@ -144,6 +177,9 @@ These specifications break down the comprehensive PROJECT.md into focused, human
   - ReportGenerated
   - OrganizationCreated
   - MemberAdded
+  - MessageDelivered
+  - ConversationCreated
+  - ParticipantAdded/Removed
 - Event versioning strategy
 - Event validation rules
 
@@ -217,8 +253,8 @@ After reviewing these specifications, proceed to:
 
 **Generated**: 2024-03-14  
 **Source**: PROJECT.md (1913 lines)  
-**Total Specs**: 14 files  
-**Total Lines**: ~5000+ lines of specifications  
+**Total Specs**: 18 files  
+**Total Lines**: ~7500+ lines of specifications  
 **Coverage**: 100% of PROJECT.md architecture, services, infrastructure, and DevOps  
 
 ---

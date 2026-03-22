@@ -531,9 +531,29 @@ mvn verify -Dtest=AuthenticationIntegrationTest -Dspring.profiles.active=integra
 - **Circuit Breaker**: Opens after 50% failure rate
 - **Rate Limit**: Enforced at configured thresholds
 
+## Testing Strategy
+
+**BFF API uses WireMock** for downstream service mocking (not Testcontainers/LocalStack):
+
+- **Use WireMock** to mock:
+  - Identity Service
+  - Organization Service
+  - Experiment Service
+  - Metrics Service
+  - Communications Service
+
+- **No AWS services** needed for BFF API integration tests
+- **Focus on**: Request routing, aggregation, circuit breakers, rate limiting
+
+**Note**: This differs from microservice integration tests which use Testcontainers + LocalStack for database and AWS service testing.
+
+---
+
 ## References
 
-- Specification: `specs/bff-api.md` (Integration Testing section)
-- WireMock Documentation
-- Spring Boot Testing Documentation
-- Testcontainers Documentation
+- **Testing Strategy**: `specs/testing-strategy.md` (comprehensive guide)
+- **PROJECT.md**: Section 23a - Testing Strategy
+- **CI/CD Pipeline**: `specs/ci-cd-pipelines.md` (integration test stage)
+- **BFF API**: `specs/bff-api.md` (Integration Testing section)
+- **WireMock Documentation**: https://wiremock.org/
+- **Spring Boot Testing**: https://spring.io/guides/gs/testing-web/

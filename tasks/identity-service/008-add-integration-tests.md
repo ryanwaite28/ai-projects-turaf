@@ -20,15 +20,59 @@ Create integration tests that verify the complete authentication flow from API e
 - `UserControllerIntegrationTest.java`
 - `AuthenticationFlowIntegrationTest.java`
 
+## Testing Strategy
+
+**Follow the hybrid AWS approach** (PROJECT.md Section 23a, specs/testing-strategy.md):
+
+- **Use Testcontainers** for:
+  - PostgreSQL database integration tests
+  - Realistic database queries and transactions
+  
+- **No AWS services needed** for Identity Service (authentication is local)
+
+**Example Configuration**:
+```java
+@SpringBootTest
+@Testcontainers
+@ActiveProfiles("test")
+class IdentityServiceIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+        .withDatabaseName("identity_test")
+        .withUsername("test")
+        .withPassword("test");
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+}
+```
+
+---
+
 ## Implementation Details
 
 ### Auth Controller Integration Test
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase
-@Transactional
+@Testcontainers
+@ActiveProfiles("test")
 class AuthControllerIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
     @Autowired
     private TestRestTemplate restTemplate;
     
@@ -247,5 +291,8 @@ class AuthenticationFlowIntegrationTest {
 
 ## References
 
-- Specification: `specs/identity-service.md`
-- Related Tasks: All identity-service tasks
+- **Testing Strategy**: `specs/testing-strategy.md` (comprehensive guide)
+- **PROJECT.md**: Section 23a - Testing Strategy
+- **CI/CD Pipeline**: `specs/ci-cd-pipelines.md` (integration test stage)
+- **Identity Service**: `specs/identity-service.md`
+- **Related Tasks**: All identity-service tasks

@@ -14,6 +14,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE SCHEMA IF NOT EXISTS organization_schema;
     CREATE SCHEMA IF NOT EXISTS experiment_schema;
     CREATE SCHEMA IF NOT EXISTS metrics_schema;
+    CREATE SCHEMA IF NOT EXISTS communications_schema;
 
     -- ==========================================
     -- Create Service Users
@@ -50,6 +51,14 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
             RAISE NOTICE 'Created user: metrics_user';
         ELSE
             RAISE NOTICE 'User already exists: metrics_user';
+        END IF;
+
+        -- Communications User
+        IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'communications_user') THEN
+            CREATE USER communications_user WITH PASSWORD '${COMMUNICATIONS_USER_PASSWORD}';
+            RAISE NOTICE 'Created user: communications_user';
+        ELSE
+            RAISE NOTICE 'User already exists: communications_user';
         END IF;
     END
     \$\$;
@@ -91,6 +100,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     ALTER DEFAULT PRIVILEGES IN SCHEMA metrics_schema GRANT ALL ON SEQUENCES TO metrics_user;
 
     -- ==========================================
+    -- Grant Permissions: communications_schema
+    -- ==========================================
+    GRANT ALL PRIVILEGES ON SCHEMA communications_schema TO communications_user;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA communications_schema TO communications_user;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA communications_schema TO communications_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA communications_schema GRANT ALL ON TABLES TO communications_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA communications_schema GRANT ALL ON SEQUENCES TO communications_user;
+
+    -- ==========================================
     -- Verify Setup
     -- ==========================================
     SELECT schema_name FROM information_schema.schemata 
@@ -100,6 +118,6 @@ EOSQL
 
 echo "=========================================="
 echo "Database initialization complete!"
-echo "Schemas created: identity_schema, organization_schema, experiment_schema, metrics_schema"
-echo "Users created: identity_user, organization_user, experiment_user, metrics_user"
+echo "Schemas created: identity_schema, organization_schema, experiment_schema, metrics_schema, communications_schema"
+echo "Users created: identity_user, organization_user, experiment_user, metrics_user, communications_user"
 echo "=========================================="

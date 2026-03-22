@@ -12,16 +12,18 @@ tasks/
 ├── identity-service/      # 8 tasks - User authentication
 ├── organization-service/  # 9 tasks - Multi-tenancy
 ├── experiment-service/    # 10 tasks - Core domain
-├── metrics-service/       # 9 tasks - Data collection
+├── metrics-service/       # 10 tasks - Data collection
 ├── reporting-service/     # 10 tasks - Report generation
 ├── notification-service/  # 8 tasks - Notifications
+├── communications-service/ # 12 tasks - Real-time messaging
+├── ws-gateway/            # 8 tasks - WebSocket gateway
 ├── infrastructure/        # 12 tasks - AWS & Terraform
 ├── frontend/             # 14 tasks - Angular app
 ├── cicd/                 # 7 tasks - GitHub Actions
 └── events/               # 5 tasks - Event infrastructure
 ```
 
-**Total Tasks**: 95
+**Total Tasks**: 115
 
 ## Implementation Order
 
@@ -41,17 +43,17 @@ Follow this sequence for optimal dependency management:
 ### Phase 4: Experiment Service (Tasks 21-30)
 21-30. Complete experiment service implementation
 
-### Phase 5: Metrics Service (Tasks 31-39)
-31-39. Complete metrics service implementation
+### Phase 5: Metrics Service (Tasks 31-40)
+31-40. Complete metrics service implementation
 
-### Phase 6: Event Infrastructure (Tasks 40-44)
-40-44. Event envelope, publisher, EventBridge setup
+### Phase 6: Communications Service (Tasks 41-52)
+41-52. Complete communications service implementation
 
-### Phase 7: Reporting Service (Tasks 45-54)
-45-54. Complete reporting Lambda implementation
+### Phase 7: WebSocket Gateway (Tasks 53-60)
+53-60. Complete WebSocket gateway implementation
 
-### Phase 8: Notification Service (Tasks 55-62)
-55-62. Complete notification Lambda implementation
+### Phase 8: Reporting Service (Tasks 61-70)
+61-70. Complete reporting Lambda implementation
 
 ### Phase 9: Frontend (Tasks 63-76)
 63-76. Complete Angular application

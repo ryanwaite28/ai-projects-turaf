@@ -20,15 +20,54 @@ Create integration tests that verify the complete organization and membership ma
 - `MembershipControllerIntegrationTest.java`
 - `OrganizationFlowIntegrationTest.java`
 
+## Testing Strategy
+
+**Follow the hybrid AWS approach** (PROJECT.md Section 23a, specs/testing-strategy.md):
+
+- **Use Testcontainers + LocalStack** for:
+  - PostgreSQL database integration tests
+  - EventBridge event publishing (use @MockBean - not in free tier)
+  
+**Example Configuration**:
+```java
+@SpringBootTest
+@Testcontainers
+@ActiveProfiles("test")
+class OrganizationServiceIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+        .withDatabaseName("organization_test");
+    
+    @MockBean
+    private EventBridgeClient eventBridgeClient;
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+}
+```
+
+---
+
 ## Implementation Details
 
 ### Organization Controller Integration Test
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase
-@Transactional
+@Testcontainers
+@ActiveProfiles("test")
 class OrganizationControllerIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    
+    @MockBean
+    private EventBridgeClient eventBridgeClient;
     @Autowired
     private TestRestTemplate restTemplate;
     
@@ -211,5 +250,8 @@ class OrganizationFlowIntegrationTest {
 
 ## References
 
-- Specification: `specs/organization-service.md`
-- Related Tasks: All organization-service tasks
+- **Testing Strategy**: `specs/testing-strategy.md` (comprehensive guide)
+- **PROJECT.md**: Section 23a - Testing Strategy
+- **CI/CD Pipeline**: `specs/ci-cd-pipelines.md` (integration test stage)
+- **Organization Service**: `specs/organization-service.md`
+- **Related Tasks**: All organization-service tasks

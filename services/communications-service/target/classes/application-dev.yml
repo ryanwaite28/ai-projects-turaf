@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/turaf
+  jpa:
+    show-sql: true
+
+aws:
+  region: us-east-1
+  sqs:
+    endpoint: http://localhost:4566
+  eventbridge:
+    endpoint: http://localhost:4566
+
+logging:
+  level:
+    com.turaf.communications: DEBUG

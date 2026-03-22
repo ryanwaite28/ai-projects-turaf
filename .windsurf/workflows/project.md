@@ -107,8 +107,16 @@ Follow engineering principles in PROJECT.md:
 - DDD
 - Clean Architecture
 - Spring Boot best practices (Java)
+
 Generate only the code necessary for this task.
-Include unit tests where relevant.
+
+Include tests following the testing strategy (PROJECT.md Section 23a):
+- Unit tests for domain logic and services (80%+ coverage)
+- Integration tests for repositories and AWS integrations
+- Use Testcontainers + LocalStack for integration tests
+- Mock paid AWS services (EventBridge, CloudWatch) with @MockBean
+- Use LocalStack for free-tier services (SQS, S3, DynamoDB)
+
 Do NOT change other services or violate service boundaries.
 Track progress using task checklists in the task files.
 ```
@@ -154,8 +162,17 @@ Include service-based API calls, feature modules, and state management.
 After each task or feature:
 
 * Run unit tests and integration tests
+  - Unit tests: `mvn test -Dtest="!*IntegrationTest"`
+  - Integration tests: `mvn test -Dtest="*IntegrationTest"` (requires Docker)
+  - Verify 80%+ code coverage with JaCoCo
 * Validate CI/CD pipeline execution
+  - Ensure all tests pass in GitHub Actions
+  - Check test reports in PR checks
+  - Verify coverage uploaded to Codecov
 * Verify event-driven interactions
+  - Integration tests should validate SQS message flow (LocalStack)
+  - Mock EventBridge calls should be verified with @MockBean
+  - Check event schemas match specifications
 
 ---
 
@@ -166,6 +183,12 @@ After each task or feature:
 3. Break tasks into small, incremental units.
 4. Parallelize DevOps and backend development where possible.
 5. Remind AI of service boundaries and architecture before coding.
+6. **Testing Best Practices**:
+   - Write unit tests first for TDD approach
+   - Use Testcontainers for integration tests (portable, reproducible)
+   - Apply hybrid AWS approach: LocalStack for free services, @MockBean for paid
+   - Verify tests pass locally before committing
+   - Aim for 80%+ code coverage across all services
 
 ---
 

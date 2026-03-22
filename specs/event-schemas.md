@@ -541,6 +541,64 @@ All events must follow this standardized envelope structure:
 
 ---
 
+### MessageDelivered
+
+**Published By**: Communications Service  
+**Event Type**: `MessageDelivered`  
+**Version**: 1  
+
+**Payload Schema**:
+```json
+{
+  "messageId": "uuid",
+  "conversationId": "uuid",
+  "senderId": "uuid",
+  "conversationType": "DIRECT|GROUP",
+  "recipientIds": ["uuid"],
+  "content": "string",
+  "deliveredAt": "ISO-8601"
+}
+```
+
+**Field Definitions**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| messageId | UUID | Yes | Unique message identifier |
+| conversationId | UUID | Yes | Conversation the message belongs to |
+| senderId | UUID | Yes | User who sent the message |
+| conversationType | Enum | Yes | DIRECT or GROUP |
+| recipientIds | UUID[] | Yes | All participants except sender |
+| content | String | Yes | Message content (max 10,000 chars) |
+| deliveredAt | ISO-8601 | Yes | When message was persisted |
+
+**Consumers**:
+- Notification Service (push notifications)
+- Analytics Service (messaging metrics)
+
+**Example**:
+```json
+{
+  "eventId": "550e8400-e29b-41d4-a716-446655440000",
+  "eventType": "MessageDelivered",
+  "eventVersion": 1,
+  "timestamp": "2026-03-21T20:30:00Z",
+  "sourceService": "communications-service",
+  "organizationId": "org-123",
+  "payload": {
+    "messageId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "conversationId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "senderId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "conversationType": "DIRECT",
+    "recipientIds": ["b2c3d4e5-f6a7-8901-bcde-f12345678901"],
+    "content": "Hello, how are you?",
+    "deliveredAt": "2026-03-21T20:30:00Z"
+  }
+}
+```
+
+---
+
 ## Event Versioning Strategy
 
 ### Version Evolution Rules

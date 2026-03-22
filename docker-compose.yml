@@ -13,6 +13,7 @@ services:
       - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
       - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
       - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+      - COMMUNICATIONS_USER_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
@@ -197,6 +198,90 @@ services:
       retries: 5
       start_period: 40s
 
+  # Redis for WebSocket scaling
+  redis:
+    image: redis:7-alpine
+    container_name: turaf-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - turaf-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  # Communications Service
+  communications-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/spring-boot/Dockerfile
+      args:
+        SERVICE_NAME: communications-service
+    container_name: turaf-communications-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-turaf}
+      - DB_USER=communications_user
+      - DB_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - SQS_DIRECT_QUEUE=communications-direct-messages.fifo
+      - SQS_GROUP_QUEUE=communications-group-messages.fifo
+      - EVENTBRIDGE_BUS=turaf-event-bus
+      - AWS_ENDPOINT=http://localstack:4566
+    ports:
+      - "${COMMUNICATIONS_SERVICE_PORT:-8085}:8085"
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/communications/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # WebSocket Gateway
+  ws-gateway:
+    build:
+      context: ./services/ws-gateway
+      dockerfile: Dockerfile
+    container_name: turaf-ws-gateway
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - REDIS_URL=redis://redis:6379
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_SQS_ENDPOINT=http://localstack:4566
+      - SQS_DIRECT_QUEUE_URL=http://localstack:4566/000000000000/communications-direct-messages.fifo
+      - SQS_GROUP_QUEUE_URL=http://localstack:4566/000000000000/communications-group-messages.fifo
+      - ALLOWED_ORIGINS=http://localhost:4200
+    ports:
+      - "${WS_GATEWAY_PORT:-3000}:3000"
+    networks:
+      - turaf-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   # PgAdmin for database management (optional)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -228,5 +313,7 @@ volumes:
     name: turaf-postgres-data
   localstack_data:
     name: turaf-localstack-data
+  redis_data:
+    name: turaf-redis-data
   pgadmin_data:
     name: turaf-pgadmin-data

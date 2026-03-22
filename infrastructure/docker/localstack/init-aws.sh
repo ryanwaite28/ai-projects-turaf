@@ -47,6 +47,18 @@ awslocal sqs create-queue --queue-name turaf-report-events 2>/dev/null || echo "
 # Create DLQ (Dead Letter Queue)
 awslocal sqs create-queue --queue-name turaf-dlq 2>/dev/null || echo "Queue turaf-dlq already exists"
 
+# Create FIFO queues for Communications Service
+echo "Creating Communications FIFO queues..."
+awslocal sqs create-queue \
+    --queue-name communications-direct-messages.fifo \
+    --attributes FifoQueue=true,ContentBasedDeduplication=false 2>/dev/null || \
+    echo "Queue communications-direct-messages.fifo already exists"
+
+awslocal sqs create-queue \
+    --queue-name communications-group-messages.fifo \
+    --attributes FifoQueue=true,ContentBasedDeduplication=false 2>/dev/null || \
+    echo "Queue communications-group-messages.fifo already exists"
+
 echo "✓ SQS queues created"
 
 # ==========================================
@@ -91,6 +103,13 @@ awslocal secretsmanager create-secret \
     --secret-id turaf/db/metrics-user-password \
     --secret-string "${METRICS_USER_PASSWORD}" 2>/dev/null
 
+awslocal secretsmanager create-secret \
+    --name turaf/db/communications-user-password \
+    --secret-string "${COMMUNICATIONS_USER_PASSWORD}" 2>/dev/null || \
+    awslocal secretsmanager update-secret \
+    --secret-id turaf/db/communications-user-password \
+    --secret-string "${COMMUNICATIONS_USER_PASSWORD}" 2>/dev/null
+
 echo "✓ Secrets Manager secrets created"
 
 # ==========================================
@@ -130,6 +149,7 @@ echo "Available resources:"
 echo "  - S3 Buckets: turaf-reports-local, turaf-artifacts-local, turaf-frontend-local"
 echo "  - EventBridge: turaf-events"
 echo "  - SQS Queues: turaf-experiment-events, turaf-metric-events, turaf-notification-events, turaf-dlq"
+echo "  - SQS FIFO Queues: communications-direct-messages.fifo, communications-group-messages.fifo"
 echo "  - SNS Topics: turaf-notifications, turaf-alerts"
 echo "  - Secrets: Database user passwords"
 echo ""

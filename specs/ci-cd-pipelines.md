@@ -138,7 +138,7 @@ lint-terraform:
 
 ### 2. Unit Tests
 
-**Purpose**: Run all unit tests
+**Purpose**: Run all unit tests (fast, no external dependencies)
 
 **Steps**:
 ```yaml
@@ -152,11 +152,12 @@ test-backend:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: maven
     
-    - name: Run tests
+    - name: Run unit tests
       run: |
         cd services
-        mvn test
+        mvn test -Dtest="!*IntegrationTest"
     
     - name: Generate coverage report
       run: |
@@ -167,7 +168,7 @@ test-backend:
       uses: codecov/codecov-action@v4
       with:
         files: ./services/target/site/jacoco/jacoco.xml
-        flags: backend
+        flags: backend,unit-tests
 
 test-frontend:
   runs-on: ubuntu-latest
@@ -178,6 +179,8 @@ test-frontend:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
     
     - name: Install dependencies
       run: |
@@ -198,7 +201,73 @@ test-frontend:
 
 ---
 
-### 3. Build
+### 3. Integration Tests
+
+**Purpose**: Run integration tests with Testcontainers + LocalStack
+
+**Steps**:
+```yaml
+integration-tests:
+  runs-on: ubuntu-latest
+  needs: [test-backend]  # Run after unit tests pass
+  steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    # Docker is pre-installed on ubuntu-latest runners
+    # No additional Docker setup required for Testcontainers
+    
+    - name: Run integration tests
+      run: |
+        cd services
+        mvn verify -Dtest="*IntegrationTest"
+      env:
+        # Testcontainers will automatically use Docker
+        TESTCONTAINERS_RYUK_DISABLED: false
+    
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Integration Test Results
+        path: services/*/target/surefire-reports/*.xml
+        reporter: java-junit
+    
+    - name: Upload integration test coverage
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: services/*/target/site/jacoco/jacoco.xml
+        flags: backend,integration-tests
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: integration-test-logs
+        path: |
+          services/*/target/surefire-reports/
+          services/*/target/failsafe-reports/
+```
+
+**Key Features**:
+- **Docker-in-Docker**: GitHub Actions runners have Docker pre-installed
+- **Testcontainers**: Automatically manages container lifecycle
+- **LocalStack**: Provides free-tier AWS services (SQS, S3, DynamoDB)
+- **Mocked Services**: EventBridge and other paid services use @MockBean
+- **Test Reports**: Published to GitHub PR checks
+- **Coverage**: Uploaded to Codecov with integration-tests flag
+- **Artifacts**: Test logs uploaded on failure for debugging
+
+---
+
+### 4. Build
 
 **Purpose**: Verify builds succeed
 
@@ -206,7 +275,7 @@ test-frontend:
 ```yaml
 build-backend:
   runs-on: ubuntu-latest
-  needs: [lint-java, test-backend]
+  needs: [lint-java, test-backend, integration-tests]
   steps:
     - uses: actions/checkout@v4
     
@@ -265,7 +334,7 @@ build-frontend:
 ```yaml
 sonarqube:
   runs-on: ubuntu-latest
-  needs: [test-backend, test-frontend]
+  needs: [test-backend, integration-tests, test-frontend]
   steps:
     - uses: actions/checkout@v4
       with:
@@ -595,11 +664,13 @@ smoke-tests:
 
 **Additional Jobs**:
 
-### Integration Tests
+### Integration Tests (Against Deployed Environment)
+
+**Note**: These are environment-specific integration tests that run against the deployed QA environment. They differ from the Testcontainers integration tests in the CI pipeline, which test service integrations in isolation.
 
 **Steps**:
 ```yaml
-integration-tests:
+integration-tests-qa:
   runs-on: ubuntu-latest
   needs: deploy-services
   steps:
@@ -610,12 +681,22 @@ integration-tests:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: maven
     
-    - name: Run integration tests
+    - name: Run environment integration tests
       run: |
         cd services
-        mvn verify -P integration-tests \
-          -Dtest.api.url=https://api.qa.turaf.com
+        mvn verify -P qa-integration-tests \
+          -Dtest.api.url=https://api.qa.turafapp.com \
+          -Dtest.environment=qa
+    
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: QA Integration Test Results
+        path: services/*/target/failsafe-reports/*.xml
+        reporter: java-junit
 ```
 
 ### E2E Tests
