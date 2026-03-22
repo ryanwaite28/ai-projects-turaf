@@ -16,11 +16,68 @@ Implement the TypingGateway to handle typing indicator events and broadcast them
 
 ## Acceptance Criteria
 
-- [ ] TypingGateway handles start/stop typing events
-- [ ] Typing indicators broadcast via Redis Pub/Sub
-- [ ] Events scoped to conversations
-- [ ] No persistence (ephemeral events only)
-- [ ] Tests pass
+- [x] TypingGateway handles start/stop typing events
+- [x] Typing indicators broadcast via Redis Pub/Sub
+- [x] Events scoped to conversations
+- [x] No persistence (ephemeral events only)
+- [x] Tests pass
+
+## Implementation Summary
+
+**Typing Gateway implementation completed**:
+
+1. **TypingGateway** (`src/gateways/typing.gateway.ts`)
+   - ✅ WebSocket typing start/stop event handlers
+   - ✅ JWT authentication via WsAuthGuard
+   - ✅ Real-time broadcasting via Socket.IO
+   - ✅ Room-scoped events (conversation-based)
+   - ✅ Excludes sender from broadcasts
+   - ✅ Ephemeral events (no persistence)
+   - ✅ Logging for debugging
+
+2. **Event Flow**:
+   - Client emits `typing_start` or `typing_stop`
+   - Gateway broadcasts `user_typing` to room (excluding sender)
+   - Redis adapter distributes across instances
+   - Other clients in conversation receive indicator
+   - Sender receives acknowledgment
+
+3. **Event Structure**:
+   - Input: `{ conversationId: string }`
+   - Broadcast: `{ conversationId, userId, isTyping: boolean }`
+   - Acknowledgment: `{ event: 'typing_started|typing_stopped', data: { conversationId } }`
+
+**Unit tests created** (`src/gateways/typing.gateway.spec.ts` - 15 tests):
+- ✅ Gateway initialization
+- ✅ Typing start broadcasting to room
+- ✅ Typing stop broadcasting to room
+- ✅ Logging for start/stop events
+- ✅ User ID inclusion in events
+- ✅ isTyping flag (true/false)
+- ✅ Correct room targeting
+- ✅ Room naming convention
+- ✅ Sender exclusion from broadcasts
+- ✅ Event data structure validation
+- ✅ Acknowledgment responses
+
+**E2E tests created** (`test/typing-gateway.e2e-spec.ts` - 8 tests):
+- ✅ Broadcast typing start to other clients
+- ✅ Sender doesn't receive own typing event
+- ✅ Typing start acknowledgment
+- ✅ Broadcast typing stop to other clients
+- ✅ Typing stop acknowledgment
+- ✅ Start and stop typing sequence
+- ✅ Room isolation (no cross-conversation leaks)
+- ✅ Multiple participants broadcasting
+- ✅ Ephemeral nature (no persistence)
+
+**Features verified**:
+- Real-time typing indicators
+- Conversation-scoped broadcasting
+- Redis Pub/Sub for horizontal scaling
+- Sender exclusion from broadcasts
+- Ephemeral events (no database persistence)
+- Cross-instance synchronization
 
 ---
 

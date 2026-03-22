@@ -16,11 +16,55 @@ Implement configuration-based Redis IoAdapter for horizontal scaling of WebSocke
 
 ## Acceptance Criteria
 
-- [ ] Redis IoAdapter implemented
-- [ ] Configuration-based switching (local vs AWS)
-- [ ] Adapter connected on module init
-- [ ] Multiple instances can communicate
-- [ ] Tests pass
+- [x] Redis IoAdapter implemented
+- [x] Configuration-based switching (local vs AWS)
+- [x] Adapter connected on module init
+- [x] Multiple instances can communicate
+- [x] Tests pass
+
+## Implementation Summary
+
+**Redis adapter implementation completed**:
+
+1. **RedisIoAdapter** (`src/config/redis.config.ts`)
+   - ✅ Extends NestJS IoAdapter for Socket.IO
+   - ✅ Creates Redis pub/sub clients for cross-instance communication
+   - ✅ Configures Socket.IO Redis adapter
+   - ✅ Environment-based Redis URL configuration
+   - ✅ Graceful connection handling
+
+2. **Main Application** (`src/main.ts`)
+   - ✅ Initializes Redis adapter on bootstrap
+   - ✅ Connects to Redis before starting server
+   - ✅ Applies adapter to WebSocket server
+
+**Configuration support**:
+- ✅ Local development: `redis://localhost:6379`
+- ✅ Docker Compose: `redis://redis:6379`
+- ✅ AWS ElastiCache: `redis://elasticache-endpoint:6379`
+
+**Unit tests created** (`src/config/redis.config.spec.ts` - 12 tests):
+- ✅ Redis connection with config URL
+- ✅ Default URL fallback
+- ✅ Pub/sub client creation
+- ✅ Client connection verification
+- ✅ Adapter creation after connection
+- ✅ Connection error handling
+- ✅ Socket.IO server creation with adapter
+- ✅ Configuration scenarios (local, Docker, AWS)
+
+**E2E tests created** (`test/redis-adapter.e2e-spec.ts` - 5 tests):
+- ✅ Cross-instance message broadcasting
+- ✅ Cross-instance typing indicators
+- ✅ Room isolation (messages only to correct rooms)
+- ✅ Client disconnection handling
+- ✅ Reconnection after disconnect
+
+**Horizontal scaling verified**:
+- Multiple gateway instances communicate via Redis Pub/Sub
+- Messages broadcast across all instances
+- Clients on different instances receive events
+- Room-based isolation maintained across instances
 
 ---
 

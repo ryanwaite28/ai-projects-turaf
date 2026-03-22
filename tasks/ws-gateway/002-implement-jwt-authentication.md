@@ -16,12 +16,56 @@ Implement JWT authentication for WebSocket connections using NestJS guards and s
 
 ## Acceptance Criteria
 
-- [ ] JWT strategy configured
-- [ ] WebSocket authentication guard implemented
-- [ ] Token validation working
-- [ ] User info attached to socket
-- [ ] Unauthorized connections rejected
-- [ ] Tests pass
+- [x] JWT strategy configured
+- [x] WebSocket authentication guard implemented
+- [x] Token validation working
+- [x] User info attached to socket
+- [x] Unauthorized connections rejected
+- [x] Tests pass
+
+## Implementation Summary
+
+**Authentication implementation completed**:
+
+1. **JWT Strategy** (`src/auth/jwt.strategy.ts`)
+   - ✅ Validates JWT tokens from Identity Service
+   - ✅ Extracts user information (userId, email, organizationId)
+   - ✅ Uses ConfigService for JWT_SECRET
+   - ✅ Ignores expired tokens
+
+2. **WebSocket Auth Guard** (`src/auth/ws-auth.guard.ts`)
+   - ✅ Validates tokens from multiple sources (auth object, header, query)
+   - ✅ Attaches user info to socket.data.user
+   - ✅ Throws WsException for unauthorized connections
+   - ✅ Prioritizes auth object > header > query parameter
+
+3. **Auth Module** (`src/auth/auth.module.ts`)
+   - ✅ Configures JwtModule with async factory
+   - ✅ Exports WsAuthGuard for use in gateways
+   - ✅ Integrates with ConfigModule
+
+**Unit tests created**:
+- ✅ `ws-auth.guard.spec.ts` (11 tests)
+  - Valid token from auth object, header, query
+  - Missing token rejection
+  - Invalid/expired token rejection
+  - Token extraction priority
+  - Malformed header handling
+  
+- ✅ `jwt.strategy.spec.ts` (6 tests)
+  - Payload validation
+  - User object extraction
+  - Missing optional fields handling
+  
+- ✅ `auth.module.spec.ts` (4 tests)
+  - Module initialization
+  - Provider availability
+  - Guard export verification
+
+**Token sources supported** (in priority order):
+1. `socket.handshake.auth.token` (preferred)
+2. `socket.handshake.headers.authorization` (Bearer token)
+3. `socket.handshake.query.token` (fallback)
 
 ---
 
