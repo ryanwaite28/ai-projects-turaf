@@ -10,12 +10,12 @@ resource "aws_cloudwatch_event_rule" "experiment_completed" {
   name           = "experiment-completed-${var.environment}"
   description    = "Routes ExperimentCompleted events to reporting and notification services"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.experiment-service"]
     detail-type = ["ExperimentCompleted"]
   })
-  
+
   tags = {
     Name        = "experiment-completed-${var.environment}"
     Environment = var.environment
@@ -29,16 +29,16 @@ resource "aws_cloudwatch_event_target" "experiment_completed_reporting" {
   rule           = aws_cloudwatch_event_rule.experiment_completed.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.reporting_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600  # 1 hour
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600 # 1 hour
+    maximum_retry_attempts = 3
   }
-  
+
   dead_letter_config {
     arn = aws_sqs_queue.dlq.arn
   }
-  
+
   input_transformer {
     input_paths = {
       eventId      = "$.detail.eventId"
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_target" "experiment_completed_reporting" {
       timestamp    = "$.detail.timestamp"
       organization = "$.detail.organizationId"
     }
-    
+
     input_template = <<EOF
 {
   "eventId": <eventId>,
@@ -64,12 +64,12 @@ resource "aws_cloudwatch_event_target" "experiment_completed_notification" {
   rule           = aws_cloudwatch_event_rule.experiment_completed.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
-  
+
   dead_letter_config {
     arn = aws_sqs_queue.dlq.arn
   }
@@ -84,12 +84,12 @@ resource "aws_cloudwatch_event_rule" "report_generated" {
   name           = "report-generated-${var.environment}"
   description    = "Routes ReportGenerated events to notification service"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.reporting-service"]
     detail-type = ["ReportGenerated"]
   })
-  
+
   tags = {
     Name        = "report-generated-${var.environment}"
     Environment = var.environment
@@ -103,12 +103,12 @@ resource "aws_cloudwatch_event_target" "report_generated_notification" {
   rule           = aws_cloudwatch_event_rule.report_generated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
-  
+
   dead_letter_config {
     arn = aws_sqs_queue.dlq.arn
   }
@@ -123,12 +123,12 @@ resource "aws_cloudwatch_event_rule" "organization_created" {
   name           = "organization-created-${var.environment}"
   description    = "Routes OrganizationCreated events to notification service"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.organization-service"]
     detail-type = ["OrganizationCreated"]
   })
-  
+
   tags = {
     Name        = "organization-created-${var.environment}"
     Environment = var.environment
@@ -142,12 +142,12 @@ resource "aws_cloudwatch_event_target" "organization_created_notification" {
   rule           = aws_cloudwatch_event_rule.organization_created.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
-  
+
   dead_letter_config {
     arn = aws_sqs_queue.dlq.arn
   }
@@ -158,12 +158,12 @@ resource "aws_cloudwatch_event_rule" "organization_updated" {
   name           = "organization-updated-${var.environment}"
   description    = "Routes OrganizationUpdated events to notification service"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.organization-service"]
     detail-type = ["OrganizationUpdated"]
   })
-  
+
   tags = {
     Name        = "organization-updated-${var.environment}"
     Environment = var.environment
@@ -177,10 +177,10 @@ resource "aws_cloudwatch_event_target" "organization_updated_notification" {
   rule           = aws_cloudwatch_event_rule.organization_updated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
 }
 
@@ -193,12 +193,12 @@ resource "aws_cloudwatch_event_rule" "user_created" {
   name           = "user-created-${var.environment}"
   description    = "Routes UserCreated events to notification service"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.identity-service"]
     detail-type = ["UserCreated"]
   })
-  
+
   tags = {
     Name        = "user-created-${var.environment}"
     Environment = var.environment
@@ -212,12 +212,12 @@ resource "aws_cloudwatch_event_target" "user_created_notification" {
   rule           = aws_cloudwatch_event_rule.user_created.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
-  
+
   dead_letter_config {
     arn = aws_sqs_queue.dlq.arn
   }
@@ -232,12 +232,12 @@ resource "aws_cloudwatch_event_rule" "metrics_calculated" {
   name           = "metrics-calculated-${var.environment}"
   description    = "Routes MetricsCalculated events to notification service"
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  
+
   event_pattern = jsonencode({
     source      = ["turaf.metrics-service"]
     detail-type = ["MetricsCalculated"]
   })
-  
+
   tags = {
     Name        = "metrics-calculated-${var.environment}"
     Environment = var.environment
@@ -251,10 +251,10 @@ resource "aws_cloudwatch_event_target" "metrics_calculated_notification" {
   rule           = aws_cloudwatch_event_rule.metrics_calculated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
-  
+
   retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 3
+    maximum_event_age      = 3600
+    maximum_retry_attempts = 3
   }
 }
 
@@ -263,9 +263,9 @@ resource "aws_cloudwatch_event_target" "metrics_calculated_notification" {
 # ============================================================================
 
 resource "aws_sqs_queue" "dlq" {
-  name                       = "turaf-eventbridge-dlq-${var.environment}"
-  message_retention_seconds  = 1209600  # 14 days
-  
+  name                      = "turaf-eventbridge-dlq-${var.environment}"
+  message_retention_seconds = 1209600 # 14 days
+
   tags = {
     Name        = "turaf-eventbridge-dlq-${var.environment}"
     Environment = var.environment
@@ -277,7 +277,7 @@ resource "aws_sqs_queue" "dlq" {
 # DLQ Policy to allow EventBridge to send messages
 resource "aws_sqs_queue_policy" "dlq_policy" {
   queue_url = aws_sqs_queue.dlq.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -305,11 +305,11 @@ resource "aws_cloudwatch_metric_alarm" "dlq_messages" {
   threshold           = "0"
   alarm_description   = "Alert when events fail and land in DLQ"
   treat_missing_data  = "notBreaching"
-  
+
   dimensions = {
     QueueName = aws_sqs_queue.dlq.name
   }
-  
+
   tags = {
     Name        = "eventbridge-dlq-messages-${var.environment}"
     Environment = var.environment
