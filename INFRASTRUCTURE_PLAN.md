@@ -4,6 +4,710 @@ This plan provides a comprehensive, step-by-step guide for setting up all infras
 
 ---
 
+## Phase 0: Local Environment Setup
+
+Before implementing any infrastructure, you must set up your local development environment with the necessary tools and credentials.
+
+### 0.1 Install Required CLI Tools
+
+**Objective**: Install all command-line tools needed for infrastructure management
+
+#### macOS Installation (using Homebrew)
+
+1. **Install Homebrew** (if not already installed):
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. **Install AWS CLI**:
+   ```bash
+   brew install awscli
+   
+   # Verify installation
+   aws --version
+   # Expected output: aws-cli/2.x.x Python/3.x.x Darwin/xx.x.x
+   ```
+
+3. **Install Terraform**:
+   ```bash
+   brew tap hashicorp/tap
+   brew install hashicorp/tap/terraform
+   
+   # Verify installation
+   terraform --version
+   # Expected output: Terraform v1.x.x
+   ```
+
+4. **Install GitHub CLI**:
+   ```bash
+   brew install gh
+   
+   # Verify installation
+   gh --version
+   # Expected output: gh version 2.x.x
+   ```
+
+5. **Install jq** (JSON processor for AWS CLI output):
+   ```bash
+   brew install jq
+   
+   # Verify installation
+   jq --version
+   # Expected output: jq-1.x
+   ```
+
+6. **Install Additional Utilities**:
+   ```bash
+   # For DNS verification
+   brew install bind  # Provides dig and nslookup
+   
+   # For Git operations
+   brew install git
+   git --version
+   ```
+
+#### Linux Installation (Ubuntu/Debian)
+
+```bash
+# AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+
+# Terraform
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+
+# GitHub CLI
+type -p curl >/dev/null || sudo apt install curl -y
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update && sudo apt install gh -y
+
+# jq and utilities
+sudo apt install jq dnsutils git -y
+```
+
+### 0.2 Obtain AWS Credentials
+
+**Objective**: Get access credentials for all AWS accounts
+
+#### Option A: IAM User with Access Keys (Simpler, for individual use)
+
+1. **Log into AWS Console** for the root account (072456928432):
+   - Navigate to: https://console.aws.amazon.com/
+   - Use root account email: `aws@turafapp.com`
+
+2. **Create IAM User**:
+   - Go to IAM → Users → Create user
+   - Username: `infrastructure-admin` (or your name)
+   - Enable "Provide user access to the AWS Management Console" (optional)
+   - Click Next
+
+3. **Attach Permissions**:
+   - Select "Attach policies directly"
+   - Attach: `AdministratorAccess` (for infrastructure setup)
+   - Click Next → Create user
+
+4. **Create Access Keys**:
+   - Click on the newly created user
+   - Go to "Security credentials" tab
+   - Under "Access keys", click "Create access key"
+   - Select use case: "Command Line Interface (CLI)"
+   - Acknowledge the recommendation
+   - Click "Create access key"
+   - **IMPORTANT**: Download the CSV or copy both:
+     - Access key ID (e.g., `AKIAIOSFODNN7EXAMPLE`)
+     - Secret access key (e.g., `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`)
+   - Store these securely (you won't be able to see the secret again)
+
+5. **Repeat for Other Accounts** (Ops, Dev, QA, Prod):
+   - Log into each account using the account-specific email
+   - Create IAM user with AdministratorAccess
+   - Generate access keys for each
+
+#### Option B: IAM Identity Center (SSO) - Recommended for Organizations
+
+This option is more secure and scalable, especially for managing access across multiple AWS accounts in an organization.
+
+**Prerequisites**:
+- AWS Organizations must be enabled (already done - see AWS_ACCOUNTS.md)
+- Access to the management/root account (072456928432)
+
+##### Step 1: Enable IAM Identity Center
+
+1. **Log into AWS Console** (root account 072456928432):
+   - Navigate to: https://console.aws.amazon.com/
+   - Use root account email: `aws@turafapp.com`
+
+2. **Access IAM Identity Center**:
+   - In the AWS Console search bar, type "IAM Identity Center"
+   - Click on "IAM Identity Center" service
+   - Or navigate directly to: https://console.aws.amazon.com/singlesignon
+
+3. **Enable IAM Identity Center**:
+   - Click "Enable" button
+   - **Region Selection**: Choose `us-east-1` (N. Virginia) - this is where IAM Identity Center will be managed
+   - Wait for enablement (takes 1-2 minutes)
+   - You'll see a success message with your AWS access portal URL
+
+4. **Note Your Access Portal URL**:
+   - Format: `https://d-xxxxxxxxxx.awsapps.com/start`
+   - **IMPORTANT**: Save this URL - you'll need it for CLI configuration
+   - Example: `https://d-9067f4a123.awsapps.com/start`
+
+##### Step 2: Choose Identity Source
+
+1. **Select Identity Source**:
+   - In IAM Identity Center dashboard, go to "Settings" in left menu
+   - Under "Identity source", you'll see the current source (default: "Identity Center directory")
+   
+2. **Choose One of Three Options**:
+
+   **Option 2a: Identity Center Directory (Recommended for getting started)**
+   - This is the default AWS-managed directory
+   - Best for small teams or getting started quickly
+   - Click "Continue" to use this option
+
+   **Option 2b: Active Directory (For enterprise environments)**
+   - If you have AWS Managed Microsoft AD or AD Connector
+   - Click "Actions" → "Change identity source"
+   - Select "Active Directory"
+   - Choose your directory
+
+   **Option 2c: External Identity Provider (For existing IdP)**
+   - If you use Okta, Azure AD, Google Workspace, etc.
+   - Click "Actions" → "Change identity source"
+   - Select "External identity provider"
+   - Configure SAML 2.0 metadata
+
+   **For this guide, we'll use Identity Center Directory (Option 2a)**
+
+##### Step 3: Create Users
+
+1. **Navigate to Users**:
+   - In IAM Identity Center, click "Users" in the left menu
+   - Click "Add user" button
+
+2. **Add Your Primary User**:
+   - **Username**: Your preferred username (e.g., `ryan.waite` or `admin`)
+   - **Email address**: Your work email (e.g., `ryan@turafapp.com`)
+   - **First name**: Your first name
+   - **Last name**: Your last name
+   - **Display name**: Full name (auto-populated)
+   - Click "Next"
+
+3. **Add to Groups (Optional but Recommended)**:
+   - Click "Create group" if you want to organize users
+   - Group name: `InfrastructureAdmins`
+   - Description: "Full access to all accounts for infrastructure management"
+   - Click "Create group"
+   - Select the group checkbox
+   - Click "Next"
+
+4. **Review and Create**:
+   - Review user details
+   - Click "Add user"
+   - **IMPORTANT**: User will receive an email with activation instructions
+
+5. **Activate User Account**:
+   - Check email inbox for "Invitation to join AWS IAM Identity Center"
+   - Click "Accept invitation" link
+   - Set up password (must meet complexity requirements)
+   - Optionally set up MFA (highly recommended):
+     - Choose "Authenticator app" or "Security key"
+     - Follow setup instructions
+   - Click "Continue"
+
+6. **Repeat for Additional Users** (if needed):
+   - Add team members who need infrastructure access
+   - Assign them to appropriate groups
+
+##### Step 4: Create Permission Sets
+
+Permission sets define what users can do in each AWS account.
+
+1. **Navigate to Permission Sets**:
+   - In IAM Identity Center, click "Permission sets" in the left menu
+   - Click "Create permission set"
+
+2. **Create Administrator Permission Set**:
+   
+   **Step 4a: Select Type**
+   - Choose "Predefined permission set"
+   - Select "AdministratorAccess" from dropdown
+   - Click "Next"
+   
+   **Step 4b: Specify Details**
+   - **Permission set name**: `AdministratorAccess`
+   - **Description**: "Full administrative access to AWS services"
+   - **Session duration**: `12 hours` (adjust as needed)
+   - Click "Next"
+   
+   **Step 4c: Review and Create**
+   - Review settings
+   - Click "Create"
+
+3. **Create Additional Permission Sets** (Optional):
+   
+   **Developer Permission Set**:
+   - Click "Create permission set"
+   - Choose "Custom permission set"
+   - Click "Next"
+   - **Attach AWS managed policies**:
+     - `PowerUserAccess` (full access except IAM/Organizations)
+   - Permission set name: `DeveloperAccess`
+   - Click "Next" → "Create"
+   
+   **ReadOnly Permission Set**:
+   - Click "Create permission set"
+   - Choose "Predefined permission set"
+   - Select "ViewOnlyAccess"
+   - Permission set name: `ReadOnlyAccess`
+   - Click "Next" → "Create"
+
+##### Step 5: Assign Users to AWS Accounts
+
+Now assign users/groups to specific AWS accounts with specific permission sets.
+
+1. **Navigate to AWS Accounts**:
+   - In IAM Identity Center, click "AWS accounts" in the left menu
+   - You should see your AWS Organization structure with all 5 accounts:
+     - root (072456928432)
+     - Ops (146072879609)
+     - dev (801651112319)
+     - qa (965932217544)
+     - prod (811783768245)
+
+2. **Assign to Root Account**:
+   - Check the box next to "root (072456928432)"
+   - Click "Assign users or groups" button
+   
+   **Step 5a: Select Users/Groups**
+   - **Users** tab: Select your user (e.g., `ryan.waite`)
+   - OR **Groups** tab: Select `InfrastructureAdmins` group
+   - Click "Next"
+   
+   **Step 5b: Select Permission Sets**
+   - Check "AdministratorAccess"
+   - Click "Next"
+   
+   **Step 5c: Review and Submit**
+   - Review the assignment
+   - Click "Submit"
+   - Wait for "Successfully assigned" message
+
+3. **Assign to Ops Account**:
+   - Check the box next to "Ops (146072879609)"
+   - Click "Assign users or groups"
+   - Select your user/group
+   - Click "Next"
+   - Select "AdministratorAccess"
+   - Click "Next" → "Submit"
+
+4. **Assign to Dev Account**:
+   - Check the box next to "dev (801651112319)"
+   - Click "Assign users or groups"
+   - Select your user/group
+   - Click "Next"
+   - Select "AdministratorAccess"
+   - Click "Next" → "Submit"
+
+5. **Assign to QA Account**:
+   - Check the box next to "qa (965932217544)"
+   - Click "Assign users or groups"
+   - Select your user/group
+   - Click "Next"
+   - Select "AdministratorAccess"
+   - Click "Next" → "Submit"
+
+6. **Assign to Prod Account**:
+   - Check the box next to "prod (811783768245)"
+   - Click "Assign users or groups"
+   - Select your user/group
+   - Click "Next"
+   - Select "AdministratorAccess"
+   - Click "Next" → "Submit"
+
+**Bulk Assignment Alternative**:
+- Select multiple accounts at once (Shift+Click or Cmd+Click)
+- Click "Assign users or groups"
+- Assign the same user/group and permission set to all selected accounts
+
+##### Step 6: Configure AWS CLI for SSO
+
+1. **Get SSO Configuration Details**:
+   - In IAM Identity Center dashboard, note:
+     - **AWS access portal URL**: `https://d-xxxxxxxxxx.awsapps.com/start`
+     - **SSO Region**: `us-east-1` (where IAM Identity Center is enabled)
+
+2. **Configure SSO Profile** (see section 0.3 for full `~/.aws/config` setup):
+   ```ini
+   [profile turaf-root]
+   sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+   sso_region = us-east-1
+   sso_account_id = 072456928432
+   sso_role_name = AdministratorAccess
+   region = us-east-1
+   output = json
+   ```
+
+3. **Initial SSO Login**:
+   ```bash
+   aws sso login --profile turaf-root
+   ```
+   
+   **What happens**:
+   - Browser opens automatically
+   - You'll see a code to verify (e.g., `QWER-TYUI`)
+   - Confirm the code matches what's shown in terminal
+   - Click "Confirm and continue"
+   - Sign in with your IAM Identity Center credentials
+   - Approve the request
+   - You'll see "Request approved" message
+   - Return to terminal - login successful!
+
+4. **Verify Access**:
+   ```bash
+   aws sts get-caller-identity --profile turaf-root
+   ```
+   
+   **Expected output**:
+   ```json
+   {
+       "UserId": "AROAXXXXXXXXXXXXXXXXX:ryan.waite",
+       "Account": "072456928432",
+       "Arn": "arn:aws:sts::072456928432:assumed-role/AWSReservedSSO_AdministratorAccess_xxxxx/ryan.waite"
+   }
+   ```
+
+##### Step 7: Test Access to All Accounts
+
+```bash
+# Test each account
+aws sts get-caller-identity --profile turaf-root
+aws sts get-caller-identity --profile turaf-ops
+aws sts get-caller-identity --profile turaf-dev
+aws sts get-caller-identity --profile turaf-qa
+aws sts get-caller-identity --profile turaf-prod
+```
+
+**Note**: SSO sessions expire based on the session duration set in the permission set (default 12 hours). When expired, run:
+```bash
+aws sso login --profile turaf-root
+```
+
+##### Step 8: Enable MFA (Highly Recommended)
+
+1. **Access User Portal**:
+   - Go to your AWS access portal URL: `https://d-xxxxxxxxxx.awsapps.com/start`
+   - Sign in with your credentials
+
+2. **Register MFA Device**:
+   - Click your username in top-right
+   - Click "My profile" or "Security credentials"
+   - Under "Multi-factor authentication (MFA)", click "Register device"
+   - Choose device type:
+     - **Authenticator app** (recommended): Use Google Authenticator, Authy, 1Password, etc.
+     - **Security key**: Use hardware key like YubiKey
+   - Follow the setup wizard
+   - Scan QR code with authenticator app
+   - Enter two consecutive MFA codes
+   - Click "Assign MFA"
+
+3. **Test MFA**:
+   - Sign out
+   - Sign back in
+   - You should now be prompted for MFA code after password
+
+##### Troubleshooting SSO
+
+**Issue**: `aws sso login` fails with "Invalid grant"
+- **Solution**: Delete cached credentials and re-login:
+  ```bash
+  rm -rf ~/.aws/sso/cache/
+  aws sso login --profile turaf-root
+  ```
+
+**Issue**: Browser doesn't open automatically
+- **Solution**: Manually copy the URL shown in terminal and paste in browser
+
+**Issue**: "Access denied" when running AWS commands
+- **Solution**: 
+  - Verify user is assigned to the account in IAM Identity Center
+  - Check permission set includes necessary permissions
+  - Ensure SSO session hasn't expired - run `aws sso login` again
+
+**Issue**: Can't see all accounts in IAM Identity Center
+- **Solution**: 
+  - Ensure you're logged into the management/root account (072456928432)
+  - Verify AWS Organizations is enabled
+  - Check that accounts are part of the organization
+
+### 0.3 Configure AWS CLI Profiles
+
+**Objective**: Set up `~/.aws/config` and `~/.aws/credentials` for all accounts
+
+#### Create Directory Structure
+
+```bash
+mkdir -p ~/.aws
+touch ~/.aws/config
+touch ~/.aws/credentials
+chmod 600 ~/.aws/credentials  # Secure the credentials file
+```
+
+#### Configure `~/.aws/config`
+
+Edit `~/.aws/config` and add profiles for each account:
+
+```ini
+# Root/Management Account
+[profile turaf-root]
+region = us-east-1
+output = json
+
+# Operations Account
+[profile turaf-ops]
+region = us-east-1
+output = json
+
+# Development Account
+[profile turaf-dev]
+region = us-east-1
+output = json
+
+# QA Account
+[profile turaf-qa]
+region = us-east-1
+output = json
+
+# Production Account
+[profile turaf-prod]
+region = us-east-1
+output = json
+```
+
+#### Configure `~/.aws/credentials`
+
+**If using IAM Users (Option A)**, edit `~/.aws/credentials`:
+
+```ini
+[turaf-root]
+aws_access_key_id = AKIAIOSFODNN7EXAMPLE
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+[turaf-ops]
+aws_access_key_id = AKIAI44QH8DHBEXAMPLE
+aws_secret_access_key = je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+
+[turaf-dev]
+aws_access_key_id = AKIAI44QH8DHBEXAMPLE
+aws_secret_access_key = je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+
+[turaf-qa]
+aws_access_key_id = AKIAI44QH8DHBEXAMPLE
+aws_secret_access_key = je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+
+[turaf-prod]
+aws_access_key_id = AKIAI44QH8DHBEXAMPLE
+aws_secret_access_key = je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+```
+
+**If using SSO (Option B)**, update `~/.aws/config`:
+
+```ini
+[profile turaf-root]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_account_id = 072456928432
+sso_role_name = AdministratorAccess
+region = us-east-1
+output = json
+
+[profile turaf-ops]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_account_id = 146072879609
+sso_role_name = AdministratorAccess
+region = us-east-1
+output = json
+
+[profile turaf-dev]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_account_id = 801651112319
+sso_role_name = AdministratorAccess
+region = us-east-1
+output = json
+
+[profile turaf-qa]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_account_id = 965932217544
+sso_role_name = AdministratorAccess
+region = us-east-1
+output = json
+
+[profile turaf-prod]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_account_id = 811783768245
+sso_role_name = AdministratorAccess
+region = us-east-1
+output = json
+```
+
+### 0.4 Verify AWS CLI Configuration
+
+**Objective**: Confirm all profiles are working correctly
+
+1. **Test Each Profile**:
+   ```bash
+   # Root account
+   aws sts get-caller-identity --profile turaf-root
+   
+   # Ops account
+   aws sts get-caller-identity --profile turaf-ops
+   
+   # Dev account
+   aws sts get-caller-identity --profile turaf-dev
+   
+   # QA account
+   aws sts get-caller-identity --profile turaf-qa
+   
+   # Prod account
+   aws sts get-caller-identity --profile turaf-prod
+   ```
+
+2. **Expected Output** (example for root):
+   ```json
+   {
+       "UserId": "AIDAI23HXS2EXAMPLE",
+       "Account": "072456928432",
+       "Arn": "arn:aws:iam::072456928432:user/infrastructure-admin"
+   }
+   ```
+
+3. **If using SSO**, login first:
+   ```bash
+   aws sso login --profile turaf-root
+   # Opens browser for authentication
+   ```
+
+### 0.5 Configure GitHub CLI
+
+**Objective**: Authenticate with GitHub for repository access
+
+1. **Authenticate**:
+   ```bash
+   gh auth login
+   ```
+
+2. **Follow the prompts**:
+   - What account do you want to log into? **GitHub.com**
+   - What is your preferred protocol? **HTTPS** or **SSH**
+   - Authenticate Git with your GitHub credentials? **Yes**
+   - How would you like to authenticate? **Login with a web browser** (recommended)
+   - Copy the one-time code and press Enter
+   - Complete authentication in browser
+
+3. **Verify**:
+   ```bash
+   gh auth status
+   # Should show: Logged in to github.com as <your-username>
+   ```
+
+4. **Clone Repository** (if not already done):
+   ```bash
+   cd ~/Developer/portfolio-projects
+   gh repo clone ryanwaite28/ai-projects-turaf Turaf
+   cd Turaf
+   ```
+
+### 0.6 Set Up Environment Variables (Optional)
+
+**Objective**: Create helper aliases and environment variables
+
+Create or edit `~/.zshrc` (macOS) or `~/.bashrc` (Linux):
+
+```bash
+# AWS Profile Aliases
+alias aws-root='aws --profile turaf-root'
+alias aws-ops='aws --profile turaf-ops'
+alias aws-dev='aws --profile turaf-dev'
+alias aws-qa='aws --profile turaf-qa'
+alias aws-prod='aws --profile turaf-prod'
+
+# Default AWS Profile
+export AWS_PROFILE=turaf-root
+
+# Terraform Workspace Helpers
+export TF_VAR_project_name="turaf"
+export TF_VAR_domain_name="turafapp.com"
+```
+
+Reload your shell:
+```bash
+source ~/.zshrc  # macOS
+# or
+source ~/.bashrc  # Linux
+```
+
+### 0.7 Verify Complete Setup
+
+**Objective**: Final verification checklist
+
+Run this verification script:
+
+```bash
+#!/bin/bash
+echo "=== Turaf Infrastructure Setup Verification ==="
+echo ""
+
+echo "1. AWS CLI:"
+aws --version && echo "✓ AWS CLI installed" || echo "✗ AWS CLI missing"
+echo ""
+
+echo "2. Terraform:"
+terraform --version && echo "✓ Terraform installed" || echo "✗ Terraform missing"
+echo ""
+
+echo "3. GitHub CLI:"
+gh --version && echo "✓ GitHub CLI installed" || echo "✗ GitHub CLI missing"
+echo ""
+
+echo "4. jq:"
+jq --version && echo "✓ jq installed" || echo "✗ jq missing"
+echo ""
+
+echo "5. AWS Profiles:"
+for profile in turaf-root turaf-ops turaf-dev turaf-qa turaf-prod; do
+  if aws sts get-caller-identity --profile $profile &>/dev/null; then
+    echo "✓ $profile configured"
+  else
+    echo "✗ $profile not configured or credentials invalid"
+  fi
+done
+echo ""
+
+echo "6. GitHub Authentication:"
+gh auth status &>/dev/null && echo "✓ GitHub authenticated" || echo "✗ GitHub not authenticated"
+echo ""
+
+echo "=== Setup Verification Complete ==="
+```
+
+Save as `verify-setup.sh`, make executable, and run:
+```bash
+chmod +x verify-setup.sh
+./verify-setup.sh
+```
+
+---
+
 ## Prerequisites
 
 **Required Resources**:
