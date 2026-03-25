@@ -1,0 +1,31 @@
+{
+  "Changes": [
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "dyz2gbmqvtrmhgubc23flyv5z3rehk2w._domainkey.turafapp.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "dyz2gbmqvtrmhgubc23flyv5z3rehk2w.dkim.amazonses.com"}]
+      }
+    },
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "yyerrwgqsxhyxmyhh5ayij3smxgutgxs._domainkey.turafapp.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "yyerrwgqsxhyxmyhh5ayij3smxgutgxs.dkim.amazonses.com"}]
+      }
+    },
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "nqe4adr5qtk6bvd3ag72fyz3tbng5p4n._domainkey.turafapp.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{"Value": "nqe4adr5qtk6bvd3ag72fyz3tbng5p4n.dkim.amazonses.com"}]
+      }
+    }
+  ]
+}

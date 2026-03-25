@@ -1,0 +1,11 @@
+{
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "turafapp.com",
+      "Type": "TXT",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "\"v=spf1 include:amazonses.com ~all\""}]
+    }
+  }]
+}

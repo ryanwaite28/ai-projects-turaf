@@ -121,6 +121,11 @@ Do NOT change other services or violate service boundaries.
 Track progress using task checklists in the task files.
 ```
 
+Subsequent prompts can follow this until all tasks are complete for the spec:
+```
+Continue onto the next task. If there are any parts that require manual intervention, pause execution until input is provided confirming the manual work is done.
+```
+
 > Repeat for all tasks across microservices, frontend, and infrastructure.
 
 ---

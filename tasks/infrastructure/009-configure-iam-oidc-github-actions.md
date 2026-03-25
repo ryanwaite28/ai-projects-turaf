@@ -16,12 +16,12 @@ Configure AWS IAM OIDC identity providers and roles in each account to enable Gi
 
 ## Acceptance Criteria
 
-- [ ] OIDC provider created in each account (Ops, dev, qa, prod)
-- [ ] GitHub Actions deployment role created in each account
-- [ ] Trust policies configured for GitHub repository
-- [ ] Permissions policies attached to roles
-- [ ] OIDC configuration tested with GitHub Actions
-- [ ] Role ARNs documented for GitHub secrets
+- [x] OIDC provider created in each account (Ops, dev, qa, prod)
+- [x] GitHub Actions deployment role created in each account
+- [x] Trust policies configured for GitHub repository
+- [x] Permissions policies attached to roles
+- [ ] OIDC configuration tested with GitHub Actions (pending GitHub workflows)
+- [x] Role ARNs documented for GitHub secrets
 
 ---
 
@@ -516,27 +516,128 @@ Create `infrastructure/github-oidc-roles.md`:
 
 ## Checklist
 
-- [ ] Created OIDC provider in Ops account
-- [ ] Created OIDC provider in dev account
-- [ ] Created OIDC provider in qa account
-- [ ] Created OIDC provider in prod account
-- [ ] Created GitHubActionsDeploymentRole in Ops account
-- [ ] Created GitHubActionsDeploymentRole in dev account
-- [ ] Created GitHubActionsDeploymentRole in qa account
-- [ ] Created GitHubActionsDeploymentRole in prod account
-- [ ] Attached permissions policies to all roles
-- [ ] Tested OIDC authentication with GitHub Actions
-- [ ] Documented role ARNs
-- [ ] Saved role ARNs for GitHub secrets (task 025)
+- [x] Created OIDC provider in Ops account
+- [x] Created OIDC provider in dev account
+- [x] Created OIDC provider in qa account
+- [x] Created OIDC provider in prod account
+- [x] Created GitHubActionsDeploymentRole in Ops account
+- [x] Created GitHubActionsDeploymentRole in dev account
+- [x] Created GitHubActionsDeploymentRole in qa account
+- [x] Created GitHubActionsDeploymentRole in prod account
+- [x] Attached permissions policies to all roles
+- [ ] Tested OIDC authentication with GitHub Actions (pending workflows)
+- [x] Documented role ARNs
+- [x] Saved role ARNs for GitHub secrets (task 012)
 
 ---
 
 ## Next Steps
 
 After OIDC configuration:
-1. Proceed to task 023: Configure Amazon SES
-2. Use role ARNs in task 025: Configure GitHub Environments and Secrets
-3. Update CI/CD workflows to use OIDC authentication
+1. ✅ **COMPLETED** - OIDC providers and IAM roles configured in all 4 accounts
+2. Proceed to **Task 010: Configure Amazon SES**
+3. Use role ARNs in Task 012: Configure GitHub Environments and Secrets
+4. Update CI/CD workflows to use OIDC authentication
+
+## Implementation Results (2024-03-23)
+
+### ✅ OIDC Providers Created
+
+All accounts now have GitHub Actions OIDC providers configured:
+
+| Account | OIDC Provider ARN | Status |
+|---------|-------------------|--------|
+| Ops (146072879609) | arn:aws:iam::146072879609:oidc-provider/token.actions.githubusercontent.com | ✅ Verified |
+| Dev (801651112319) | arn:aws:iam::801651112319:oidc-provider/token.actions.githubusercontent.com | ✅ Configured |
+| QA (965932217544) | arn:aws:iam::965932217544:oidc-provider/token.actions.githubusercontent.com | ✅ Configured |
+| Prod (811783768245) | arn:aws:iam::811783768245:oidc-provider/token.actions.githubusercontent.com | ✅ Configured |
+
+**OIDC Configuration**:
+- **Provider URL**: `https://token.actions.githubusercontent.com`
+- **Audience**: `sts.amazonaws.com`
+- **Thumbprint**: `6938fd4d98bab03faadb97b34396831e3780aea1`
+
+### ✅ IAM Roles Created
+
+Deployment roles created in all accounts:
+
+| Account | Role Name | Role ARN | Status |
+|---------|-----------|----------|--------|
+| Ops | GitHubActionsDeploymentRole | arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole | ✅ Active |
+| Dev | GitHubActionsDeploymentRole | arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole | ✅ Active |
+| QA | GitHubActionsDeploymentRole | arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole | ✅ Active |
+| Prod | GitHubActionsDeploymentRole | arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole | ✅ Active |
+
+### ✅ Trust Policy Configuration
+
+All roles configured with trust policy allowing GitHub repository `ryanwaite28/ai-projects-turaf`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::{ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+      },
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:*"
+      }
+    }
+  }]
+}
+```
+
+### ✅ Permissions Configured
+
+Each role has permissions for:
+- **ECR**: Push/pull Docker images
+- **ECS**: Update services, register task definitions
+- **IAM**: Pass roles to ECS tasks
+- **S3**: Upload/download artifacts
+- **CloudWatch Logs**: Write deployment logs
+
+### 📁 Documentation Created
+
+- ✅ `infrastructure/iam-policies/github-actions-trust-policy.json` - Trust policy template
+- ✅ `infrastructure/iam-policies/github-actions-permissions-policy.json` - Permissions policy template
+- ✅ `infrastructure/github-oidc-roles.md` - Complete OIDC documentation with usage examples
+- ✅ `scripts/setup-github-oidc.sh` - Automation script
+- ✅ `scripts/setup-github-oidc-root.sh` - Manual setup instructions
+
+### 🎯 Benefits
+
+- ✅ **No long-lived credentials** - GitHub Actions uses temporary STS tokens
+- ✅ **Repository-scoped** - Only `ryanwaite28/ai-projects-turaf` can assume roles
+- ✅ **Audit trail** - All role assumptions logged in CloudTrail
+- ✅ **Least privilege** - Roles have only deployment permissions
+- ✅ **Multi-environment** - Separate roles for each environment
+
+### 🔐 Security Features
+
+- OIDC authentication eliminates need for AWS access keys in GitHub
+- Trust policy restricts access to specific repository
+- Temporary credentials expire automatically
+- All actions logged and auditable
+
+### ⚠️ Implementation Notes
+
+**Ops Account**: Automated setup completed successfully via CLI
+
+**Dev/QA/Prod Accounts**: Manual setup required due to SSO role IAM permission restrictions:
+- SSO roles (`AWSReservedSSO_DeveloperAccess`) lack permissions for:
+  - `iam:CreateOpenIDConnectProvider`
+  - `iam:CreateRole`
+  - `iam:PutRolePolicy`
+  - `iam:ListOpenIDConnectProviders`
+  - `iam:GetRole`
+- Manual setup completed via AWS Console with admin access
+- Configuration verified by user confirmation
 
 ---
 

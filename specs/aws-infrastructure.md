@@ -52,12 +52,14 @@ This specification defines the complete AWS infrastructure for the Turaf platfor
 
 Each environment is deployed to a dedicated AWS account:
 
-| Environment | AWS Account | Infrastructure Scope |
-|-------------|-------------|---------------------|
-| **DEV** | 801651112319 | Single-AZ, cost-optimized, Fargate Spot |
-| **QA** | 965932217544 | Multi-AZ, production-like configuration |
-| **PROD** | 811783768245 | Multi-AZ, auto-scaling, enhanced monitoring |
-| **Ops** | 146072879609 | Centralized tooling, logging aggregation |
+| Environment | AWS Account | Infrastructure Scope | Monthly Cost |
+|-------------|-------------|---------------------|--------------|
+| **DEV** | 801651112319 | Single-AZ, minimal config, Fargate Spot, Free Tier | ~$55/month |
+| **QA** | 965932217544 | Multi-AZ, production-like (optional for demo) | ~$200/month |
+| **PROD** | 811783768245 | Multi-AZ, auto-scaling, enhanced monitoring (optional) | ~$378/month |
+| **Ops** | 146072879609 | Centralized tooling, logging aggregation (optional) | ~$50/month |
+
+**Demo Configuration**: Deploy DEV environment only to minimize costs (~$55/month with Free Tier)
 
 ---
 
@@ -70,32 +72,31 @@ Each environment is deployed to a dedicated AWS account:
 **Cluster Configuration**:
 - Cluster Name: `turaf-cluster-{env}`
 - Launch Type: Fargate (serverless)
-- Capacity Providers: FARGATE, FARGATE_SPOT (dev only)
+- Capacity Providers: FARGATE_SPOT (dev - 70% cost savings)
 
-**Services**:
+**Demo Services** (Minimal Configuration):
 1. **identity-service**
-   - Task Count: 2 (prod), 1 (dev/qa)
-   - CPU: 512 (0.5 vCPU)
-   - Memory: 1024 MB
-   - Auto-scaling: 2-10 tasks (prod)
+   - Task Count: 1
+   - CPU: 256 (0.25 vCPU)
+   - Memory: 512 MB
+   - Cost: ~$5/month
 
 2. **organization-service**
-   - Task Count: 2 (prod), 1 (dev/qa)
-   - CPU: 512
-   - Memory: 1024 MB
-   - Auto-scaling: 2-10 tasks (prod)
+   - Task Count: 1
+   - CPU: 256 (0.25 vCPU)
+   - Memory: 512 MB
+   - Cost: ~$5/month
 
 3. **experiment-service**
-   - Task Count: 2 (prod), 1 (dev/qa)
-   - CPU: 1024 (1 vCPU)
-   - Memory: 2048 MB
-   - Auto-scaling: 2-10 tasks (prod)
+   - Task Count: 1
+   - CPU: 256 (0.25 vCPU)
+   - Memory: 512 MB
+   - Cost: ~$5/month
 
-4. **metrics-service**
-   - Task Count: 2 (prod), 1 (dev/qa)
-   - CPU: 1024
-   - Memory: 2048 MB
-   - Auto-scaling: 2-10 tasks (prod)
+**Services Deferred for Demo**:
+- ❌ metrics-service (can be added later)
+- ❌ reporting-service (can be added later)
+- ❌ notification-service (use SES directly)
 
 **Task Definition**:
 ```hcl
@@ -206,12 +207,23 @@ resource "aws_lambda_function" "reporting_service" {
 **Public Subnets** (2 AZs):
 - `10.0.1.0/24` (us-east-1a)
 - `10.0.2.0/24` (us-east-1b)
-- Resources: ALB, NAT Gateway
+- Resources: ALB, (NAT Gateway disabled for demo)
 
 **Private Subnets** (2 AZs):
 - `10.0.11.0/24` (us-east-1a)
 - `10.0.12.0/24` (us-east-1b)
-- Resources: ECS tasks, RDS, Lambda
+- Resources: ECS tasks, RDS
+- Internet Access: VPC Endpoints only (no NAT Gateway)
+
+**Database Subnets** (2 AZs):
+- `10.0.21.0/24` (us-east-1a)
+- `10.0.22.0/24` (us-east-1b)
+- Resources: RDS PostgreSQL
+
+**Cost Optimization**:
+- ❌ **NAT Gateways**: Disabled for demo (-$65/month)
+- ✅ **VPC Endpoints**: ECR API, ECR DKR, S3 (gateway) only
+- Alternative: ECS tasks use VPC endpoints for AWS service access
 
 **VPC Terraform**:
 ```hcl
@@ -326,6 +338,14 @@ resource "aws_lb_listener_rule" "identity_service" {
 
 **Architecture**: Single database instance with multi-schema isolation per service
 
+**Demo Configuration** (Cost-Optimized):
+- **Instance Class**: db.t3.micro (Free Tier eligible)
+- **Storage**: 20 GB gp3 (Free Tier eligible)
+- **Deployment**: Single-AZ (Multi-AZ disabled for demo)
+- **Backup Retention**: 1 day (minimum)
+- **Performance Insights**: Disabled
+- **Cost**: $0/month (Free Tier) or ~$12/month after
+
 **Database Design**:
 - **Instance**: Single RDS PostgreSQL instance per environment
 - **Database Name**: `turaf`
@@ -339,6 +359,10 @@ resource "aws_lb_listener_rule" "identity_service" {
   - `organization_user` → `organization_schema`
   - `experiment_user` → `experiment_schema`
   - `metrics_user` → `metrics_schema`
+
+**Services Disabled for Demo**:
+- ❌ **ElastiCache Redis**: Use in-memory cache or local Redis (-$12/month)
+- ❌ **DocumentDB**: Use PostgreSQL JSON columns (-$54/month)
 
 **Configuration**:
 

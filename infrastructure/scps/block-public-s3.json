@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPublicS3Buckets",
+      "Effect": "Deny",
+      "Action": [
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutAccountPublicAccessBlock"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "s3:BlockPublicAcls": "false",
+          "s3:BlockPublicPolicy": "false",
+          "s3:IgnorePublicAcls": "false",
+          "s3:RestrictPublicBuckets": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicACLs",
+      "Effect": "Deny",
+      "Action": [
+        "s3:PutObjectAcl",
+        "s3:PutBucketAcl"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": [
+            "public-read",
+            "public-read-write",
+            "authenticated-read"
+          ]
+        }
+      }
+    }
+  ]
+}

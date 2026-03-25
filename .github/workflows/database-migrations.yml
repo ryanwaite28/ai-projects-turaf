@@ -1,0 +1,116 @@
+name: Database Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+  push:
+    branches:
+      - develop    # Auto-run for DEV
+      - release/*  # Auto-run for QA
+    paths:
+      - 'services/flyway-service/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  migrate:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/release/ ]]; then
+            echo "environment=qa" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set AWS account ID
+        id: aws-account
+        run: |
+          case "${{ steps.env.outputs.environment }}" in
+            dev)
+              echo "account_id=801651112319" >> $GITHUB_OUTPUT
+              ;;
+            qa)
+              echo "account_id=965932217544" >> $GITHUB_OUTPUT
+              ;;
+            prod)
+              echo "account_id=811783768245" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ steps.aws-account.outputs.account_id }}:role/GitHubActionsFlywayRole
+          aws-region: us-east-1
+      
+      - name: Trigger CodeBuild
+        id: codebuild
+        run: |
+          echo "Starting CodeBuild migration for ${{ steps.env.outputs.environment }} environment..."
+          
+          BUILD_ID=$(aws codebuild start-build \
+            --project-name turaf-flyway-migrations-${{ steps.env.outputs.environment }} \
+            --source-version ${{ github.sha }} \
+            --query 'build.id' \
+            --output text)
+          
+          echo "CodeBuild ID: $BUILD_ID"
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+      
+      - name: Wait for CodeBuild completion
+        run: |
+          echo "Waiting for CodeBuild to complete..."
+          aws codebuild wait build-complete --ids ${{ steps.codebuild.outputs.build_id }}
+      
+      - name: Get build status
+        run: |
+          echo "Retrieving build status..."
+          
+          STATUS=$(aws codebuild batch-get-builds \
+            --ids ${{ steps.codebuild.outputs.build_id }} \
+            --query 'builds[0].buildStatus' \
+            --output text)
+          
+          echo "Build Status: $STATUS"
+          
+          if [ "$STATUS" != "SUCCEEDED" ]; then
+            echo "❌ Migration failed with status: $STATUS"
+            echo "Check CodeBuild logs for details: https://console.aws.amazon.com/codesuite/codebuild/projects/turaf-flyway-migrations-${{ steps.env.outputs.environment }}/build/${{ steps.codebuild.outputs.build_id }}"
+            exit 1
+          fi
+          
+          echo "✅ Migrations completed successfully"
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Database Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **CodeBuild Project**: turaf-flyway-migrations-${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build ID**: ${{ steps.codebuild.outputs.build_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View CodeBuild Logs](https://console.aws.amazon.com/codesuite/codebuild/projects/turaf-flyway-migrations-${{ steps.env.outputs.environment }}/build/${{ steps.codebuild.outputs.build_id }})" >> $GITHUB_STEP_SUMMARY

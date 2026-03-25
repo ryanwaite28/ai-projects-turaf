@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyAllWithoutMFA",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:StopInstances",
+        "ec2:TerminateInstances",
+        "rds:DeleteDBInstance",
+        "s3:DeleteBucket",
+        "iam:DeleteUser",
+        "iam:DeleteRole"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "aws:MultiFactorAuthPresent": "false"
+        }
+      }
+    }
+  ]
+}

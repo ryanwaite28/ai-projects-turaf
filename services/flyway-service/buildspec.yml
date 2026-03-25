@@ -1,0 +1,51 @@
+version: 0.2
+
+# AWS CodeBuild specification for Flyway database migrations
+# This buildspec is executed by CodeBuild to apply database migrations
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "Installing Flyway CLI..."
+      - wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar xvz
+      - export PATH=$PATH:$(pwd)/flyway-9.22.3
+      - flyway -v
+      
+  pre_build:
+    commands:
+      - echo "Pre-build phase - Validating environment..."
+      - echo "DB_HOST=$DB_HOST"
+      - echo "DB_NAME=$DB_NAME"
+      - echo "DB_USER=$DB_USER"
+      - echo "Build started on $(date)"
+      - cd services/flyway-service
+      - ls -la migrations/
+      
+  build:
+    commands:
+      - echo "Running database migrations..."
+      - chmod +x scripts/run-migrations.sh
+      - ./scripts/run-migrations.sh
+      
+  post_build:
+    commands:
+      - echo "Post-build phase - Migration complete"
+      - echo "Build completed on $(date)"
+      - |
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+          echo "✅ Migrations applied successfully"
+        else
+          echo "❌ Migration failed"
+          exit 1
+        fi
+
+artifacts:
+  files:
+    - '**/*'
+  name: flyway-migration-artifacts
+
+cache:
+  paths:
+    - '/root/.m2/**/*'

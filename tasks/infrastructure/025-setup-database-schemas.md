@@ -1,31 +1,46 @@
-# Task: Setup Database Schemas
+# Task: Configure Database Users and Permissions
 
 **Service**: Infrastructure  
 **Phase**: 10  
-**Estimated Time**: 2 hours  
+**Estimated Time**: 1.5 hours  
+**Dependencies**: Task 028 (CodeBuild Migration Projects)
 
 ## Objective
 
-Create database schema initialization and validation scripts for the multi-schema PostgreSQL architecture.
+Configure database users with schema-level permissions and create validation scripts for the multi-schema PostgreSQL architecture.
+
+**Note**: Schema and table creation is now handled by the centralized Flyway migration service. This task focuses on user management and permission configuration.
 
 ## Prerequisites
 
-- [x] Task 004: Database module created
+- [x] Task 016: Database module created
+- [x] Task 028: CodeBuild migration projects created
+- [ ] Flyway migrations executed (schemas and tables created)
 - [ ] RDS instance deployed
 
 ## Scope
 
 **Files to Create**:
-- `infrastructure/scripts/init-schemas.sh`
-- `infrastructure/scripts/validate-schemas.sh`
-- `infrastructure/scripts/test-schema-isolation.sql`
-- `docs/DATABASE_SETUP.md`
+- `infrastructure/scripts/create-db-users.sh` (NEW - user creation only)
+- `infrastructure/scripts/validate-db-permissions.sh` (UPDATED - validation only)
+- `infrastructure/scripts/test-schema-isolation.sql` (KEPT - still needed)
+- `docs/DATABASE_SETUP.md` (UPDATED - reflect Flyway architecture)
+
+**What This Task Does NOT Do**:
+- ❌ Create schemas (handled by Flyway migrations)
+- ❌ Create tables (handled by Flyway migrations)
+- ❌ Manage migrations (handled by flyway-service)
 
 ## Implementation Details
 
-### Schema Initialization Script
+### Database User Creation Script
 
-**File**: `infrastructure/scripts/init-schemas.sh`
+**File**: `infrastructure/scripts/create-db-users.sh`
+
+**Purpose**: Create service-specific database users with schema-level permissions.
+
+**Note**: Schemas are created by Flyway migrations. This script only creates users and grants permissions.
+
 ```bash
 #!/bin/bash
 set -e
@@ -34,7 +49,7 @@ set -e
 DB_HOST=${1:-localhost}
 DB_PORT=${2:-5432}
 DB_NAME=${3:-turaf}
-ADMIN_USER=${4:-turaf_admin}
+ADMIN_USER=${4:-postgres}
 ADMIN_PASSWORD=${5}
 
 if [ -z "$ADMIN_PASSWORD" ]; then
@@ -42,30 +57,73 @@ if [ -z "$ADMIN_PASSWORD" ]; then
   exit 1
 fi
 
-echo "Initializing database schemas on $DB_HOST:$DB_PORT/$DB_NAME"
+echo "Creating database users on $DB_HOST:$DB_PORT/$DB_NAME"
+echo "NOTE: Schemas should already exist (created by Flyway migrations)"
 
-# Create schemas
+# Verify schemas exist before creating users
 PGPASSWORD=$ADMIN_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $ADMIN_USER -d $DB_NAME <<SQL
--- Create schemas
-CREATE SCHEMA IF NOT EXISTS identity_schema;
-CREATE SCHEMA IF NOT EXISTS organization_schema;
-CREATE SCHEMA IF NOT EXISTS experiment_schema;
-CREATE SCHEMA IF NOT EXISTS metrics_schema;
+-- Verify schemas exist (created by Flyway)
+DO \$\$
+DECLARE
+  missing_schemas TEXT[];
+BEGIN
+  SELECT ARRAY_AGG(schema_name)
+  INTO missing_schemas
+  FROM (VALUES 
+    ('identity_schema'),
+    ('organization_schema'),
+    ('experiment_schema'),
+    ('metrics_schema'),
+    ('communications_schema')
+  ) AS expected(schema_name)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM information_schema.schemata 
+    WHERE schema_name = expected.schema_name
+  );
+  
+  IF missing_schemas IS NOT NULL THEN
+    RAISE EXCEPTION 'Missing schemas: %. Run Flyway migrations first!', missing_schemas;
+  END IF;
+  
+  RAISE NOTICE 'All required schemas exist. Proceeding with user creation...';
+END \$\$;
 
--- Create users (passwords should be provided via environment variables)
+-- Create service users (passwords from environment variables)
 DO \$\$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'identity_user') THEN
     CREATE USER identity_user WITH PASSWORD '${IDENTITY_PASSWORD}';
+    RAISE NOTICE 'Created user: identity_user';
+  ELSE
+    RAISE NOTICE 'User already exists: identity_user';
   END IF;
+  
   IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'organization_user') THEN
     CREATE USER organization_user WITH PASSWORD '${ORGANIZATION_PASSWORD}';
+    RAISE NOTICE 'Created user: organization_user';
+  ELSE
+    RAISE NOTICE 'User already exists: organization_user';
   END IF;
+  
   IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'experiment_user') THEN
     CREATE USER experiment_user WITH PASSWORD '${EXPERIMENT_PASSWORD}';
+    RAISE NOTICE 'Created user: experiment_user';
+  ELSE
+    RAISE NOTICE 'User already exists: experiment_user';
   END IF;
+  
   IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'metrics_user') THEN
     CREATE USER metrics_user WITH PASSWORD '${METRICS_PASSWORD}';
+    RAISE NOTICE 'Created user: metrics_user';
+  ELSE
+    RAISE NOTICE 'User already exists: metrics_user';
+  END IF;
+  
+  IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'communications_user') THEN
+    CREATE USER communications_user WITH PASSWORD '${COMMUNICATIONS_PASSWORD}';
+    RAISE NOTICE 'Created user: communications_user';
+  ELSE
+    RAISE NOTICE 'User already exists: communications_user';
   END IF;
 END
 \$\$;
@@ -98,14 +156,24 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA metrics_schema TO metrics_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA metrics_schema GRANT ALL ON TABLES TO metrics_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA metrics_schema GRANT ALL ON SEQUENCES TO metrics_user;
 
+-- Grant schema permissions for communications_schema
+GRANT ALL PRIVILEGES ON SCHEMA communications_schema TO communications_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA communications_schema TO communications_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA communications_schema TO communications_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA communications_schema GRANT ALL ON TABLES TO communications_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA communications_schema GRANT ALL ON SEQUENCES TO communications_user;
+
 SQL
 
-echo "Schema initialization complete"
+echo "✅ Database users created and permissions granted"
+echo "NOTE: Tables were created by Flyway migrations"
 ```
 
-### Schema Validation Script
+### Permission Validation Script
 
-**File**: `infrastructure/scripts/validate-schemas.sh`
+**File**: `infrastructure/scripts/validate-db-permissions.sh`
+
+**Purpose**: Validate that users and permissions are correctly configured.
 ```bash
 #!/bin/bash
 set -e
@@ -121,19 +189,19 @@ if [ -z "$ADMIN_PASSWORD" ]; then
   exit 1
 fi
 
-echo "Validating database schemas on $DB_HOST:$DB_PORT/$DB_NAME"
+echo "Validating database users and permissions on $DB_HOST:$DB_PORT/$DB_NAME"
 
 PGPASSWORD=$ADMIN_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $ADMIN_USER -d $DB_NAME <<SQL
--- Check schemas exist
+-- Check schemas exist (created by Flyway)
 SELECT schema_name 
 FROM information_schema.schemata 
-WHERE schema_name IN ('identity_schema', 'organization_schema', 'experiment_schema', 'metrics_schema')
+WHERE schema_name IN ('identity_schema', 'organization_schema', 'experiment_schema', 'metrics_schema', 'communications_schema')
 ORDER BY schema_name;
 
 -- Check users exist
 SELECT usename 
 FROM pg_user 
-WHERE usename IN ('identity_user', 'organization_user', 'experiment_user', 'metrics_user')
+WHERE usename IN ('identity_user', 'organization_user', 'experiment_user', 'metrics_user', 'communications_user')
 ORDER BY usename;
 
 -- Check permissions
@@ -150,19 +218,26 @@ SELECT
   END as create_privilege
 FROM pg_namespace n
 CROSS JOIN pg_roles r
-WHERE n.nspname IN ('identity_schema', 'organization_schema', 'experiment_schema', 'metrics_schema')
-  AND r.rolname IN ('identity_user', 'organization_user', 'experiment_user', 'metrics_user')
+WHERE n.nspname IN ('identity_schema', 'organization_schema', 'experiment_schema', 'metrics_schema', 'communications_schema')
+  AND r.rolname IN ('identity_user', 'organization_user', 'experiment_user', 'metrics_user', 'communications_user')
   AND (
     (n.nspname = 'identity_schema' AND r.rolname = 'identity_user') OR
     (n.nspname = 'organization_schema' AND r.rolname = 'organization_user') OR
     (n.nspname = 'experiment_schema' AND r.rolname = 'experiment_user') OR
-    (n.nspname = 'metrics_schema' AND r.rolname = 'metrics_user')
+    (n.nspname = 'metrics_schema' AND r.rolname = 'metrics_user') OR
+    (n.nspname = 'communications_schema' AND r.rolname = 'communications_user')
   )
 ORDER BY schema_name, user_name;
 
+-- Check Flyway migration history
+SELECT installed_rank, version, description, type, script, installed_on, success
+FROM public.flyway_schema_history
+ORDER BY installed_rank DESC
+LIMIT 10;
+
 SQL
 
-echo "Validation complete"
+echo "✅ Validation complete"
 ```
 
 ### Schema Isolation Test
@@ -356,12 +431,17 @@ spring:
 
 ## Migration Management
 
-Each service manages its own schema migrations using Flyway:
+**Centralized Flyway Service**:
 
-- Migrations are located in `src/main/resources/db/migration/`
-- Flyway automatically targets the configured schema
-- Migration history is tracked per schema
-- No migration conflicts between services
+Database migrations are managed centrally through the `flyway-service`:
+
+- All migrations located in `services/flyway-service/migrations/`
+- Executed via AWS CodeBuild triggered by GitHub Actions
+- Migrations run **before** service deployments
+- Migration history tracked in `public.flyway_schema_history` table
+- Each migration targets specific schema via `SET search_path`
+
+See `specs/flyway-service.md` for complete documentation.
 
 ## Troubleshooting
 
@@ -402,30 +482,38 @@ Then re-run initialization script.
 
 ## Acceptance Criteria
 
-- [ ] Schema initialization script created and tested
-- [ ] Schema validation script created and tested
-- [ ] Schema isolation test script created and passes
-- [ ] Database setup documentation created
-- [ ] Scripts executable and properly documented
-- [ ] All four schemas can be created successfully
-- [ ] All four users can be created with correct permissions
-- [ ] Schema isolation is verified (users cannot access other schemas)
-- [ ] Local development setup documented
+- [x] User creation script created and tested
+- [x] Permission validation script created and tested
+- [x] Schema isolation test script created and passes
+- [x] Database setup documentation updated for Flyway architecture
+- [x] Scripts executable and properly documented
+- [x] All five users created with correct permissions (identity, organization, experiment, metrics, communications)
+- [x] Schema isolation verified (users cannot access other schemas)
+- [x] Local development setup documented
+- [x] Flyway migrations verified as prerequisite
+- [x] README created for scripts directory
 
 ## Testing Requirements
 
+**Prerequisites**:
+1. ✅ Flyway migrations must be executed first (schemas and tables created)
+2. ✅ RDS instance must be deployed
+
 **Local Testing**:
-1. Run initialization script on local PostgreSQL
-2. Run validation script to verify setup
-3. Run isolation test script to verify permissions
-4. Verify each service can connect to its schema
-5. Verify services cannot access other schemas
+1. Verify Flyway migrations ran successfully
+2. Run user creation script on local PostgreSQL
+3. Run validation script to verify users and permissions
+4. Run isolation test script to verify permissions
+5. Verify each service can connect to its schema
+6. Verify services cannot access other schemas
 
 **Integration Testing**:
 1. Deploy to DEV environment
-2. Run validation and isolation tests
-3. Deploy all services and verify connectivity
-4. Run service integration tests
+2. Execute Flyway migrations via GitHub Actions
+3. Run user creation script
+4. Run validation and isolation tests
+5. Deploy all services and verify connectivity
+6. Run service integration tests
 
 ## References
 

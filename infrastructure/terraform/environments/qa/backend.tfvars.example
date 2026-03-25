@@ -1,0 +1,8 @@
+# Backend Configuration for QA Environment
+# Copy this file to backend.tfvars and update values as needed
+
+bucket         = "turaf-terraform-state-qa"
+key            = "qa/terraform.tfvars"
+region         = "us-east-1"
+encrypt        = true
+dynamodb_table = "turaf-terraform-locks"

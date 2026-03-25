@@ -40,18 +40,4 @@ resource "aws_cloudwatch_log_group" "eventbridge" {
   }
 }
 
-# Output the event bus details
-output "event_bus_name" {
-  description = "Name of the EventBridge event bus"
-  value       = aws_cloudwatch_event_bus.main.name
-}
-
-output "event_bus_arn" {
-  description = "ARN of the EventBridge event bus"
-  value       = aws_cloudwatch_event_bus.main.arn
-}
-
-output "event_archive_arn" {
-  description = "ARN of the EventBridge event archive"
-  value       = aws_cloudwatch_event_archive.main.arn
-}
+# Note: Outputs are defined in outputs.tf to avoid duplication

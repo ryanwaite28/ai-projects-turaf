@@ -1,0 +1,164 @@
+# Turaf Production Environment - High Availability Configuration
+# Copy this file to terraform.tfvars and update values as needed
+
+# Environment
+environment = "prod"
+aws_region  = "us-east-1"
+
+# VPC Configuration - 3 AZs for high availability
+vpc_cidr = "10.2.0.0/16"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b",
+  "us-east-1c"
+]
+
+# Networking - Production settings
+enable_nat_gateway = true   # Required for private subnet internet access
+single_nat_gateway = false  # NAT Gateway per AZ for HA
+enable_flow_logs   = true   # Enable for security monitoring
+
+# Database - Production RDS with Multi-AZ
+db_instance_class             = "db.t3.medium"     # 2 vCPU, 4 GB RAM
+db_allocated_storage          = 100                # 100 GB storage
+db_max_allocated_storage      = 500                # Auto-scale to 500 GB
+backup_retention_days         = 30                 # 30-day backup retention
+enable_multi_az               = true               # Multi-AZ for HA
+deletion_protection           = true               # Prevent accidental deletion
+enable_performance_insights   = true               # Enable performance monitoring
+
+# Redis - Production caching
+enable_redis                  = true               # Enable for session/cache
+redis_node_type               = "cache.t3.medium"  # 2 vCPU, 3.09 GB
+redis_num_cache_nodes         = 2                  # 2 nodes for HA
+redis_snapshot_retention_days = 7                  # 7-day snapshots
+
+# DocumentDB - Optional (disabled by default)
+enable_documentdb             = false              # Enable if needed
+documentdb_instance_class     = "db.t3.medium"
+documentdb_instance_count     = 3                  # 3 instances for HA
+documentdb_backup_retention_days = 7
+
+# ECS Fargate - Production workloads
+identity_service_cpu           = 1024  # 1 vCPU
+identity_service_memory        = 2048  # 2 GB
+identity_service_desired_count = 3     # 3 tasks for HA
+identity_service_min_capacity  = 2     # Min 2 tasks
+identity_service_max_capacity  = 10    # Max 10 tasks
+
+organization_service_cpu           = 1024
+organization_service_memory        = 2048
+organization_service_desired_count = 3
+organization_service_min_capacity  = 2
+organization_service_max_capacity  = 10
+
+experiment_service_cpu           = 2048  # 2 vCPU (more intensive)
+experiment_service_memory        = 4096  # 4 GB
+experiment_service_desired_count = 3
+experiment_service_min_capacity  = 2
+experiment_service_max_capacity  = 10
+
+# Use standard Fargate (not Spot) for production reliability
+use_fargate_spot          = false
+enable_container_insights = true   # Enable for monitoring
+enable_autoscaling        = true   # Enable auto-scaling
+
+# Optional Services - Enable all for production
+enable_metrics_service      = true
+enable_reporting_service    = true
+enable_notification_service = true
+
+# Lambda - Enable all functions
+enable_event_processor        = true
+enable_notification_processor = true
+enable_report_generator       = true
+lambda_use_vpc_mode          = true  # VPC mode for database access
+
+# Storage - Production settings
+enable_s3_versioning     = true   # Enable versioning
+enable_separate_s3_buckets = true # Separate buckets for security
+
+# Messaging - Enable all features
+enable_event_archive      = true
+enable_chat_queue         = true
+enable_notification_queue = true
+enable_report_queue       = true
+enable_sns_topics         = true
+enable_queue_alarms       = true
+
+# Monitoring - Full monitoring enabled
+enable_alarms       = true
+enable_dashboard    = true
+enable_sns_alerts   = true
+enable_xray         = true
+enable_log_insights = true
+
+# Alert Configuration
+alarm_email = "alerts@turafapp.com"  # Update with your email
+
+# Alarm Thresholds (stricter for production)
+cpu_threshold           = 70  # Alert at 70% CPU
+memory_threshold        = 70  # Alert at 70% memory
+response_time_threshold = 1   # Alert at 1 second response time
+
+# Logging - Longer retention for production
+log_retention_days    = 30
+enable_execute_command = true  # Enable for debugging
+
+# Tags
+tags = {
+  Project     = "turaf"
+  Environment = "prod"
+  ManagedBy   = "terraform"
+  Compliance  = "required"
+  CostCenter  = "production"
+  Criticality = "high"
+}
+
+# Domain
+domain_name = "turafapp.com"
+
+# ACM Certificate ARN (from Task 005)
+# Update this with your actual certificate ARN
+acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
+
+# ECR Image URLs (from Task 011)
+# Update these with your actual ECR repository URLs
+identity_service_image     = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/identity-service"
+organization_service_image = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/organization-service"
+experiment_service_image   = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/experiment-service"
+image_tag                  = "v1.0.0"  # Use specific version tags in production
+
+# Lambda Artifacts
+lambda_artifacts_bucket = "turaf-lambda-artifacts-prod"
+from_email             = "noreply@turafapp.com"
+
+# Estimated Monthly Cost: ~$350-450/month
+# 
+# Cost Breakdown:
+# - RDS PostgreSQL (db.t3.medium, Multi-AZ): ~$70/month
+# - ElastiCache Redis (2 nodes, cache.t3.medium): ~$50/month
+# - ECS Fargate (9-30 tasks, 1-2 vCPU, 2-4 GB): ~$150-250/month
+# - ALB: ~$20/month
+# - NAT Gateway (3 AZs): ~$100/month
+# - VPC Endpoints: ~$14/month
+# - S3: ~$10/month
+# - ECR: ~$2/month
+# - Secrets Manager: ~$2/month
+# - CloudWatch (alarms, logs, insights): ~$10/month
+# - X-Ray: ~$5/month
+# - Lambda (if used): ~$5-10/month
+# - Container Insights: ~$2/month
+#
+# Note: This is a full production configuration with:
+# - Multi-AZ RDS for high availability
+# - Redis caching for performance
+# - Multiple NAT Gateways for HA
+# - Auto-scaling ECS services
+# - Full monitoring and alerting
+# - All optional services enabled
+#
+# Cost Comparison:
+# - DEV: ~$32-55/month (minimal, demo)
+# - QA: ~$70-90/month (testing, 2x DEV)
+# - PROD: ~$350-450/month (production, HA, full features)

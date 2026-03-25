@@ -1,0 +1,92 @@
+# Turaf Development Environment - Cost-Optimized Demo Configuration
+# Copy this file to terraform.tfvars and update values as needed
+
+# Environment
+environment = "dev"
+aws_region  = "us-east-1"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b"
+]
+
+# Networking - Cost Optimized
+enable_nat_gateway = false  # Save ~$65/month - use VPC endpoints instead
+single_nat_gateway = false  # Not used when NAT gateway disabled
+enable_flow_logs   = false  # Save ~$5/month
+
+# Database - Free Tier Configuration
+db_instance_class             = "db.t3.micro"      # Free Tier eligible
+db_allocated_storage          = 20                 # Free Tier: 20 GB
+db_max_allocated_storage      = 50
+backup_retention_days         = 1                  # Minimum retention
+enable_multi_az               = false              # Single-AZ for demo
+deletion_protection           = false              # Allow easy cleanup
+enable_performance_insights   = false              # Save ~$7/month
+
+# Redis - Disabled for Cost Savings
+enable_redis                  = false              # Save ~$12/month
+redis_node_type               = "cache.t3.micro"   # Only used if enabled
+redis_num_cache_nodes         = 1
+redis_snapshot_retention_days = 1
+
+# DocumentDB - Disabled for Cost Savings
+enable_documentdb             = false              # Save ~$54/month
+documentdb_instance_class     = "db.t3.medium"     # Only used if enabled
+documentdb_instance_count     = 1
+documentdb_backup_retention_days = 1
+
+# ECS Fargate - Minimal Configuration
+ecs_services = {
+  identity = {
+    cpu    = 256  # 0.25 vCPU
+    memory = 512  # 512 MB
+    count  = 1
+  }
+  organization = {
+    cpu    = 256
+    memory = 512
+    count  = 1
+  }
+  experiment = {
+    cpu    = 256
+    memory = 512
+    count  = 1
+  }
+}
+
+# Use Fargate Spot for 70% cost savings
+fargate_capacity_provider = "FARGATE_SPOT"
+
+# Tags
+tags = {
+  Project     = "turaf"
+  Environment = "dev"
+  ManagedBy   = "terraform"
+  CostCenter  = "demo"
+  Purpose     = "portfolio"
+}
+
+# Domain
+domain_name = "turafapp.com"
+
+# ACM Certificate ARN (from Task 005)
+# Update this with your actual certificate ARN
+acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
+
+# Estimated Monthly Cost: ~$55/month (with Free Tier) or ~$67/month (after Free Tier)
+# 
+# Cost Breakdown:
+# - RDS PostgreSQL: $0 (Free Tier) or $12
+# - ECS Fargate (3 services, Spot): $15
+# - ALB: $16
+# - VPC Endpoints (2): $14
+# - S3: $2
+# - ECR: $1
+# - Secrets Manager (5): $2
+# - KMS (1): $1
+# - Route 53: $0.50
+# - CloudFront: $1
+# - CloudWatch Logs: $2

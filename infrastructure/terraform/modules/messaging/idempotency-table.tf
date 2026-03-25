@@ -61,13 +61,4 @@ resource "aws_cloudwatch_metric_alarm" "idempotency_throttled_requests" {
   }
 }
 
-# Output the table name for use in application configuration
-output "idempotency_table_name" {
-  description = "Name of the DynamoDB idempotency table"
-  value       = aws_dynamodb_table.idempotency.name
-}
-
-output "idempotency_table_arn" {
-  description = "ARN of the DynamoDB idempotency table"
-  value       = aws_dynamodb_table.idempotency.arn
-}
+# Note: Outputs are defined in outputs.tf to avoid duplication

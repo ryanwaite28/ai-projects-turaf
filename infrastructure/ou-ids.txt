@@ -1,0 +1,15 @@
+# AWS Organization - Organizational Unit IDs
+# Generated: 2024-03-23
+# Organization ID: o-l3zk5a91yj
+# Root ID: r-gs6r
+
+Workloads OU: ou-gs6r-6qpsgd9n
+
+# OU Structure:
+# AWS Organization (o-l3zk5a91yj)
+# └── Root (r-gs6r) - Management Account: 072456928432
+#     └── Workloads OU (ou-gs6r-6qpsgd9n)
+#         ├── Ops (146072879609)
+#         ├── dev (801651112319)
+#         ├── qa (965932217544)
+#         └── prod (811783768245)

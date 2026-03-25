@@ -274,7 +274,95 @@ This ensures product teams can make **data-driven decisions**.
 
 ---
 
-# 5. Core Features
+# 57. Infrastructure Costs
+
+## Cost Overview
+
+The infrastructure is designed with **cost optimization for demo/portfolio purposes** while maintaining production-ready architecture patterns.
+
+### Monthly Cost Breakdown (Development Environment)
+
+| Service | Configuration | Monthly Cost |
+|---------|--------------|--------------|
+| **RDS PostgreSQL** | db.t3.micro, 20GB, Single-AZ | $0 (Free Tier) or $12 |
+| **ECS Fargate** | 3 services, 0.25 vCPU, 512MB, Spot | $15 |
+| **Application Load Balancer** | Single ALB, path-based routing | $16 |
+| **VPC Endpoints** | ECR API, ECR DKR (2 endpoints) | $14 |
+| **S3** | Single bucket, minimal storage | $2 |
+| **ECR** | Container images, lifecycle policy | $1 |
+| **Secrets Manager** | 5 secrets | $2 |
+| **KMS** | 1 key | $1 |
+| **Route 53** | Hosted zone | $0.50 |
+| **CloudFront** | Frontend distribution | $1 |
+| **CloudWatch Logs** | Log ingestion and storage | $2 |
+
+**Total Monthly Cost**: ~$66.50/month (or ~$54.50 with Free Tier)
+
+### Cost Optimization Strategies
+
+**Services Disabled for Demo**:
+- ❌ ElastiCache Redis: -$12/month (use in-memory cache or local Redis)
+- ❌ DocumentDB: -$54/month (use PostgreSQL JSON columns)
+- ❌ NAT Gateways: -$65/month (use VPC endpoints only)
+- ❌ Multi-AZ RDS: -$12/month (Single-AZ sufficient for demo)
+- ❌ Performance Insights: -$7/month (not needed for demo)
+
+**Total Savings**: ~$150/month (69% reduction from production config)
+
+### AWS Free Tier Utilization
+
+**12-Month Free Tier**:
+- RDS: 750 hours/month db.t3.micro (covers 24/7 usage)
+- RDS Storage: 20 GB
+- S3: 5 GB storage, 20,000 GET requests
+- CloudFront: 1 TB data transfer out
+- CloudWatch Logs: 5 GB ingestion
+
+**Always Free**:
+- VPC: Free
+- Security Groups: Free
+- Route 53 Queries: First 1 billion/month
+- Lambda: 1M requests/month, 400,000 GB-seconds
+
+### Production Environment Estimate
+
+For production deployment with high availability:
+
+| Service | Configuration | Monthly Cost |
+|---------|--------------|--------------|
+| **RDS PostgreSQL** | db.t3.small, Multi-AZ, 100GB | $72 |
+| **ECS Fargate** | 6 services, 2 tasks each, 0.5 vCPU | $90 |
+| **Application Load Balancer** | Single ALB | $16 |
+| **NAT Gateways** | 2 AZs | $65 |
+| **VPC Endpoints** | 6 endpoints | $43 |
+| **ElastiCache Redis** | cache.t3.small, 2 nodes | $50 |
+| **S3** | Multi-bucket, versioning | $10 |
+| **ECR** | Container images | $3 |
+| **Secrets Manager** | 10 secrets | $4 |
+| **KMS** | 3 keys | $3 |
+| **Route 53** | Hosted zone + queries | $2 |
+| **CloudFront** | Frontend distribution | $5 |
+| **CloudWatch** | Logs, metrics, alarms | $15 |
+
+**Total Production Cost**: ~$378/month
+
+### Cost Control Measures
+
+1. **Resource Tagging**: All resources tagged with `Environment`, `Project`, `ManagedBy`
+2. **Budget Alerts**: AWS Budgets configured per account
+3. **Lifecycle Policies**: ECR and S3 cleanup policies
+4. **Auto-Scaling**: ECS tasks scale down during low usage
+5. **Spot Instances**: Fargate Spot for dev environment (70% savings)
+6. **Single Database**: Multi-schema PostgreSQL vs. separate databases
+
+### Estimated Annual Cost
+
+- **Development**: ~$660/year (with Free Tier) or ~$798/year (after Free Tier)
+- **Production**: ~$4,536/year
+
+---
+
+# 58. Changelog
 
 ## Problem Management
 
@@ -1281,11 +1369,34 @@ One database user per service with schema-scoped permissions:
 
 ### Migration Management
 
-Each service manages its own schema migrations using Flyway:
-- Migrations run independently per service
-- Schema-scoped migration history
-- No migration conflicts between services
-- Version-controlled migration scripts per service
+**Centralized Flyway Service**
+
+Database migrations are managed centrally through a dedicated `flyway-service`:
+
+- **Service**: `flyway-service` - Centralized migration management
+- **Execution**: AWS CodeBuild triggered by GitHub Actions
+- **Location**: All SQL migration scripts in `services/flyway-service/migrations/`
+- **Naming**: `V{NNN}__{service}_{description}.sql` (e.g., `V001__identity_create_users_table.sql`)
+- **Multi-Schema Support**: Flyway manages all schemas in a single execution
+- **Deployment**: Migrations run **before** service deployments in CI/CD pipeline
+- **History**: Tracked per schema in `flyway_schema_history` table
+- **Isolation**: Each migration targets specific schema via `SET search_path`
+
+**Benefits:**
+- Single source of truth for all database changes
+- Migrations run before service deployments (safety)
+- No Flyway dependencies in microservices (simplified)
+- Clear audit trail of all database changes
+- Centralized rollback procedures
+
+**GitHub Actions Workflow:**
+1. Developer commits migration script to `flyway-service/migrations/`
+2. GitHub Actions triggers on push to `develop` or `release/*`
+3. Workflow assumes `GitHubActionsFlywayRole` via OIDC
+4. Triggers AWS CodeBuild project
+5. CodeBuild runs Flyway migrations in VPC with RDS access
+6. Migration results logged to CloudWatch
+7. Service deployments proceed only if migrations succeed
 
 ---
 

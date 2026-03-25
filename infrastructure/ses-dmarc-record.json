@@ -1,0 +1,11 @@
+{
+  "Changes": [{
+    "Action": "CREATE",
+    "ResourceRecordSet": {
+      "Name": "_dmarc.turafapp.com",
+      "Type": "TXT",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "\"v=DMARC1; p=quarantine; rua=mailto:admin@turafapp.com; pct=100; adkim=s; aspf=s\""}]
+    }
+  }]
+}

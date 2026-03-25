@@ -1,0 +1,11 @@
+{
+  "Changes": [{
+    "Action": "CREATE",
+    "ResourceRecordSet": {
+      "Name": "_amazonses.turafapp.com",
+      "Type": "TXT",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "\"7annHFCIRZX1cn9hoor/wKA94wwBWsSndv0X+nVZiiA=\""}]
+    }
+  }]
+}

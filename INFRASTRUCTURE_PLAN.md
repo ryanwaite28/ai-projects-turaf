@@ -954,7 +954,173 @@ chmod +x verify-setup.sh
      --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
    ```
 
-### 2.3 Set Up Amazon SES
+### 2.3 Configure Database Migration IAM Roles
+
+**Objective**: Set up IAM roles for centralized database migrations via CodeBuild
+
+**Accounts to configure**: dev, qa, prod
+
+**Steps for EACH account**:
+
+1. **Create GitHub Actions Flyway OIDC Role**:
+   ```bash
+   # Create trust policy for Flyway migrations
+   cat > github-actions-flyway-trust-policy.json <<EOF
+   {
+     "Version": "2012-10-17",
+     "Statement": [{
+       "Effect": "Allow",
+       "Principal": {
+         "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+       },
+       "Action": "sts:AssumeRoleWithWebIdentity",
+       "Condition": {
+         "StringEquals": {
+           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+         },
+         "StringLike": {
+           "token.actions.githubusercontent.com:sub": "repo:ryanwaite28/ai-projects-turaf:*"
+         }
+       }
+     }]
+   }
+   EOF
+   
+   # Create role
+   aws iam create-role \
+     --role-name GitHubActionsFlywayRole \
+     --assume-role-policy-document file://github-actions-flyway-trust-policy.json \
+     --description "Role for GitHub Actions to trigger database migrations"
+   
+   # Create permissions policy
+   cat > github-actions-flyway-permissions.json <<EOF
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "CodeBuildPermissions",
+         "Effect": "Allow",
+         "Action": [
+           "codebuild:StartBuild",
+           "codebuild:BatchGetBuilds"
+         ],
+         "Resource": "arn:aws:codebuild:us-east-1:<ACCOUNT_ID>:project/turaf-flyway-migrations-*"
+       },
+       {
+         "Sid": "CloudWatchLogs",
+         "Effect": "Allow",
+         "Action": [
+           "logs:GetLogEvents",
+           "logs:FilterLogEvents"
+         ],
+         "Resource": "arn:aws:logs:us-east-1:<ACCOUNT_ID>:log-group:/aws/codebuild/turaf-flyway-migrations-*"
+       }
+     ]
+   }
+   EOF
+   
+   # Attach permissions
+   aws iam put-role-policy \
+     --role-name GitHubActionsFlywayRole \
+     --policy-name GitHubActionsFlywayPolicy \
+     --policy-document file://github-actions-flyway-permissions.json
+   ```
+
+2. **Create CodeBuild Flyway Execution Role**:
+   ```bash
+   # Create trust policy for CodeBuild
+   cat > codebuild-flyway-trust-policy.json <<EOF
+   {
+     "Version": "2012-10-17",
+     "Statement": [{
+       "Effect": "Allow",
+       "Principal": {
+         "Service": "codebuild.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+     }]
+   }
+   EOF
+   
+   # Create role
+   aws iam create-role \
+     --role-name CodeBuildFlywayRole \
+     --assume-role-policy-document file://codebuild-flyway-trust-policy.json \
+     --description "Role for CodeBuild to execute Flyway database migrations"
+   
+   # Create permissions policy
+   cat > codebuild-flyway-permissions.json <<EOF
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "SecretsManagerAccess",
+         "Effect": "Allow",
+         "Action": [
+           "secretsmanager:GetSecretValue"
+         ],
+         "Resource": [
+           "arn:aws:secretsmanager:us-east-1:<ACCOUNT_ID>:secret:turaf/db/master-*"
+         ]
+       },
+       {
+         "Sid": "CloudWatchLogs",
+         "Effect": "Allow",
+         "Action": [
+           "logs:CreateLogGroup",
+           "logs:CreateLogStream",
+           "logs:PutLogEvents"
+         ],
+         "Resource": "arn:aws:logs:us-east-1:<ACCOUNT_ID>:log-group:/aws/codebuild/turaf-flyway-migrations-*"
+       },
+       {
+         "Sid": "VPCAccess",
+         "Effect": "Allow",
+         "Action": [
+           "ec2:CreateNetworkInterface",
+           "ec2:DescribeNetworkInterfaces",
+           "ec2:DeleteNetworkInterface",
+           "ec2:DescribeSubnets",
+           "ec2:DescribeSecurityGroups",
+           "ec2:DescribeDhcpOptions",
+           "ec2:DescribeVpcs",
+           "ec2:CreateNetworkInterfacePermission"
+         ],
+         "Resource": "*"
+       },
+       {
+         "Sid": "ECRAccess",
+         "Effect": "Allow",
+         "Action": [
+           "ecr:GetAuthorizationToken",
+           "ecr:BatchCheckLayerAvailability",
+           "ecr:GetDownloadUrlForLayer",
+           "ecr:BatchGetImage"
+         ],
+         "Resource": "*"
+       }
+     ]
+   }
+   EOF
+   
+   # Attach permissions
+   aws iam put-role-policy \
+     --role-name CodeBuildFlywayRole \
+     --policy-name CodeBuildFlywayPolicy \
+     --policy-document file://codebuild-flyway-permissions.json
+   ```
+
+3. **Verify Roles Created**:
+   ```bash
+   # List roles
+   aws iam list-roles --query 'Roles[?contains(RoleName, `Flyway`)].RoleName'
+   
+   # Get role ARNs
+   aws iam get-role --role-name GitHubActionsFlywayRole --query 'Role.Arn'
+   aws iam get-role --role-name CodeBuildFlywayRole --query 'Role.Arn'
+   ```
+
+### 2.4 Set Up Amazon SES
 
 **Objective**: Configure email sending for notifications (multi-account strategy: centralized in prod account)
 

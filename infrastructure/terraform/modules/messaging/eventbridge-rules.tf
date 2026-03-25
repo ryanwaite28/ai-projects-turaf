@@ -261,18 +261,7 @@ resource "aws_cloudwatch_event_target" "metrics_calculated_notification" {
 # ============================================================================
 # Dead Letter Queue for Failed Events
 # ============================================================================
-
-resource "aws_sqs_queue" "dlq" {
-  name                      = "turaf-eventbridge-dlq-${var.environment}"
-  message_retention_seconds = 1209600 # 14 days
-
-  tags = {
-    Name        = "turaf-eventbridge-dlq-${var.environment}"
-    Environment = var.environment
-    Service     = "messaging"
-    Purpose     = "dead-letter-queue"
-  }
-}
+# Note: DLQ resource is defined in main.tf to avoid duplication
 
 # DLQ Policy to allow EventBridge to send messages
 resource "aws_sqs_queue_policy" "dlq_policy" {
@@ -407,12 +396,4 @@ output "user_created_rule_arn" {
   value       = aws_cloudwatch_event_rule.user_created.arn
 }
 
-output "dlq_url" {
-  description = "URL of the EventBridge dead letter queue"
-  value       = aws_sqs_queue.dlq.url
-}
-
-output "dlq_arn" {
-  description = "ARN of the EventBridge dead letter queue"
-  value       = aws_sqs_queue.dlq.arn
-}
+# Note: dlq_url and dlq_arn outputs are defined in outputs.tf to avoid duplication

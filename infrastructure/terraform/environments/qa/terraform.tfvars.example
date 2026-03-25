@@ -1,0 +1,120 @@
+# Turaf QA Environment - Testing Configuration
+# Copy this file to terraform.tfvars and update values as needed
+
+# Environment
+environment = "qa"
+aws_region  = "us-east-1"
+
+# VPC Configuration
+vpc_cidr = "10.1.0.0/16"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b"
+]
+
+# Networking - Still cost-optimized but slightly more robust
+enable_nat_gateway = false  # Still using VPC endpoints
+single_nat_gateway = false
+enable_flow_logs   = false  # Can enable for testing if needed
+
+# Database - Slightly larger for testing
+db_instance_class             = "db.t3.small"      # 2 vCPU, 2 GB RAM
+db_allocated_storage          = 50                 # More storage for test data
+db_max_allocated_storage      = 100
+backup_retention_days         = 7                  # Longer retention for testing
+enable_multi_az               = false              # Still single-AZ for cost
+deletion_protection           = false              # Allow easy cleanup
+enable_performance_insights   = false              # Save costs
+
+# Redis - Still disabled for cost savings
+enable_redis                  = false              # Can enable for testing
+redis_node_type               = "cache.t3.small"
+redis_num_cache_nodes         = 1
+redis_snapshot_retention_days = 3
+
+# DocumentDB - Still disabled for cost savings
+enable_documentdb             = false              # Can enable for testing
+documentdb_instance_class     = "db.t3.medium"
+documentdb_instance_count     = 1
+documentdb_backup_retention_days = 3
+
+# ECS Fargate - More resources for testing
+identity_service_cpu           = 512   # 0.5 vCPU
+identity_service_memory        = 1024  # 1 GB
+identity_service_desired_count = 2     # 2 tasks for redundancy
+
+organization_service_cpu           = 512
+organization_service_memory        = 1024
+organization_service_desired_count = 2
+
+experiment_service_cpu           = 512
+experiment_service_memory        = 1024
+experiment_service_desired_count = 2
+
+# Use Fargate Spot for cost savings
+use_fargate_spot          = true
+enable_container_insights = false  # Can enable for testing
+enable_autoscaling        = false  # Can enable for load testing
+
+# Optional Services - Still disabled
+enable_metrics_service      = false
+enable_reporting_service    = false
+enable_notification_service = false
+
+# Lambda - Still disabled
+enable_event_processor        = false
+enable_notification_processor = false
+enable_report_generator       = false
+
+# Monitoring - Can enable for testing
+enable_alarms       = false  # Can enable for testing
+enable_dashboard    = false  # Can enable for testing
+enable_sns_alerts   = false
+enable_xray         = false  # Can enable for tracing tests
+enable_log_insights = false
+
+# Logging - Longer retention for testing
+log_retention_days = 14
+
+# Tags
+tags = {
+  Project     = "turaf"
+  Environment = "qa"
+  ManagedBy   = "terraform"
+  CostCenter  = "testing"
+  Purpose     = "quality-assurance"
+}
+
+# Domain
+domain_name = "turafapp.com"
+
+# ACM Certificate ARN (from Task 005)
+# Update this with your actual certificate ARN
+acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
+
+# ECR Image URLs (from Task 011)
+# Update these with your actual ECR repository URLs
+identity_service_image     = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/identity-service"
+organization_service_image = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/organization-service"
+experiment_service_image   = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/experiment-service"
+image_tag                  = "qa-latest"
+
+# Estimated Monthly Cost: ~$70-90/month
+# 
+# Cost Breakdown:
+# - RDS PostgreSQL (db.t3.small): ~$25/month
+# - ECS Fargate (6 tasks, 0.5 vCPU, 1 GB, Spot): ~$30/month
+# - ALB: ~$16/month
+# - VPC Endpoints (2): ~$14/month
+# - S3: ~$3/month
+# - ECR: ~$1/month
+# - Secrets Manager (5): ~$2/month
+# - KMS (1): ~$1/month
+# - Route 53: ~$0.50/month
+# - CloudWatch Logs (14-day retention): ~$3/month
+#
+# Note: This is ~2x the cost of DEV due to:
+# - Larger RDS instance (db.t3.small vs db.t3.micro)
+# - More ECS tasks (6 vs 3)
+# - Larger task sizes (0.5 vCPU vs 0.25 vCPU)
+# - Longer log retention (14 days vs 7 days)
