@@ -1,6 +1,9 @@
 # System Architecture Specification
 
-**Source**: PROJECT.md (Sections 9, 23, 26)
+**Source**: PROJECT.md (Sections 9, 23, 26)  
+**Last Updated**: March 25, 2026  
+**Status**: Current  
+**Related Documents**: [Domain Model](domain-model.md), [Event Flow](event-flow.md), [Testing Strategy](testing-strategy.md)
 
 This specification defines the overall system architecture for the Turaf event-driven SaaS platform.
 

@@ -235,7 +235,7 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "turaf-${var.environment}"
 
   dashboard_body = jsonencode({
-    widgets = concat(
+    widgets = flatten([
       # ECS Widgets
       var.cluster_name != "" ? [
         {
@@ -316,7 +316,7 @@ resource "aws_cloudwatch_dashboard" "main" {
           }
         }
       ] : []
-    )
+    ])
   })
 }
 

@@ -1,5 +1,7 @@
-# Compute Module - ECS Fargate for Turaf Platform
-# Cost-optimized configuration for demo/portfolio purposes
+# Compute Module - Shared ECS Infrastructure for Turaf Platform
+# Provides base infrastructure for ECS services managed by CI/CD pipelines
+# Service-specific resources (ECS services, task definitions, target groups, listener rules)
+# are managed per-service via CI/CD pipelines
 
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
@@ -15,6 +17,8 @@ resource "aws_ecs_cluster" "main" {
     {
       Name        = "turaf-cluster-${var.environment}"
       Environment = var.environment
+      ManagedBy   = "Terraform"
+      Purpose     = "Shared ECS cluster for all microservices"
     }
   )
 }
@@ -30,98 +34,6 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
     weight            = 100
     base              = 0
   }
-}
-
-# CloudWatch Log Groups for ECS Services
-resource "aws_cloudwatch_log_group" "identity_service" {
-  name              = "/ecs/identity-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "identity-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "identity"
-    }
-  )
-}
-
-resource "aws_cloudwatch_log_group" "organization_service" {
-  name              = "/ecs/organization-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "organization-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "organization"
-    }
-  )
-}
-
-resource "aws_cloudwatch_log_group" "experiment_service" {
-  name              = "/ecs/experiment-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "experiment-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "experiment"
-    }
-  )
-}
-
-# Optional service log groups (disabled by default for demo)
-resource "aws_cloudwatch_log_group" "metrics_service" {
-  count = var.enable_metrics_service ? 1 : 0
-  
-  name              = "/ecs/metrics-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "metrics-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "metrics"
-    }
-  )
-}
-
-resource "aws_cloudwatch_log_group" "reporting_service" {
-  count = var.enable_reporting_service ? 1 : 0
-  
-  name              = "/ecs/reporting-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "reporting-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "reporting"
-    }
-  )
-}
-
-resource "aws_cloudwatch_log_group" "notification_service" {
-  count = var.enable_notification_service ? 1 : 0
-  
-  name              = "/ecs/notification-service-${var.environment}"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "notification-service-logs-${var.environment}"
-      Environment = var.environment
-      Service     = "notification"
-    }
-  )
 }
 
 # Application Load Balancer
@@ -141,122 +53,54 @@ resource "aws_lb" "main" {
     {
       Name        = "turaf-alb-${var.environment}"
       Environment = var.environment
+      ManagedBy   = "Terraform"
+      Purpose     = "Shared ALB for all microservices"
     }
   )
 }
 
-# ALB Target Groups
-resource "aws_lb_target_group" "identity_service" {
-  name        = "identity-svc-${var.environment}"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    path                = "/actuator/health"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    matcher             = "200"
-  }
-
-  deregistration_delay = 30
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "identity-service-tg-${var.environment}"
-      Environment = var.environment
-      Service     = "identity"
-    }
-  )
-}
-
-resource "aws_lb_target_group" "organization_service" {
-  name        = "org-svc-${var.environment}"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    path                = "/actuator/health"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    matcher             = "200"
-  }
-
-  deregistration_delay = 30
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "organization-service-tg-${var.environment}"
-      Environment = var.environment
-      Service     = "organization"
-    }
-  )
-}
-
-resource "aws_lb_target_group" "experiment_service" {
-  name        = "exp-svc-${var.environment}"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    path                = "/actuator/health"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    matcher             = "200"
-  }
-
-  deregistration_delay = 30
-
-  tags = merge(
-    var.tags,
-    {
-      Name        = "experiment-service-tg-${var.environment}"
-      Environment = var.environment
-      Service     = "experiment"
-    }
-  )
-}
-
-# ALB Listeners
+# ALB HTTP Listener (Port 80)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
-    type = "redirect"
+    type = var.acm_certificate_arn != "" ? "redirect" : "fixed-response"
 
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    dynamic "redirect" {
+      for_each = var.acm_certificate_arn != "" ? [1] : []
+      content {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
+    }
+
+    dynamic "fixed_response" {
+      for_each = var.acm_certificate_arn == "" ? [1] : []
+      content {
+        content_type = "text/plain"
+        message_body = "No service configured"
+        status_code  = "404"
+      }
     }
   }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "turaf-alb-http-listener-${var.environment}"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  )
 }
 
+# ALB HTTPS Listener (Port 443) - Optional
 resource "aws_lb_listener" "https" {
+  count = var.acm_certificate_arn != "" ? 1 : 0
+  
   load_balancer_arn = aws_lb.main.arn
   port              = 443
   protocol          = "HTTPS"
@@ -268,57 +112,17 @@ resource "aws_lb_listener" "https" {
 
     fixed_response {
       content_type = "text/plain"
-      message_body = "Service not found"
+      message_body = "No service configured"
       status_code  = "404"
     }
   }
-}
 
-# ALB Listener Rules
-resource "aws_lb_listener_rule" "identity_service" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.identity_service.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/api/identity/*", "/api/auth/*"]
+  tags = merge(
+    var.tags,
+    {
+      Name        = "turaf-alb-https-listener-${var.environment}"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
     }
-  }
-}
-
-resource "aws_lb_listener_rule" "organization_service" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 200
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.organization_service.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/api/organizations/*", "/api/teams/*"]
-    }
-  }
-}
-
-resource "aws_lb_listener_rule" "experiment_service" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 300
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.experiment_service.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/api/experiments/*", "/api/variants/*", "/api/metrics/*"]
-    }
-  }
+  )
 }

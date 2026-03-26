@@ -13,7 +13,7 @@ output "event_bus_arn" {
 
 output "event_archive_arn" {
   description = "ARN of the EventBridge event archive (null if disabled)"
-  value       = var.enable_event_archive ? aws_cloudwatch_event_archive.main[0].arn : null
+  value       = var.enable_event_archive ? aws_cloudwatch_event_archive.main.arn : null
 }
 
 # SQS Queue Outputs

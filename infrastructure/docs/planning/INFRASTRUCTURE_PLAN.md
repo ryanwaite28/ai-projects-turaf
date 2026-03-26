@@ -910,12 +910,12 @@ chmod +x verify-setup.sh
    
    # Create role
    aws iam create-role \
-     --role-name GitHubActionsRole-<ENV> \
+     --role-name GitHubActionsDeploymentRole \
      --assume-role-policy-document file://github-actions-trust-policy.json
    
    # Attach policies
    aws iam attach-role-policy \
-     --role-name GitHubActionsRole-<ENV> \
+     --role-name GitHubActionsDeploymentRole \
      --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
    ```
 
@@ -1378,17 +1378,17 @@ gh secret set ECR_REGISTRY_PROD --body "811783768245.dkr.ecr.us-east-1.amazonaws
 
 ```bash
 # DEV Environment
-gh secret set AWS_ROLE_ARN --env dev-environment --body "arn:aws:iam::801651112319:role/GitHubActionsRole-Dev"
+gh secret set AWS_ROLE_ARN --env dev-environment --body "arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole"
 gh secret set DATABASE_URL --env dev-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
 gh secret set JWT_SECRET --env dev-environment --body "<GENERATE_RANDOM_SECRET>"
 
 # QA Environment
-gh secret set AWS_ROLE_ARN --env qa-environment --body "arn:aws:iam::965932217544:role/GitHubActionsRole-QA"
+gh secret set AWS_ROLE_ARN --env qa-environment --body "arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole"
 gh secret set DATABASE_URL --env qa-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
 gh secret set JWT_SECRET --env qa-environment --body "<GENERATE_RANDOM_SECRET>"
 
 # PROD Environment
-gh secret set AWS_ROLE_ARN --env prod-environment --body "arn:aws:iam::811783768245:role/GitHubActionsRole-Prod"
+gh secret set AWS_ROLE_ARN --env prod-environment --body "arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole"
 gh secret set DATABASE_URL --env prod-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
 gh secret set JWT_SECRET --env prod-environment --body "<GENERATE_RANDOM_SECRET>"
 ```
@@ -1469,7 +1469,7 @@ gh secret set JWT_SECRET --env prod-environment --body "<GENERATE_RANDOM_SECRET>
    ```bash
    # Assume GitHub Actions role or use AWS SSO
    aws sts assume-role \
-     --role-arn arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsRole-<ENV> \
+     --role-arn arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsDeploymentRole \
      --role-session-name terraform-deployment
    ```
 

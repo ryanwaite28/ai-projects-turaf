@@ -47,7 +47,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 resource "aws_iam_role" "github_actions" {
-  name = "GitHubActionsRole-${var.environment}"
+  name = "GitHubActionsDeploymentRole"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -69,7 +69,7 @@ resource "aws_iam_role" "github_actions" {
   })
   
   tags = {
-    Name        = "GitHubActionsRole-${var.environment}"
+    Name        = "GitHubActionsDeploymentRole"
     Environment = var.environment
     ManagedBy   = "Terraform"
   }
@@ -159,7 +159,7 @@ module "github_oidc" {
 
 output "dev_github_actions_role_arn" {
   value       = module.github_oidc.github_actions_role_arn
-  description = "ARN: arn:aws:iam::801651112319:role/GitHubActionsRole-Dev"
+  description = "ARN: arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole"
 }
 ```
 
@@ -177,7 +177,7 @@ module "github_oidc" {
 
 output "qa_github_actions_role_arn" {
   value       = module.github_oidc.github_actions_role_arn
-  description = "ARN: arn:aws:iam::965932217544:role/GitHubActionsRole-QA"
+  description = "ARN: arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole"
 }
 ```
 
@@ -195,7 +195,7 @@ module "github_oidc" {
 
 output "prod_github_actions_role_arn" {
   value       = module.github_oidc.github_actions_role_arn
-  description = "ARN: arn:aws:iam::811783768245:role/GitHubActionsRole-Prod"
+  description = "ARN: arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole"
 }
 ```
 
@@ -213,7 +213,7 @@ module "github_oidc" {
 
 output "ops_github_actions_role_arn" {
   value       = module.github_oidc.github_actions_role_arn
-  description = "ARN: arn:aws:iam::146072879609:role/GitHubActionsRole-Ops"
+  description = "ARN: arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole"
 }
 ```
 
@@ -286,10 +286,10 @@ terraform apply -target=module.github_oidc
 - [ ] OIDC provider created in QA account (965932217544)
 - [ ] OIDC provider created in PROD account (811783768245)
 - [ ] OIDC provider created in Ops account (146072879609)
-- [ ] IAM role `GitHubActionsRole-Dev` configured with correct trust policy
-- [ ] IAM role `GitHubActionsRole-QA` configured with correct trust policy
-- [ ] IAM role `GitHubActionsRole-Prod` configured with correct trust policy
-- [ ] IAM role `GitHubActionsRole-Ops` configured with correct trust policy
+- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in DEV
+- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in QA
+- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in PROD
+- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in Ops
 - [ ] Trust policies scoped to repository: `ryanwaite28/ai-projects-turaf`
 - [ ] DEV role restricted to `develop` branch
 - [ ] QA role restricted to `release/*` branches
@@ -310,7 +310,7 @@ terraform apply -target=module.github_oidc
 
 2. **Verify IAM Role**:
    ```bash
-   aws iam get-role --role-name GitHubActionsRole-Dev
+   aws iam get-role --role-name GitHubActionsDeploymentRole
    ```
 
 3. **Test GitHub Actions Authentication**:

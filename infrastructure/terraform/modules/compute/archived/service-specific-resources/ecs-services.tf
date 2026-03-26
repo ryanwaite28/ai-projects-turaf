@@ -31,10 +31,8 @@ resource "aws_ecs_service" "identity_service" {
 
   enable_execute_command = var.enable_execute_command
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
 
   deployment_circuit_breaker {
     enable   = true
@@ -50,7 +48,7 @@ resource "aws_ecs_service" "identity_service" {
     }
   )
 
-  depends_on = [aws_lb_listener.https]
+  depends_on = [aws_lb_listener.http]
 }
 
 # Organization Service
@@ -84,10 +82,8 @@ resource "aws_ecs_service" "organization_service" {
 
   enable_execute_command = var.enable_execute_command
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
 
   deployment_circuit_breaker {
     enable   = true
@@ -103,7 +99,7 @@ resource "aws_ecs_service" "organization_service" {
     }
   )
 
-  depends_on = [aws_lb_listener.https]
+  depends_on = [aws_lb_listener.http]
 }
 
 # Experiment Service
@@ -137,10 +133,8 @@ resource "aws_ecs_service" "experiment_service" {
 
   enable_execute_command = var.enable_execute_command
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
 
   deployment_circuit_breaker {
     enable   = true
@@ -156,7 +150,7 @@ resource "aws_ecs_service" "experiment_service" {
     }
   )
 
-  depends_on = [aws_lb_listener.https]
+  depends_on = [aws_lb_listener.http]
 }
 
 # Optional: Metrics Service

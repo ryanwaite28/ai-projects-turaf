@@ -189,10 +189,10 @@ AWS Organization (o-l3zk5a91yj)
 ### Cross-Account IAM Roles
 
 **GitHub Actions OIDC Roles**:
-- DEV: `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
-- QA: `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
-- PROD: `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
-- Ops: `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
+- DEV: `arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole`
+- QA: `arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole`
+- PROD: `arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole`
+- Ops: `arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole`
 
 **Centralized Logging Role** (all accounts → Ops):
 ```json

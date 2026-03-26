@@ -1,154 +1,102 @@
-# Compute Module Outputs
+# Compute Module Outputs - Shared Infrastructure Only
+# These outputs are used by CI/CD pipelines to deploy service-specific resources
 
 # ECS Cluster Outputs
 output "cluster_id" {
-  description = "ID of the ECS cluster"
+  description = "ID of the ECS cluster (for CI/CD deployments)"
   value       = aws_ecs_cluster.main.id
 }
 
 output "cluster_name" {
-  description = "Name of the ECS cluster"
+  description = "Name of the ECS cluster (for CI/CD deployments)"
   value       = aws_ecs_cluster.main.name
 }
 
 output "cluster_arn" {
-  description = "ARN of the ECS cluster"
+  description = "ARN of the ECS cluster (for CI/CD deployments)"
   value       = aws_ecs_cluster.main.arn
 }
 
 # ALB Outputs
 output "alb_arn" {
-  description = "ARN of the Application Load Balancer"
+  description = "ARN of the Application Load Balancer (for target group attachments)"
   value       = aws_lb.main.arn
 }
 
 output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
+  description = "DNS name of the Application Load Balancer (for testing and DNS configuration)"
   value       = aws_lb.main.dns_name
 }
 
 output "alb_zone_id" {
-  description = "Zone ID of the Application Load Balancer"
+  description = "Zone ID of the Application Load Balancer (for Route53 alias records)"
   value       = aws_lb.main.zone_id
 }
 
+output "alb_arn_suffix" {
+  description = "ARN suffix of the Application Load Balancer (for CloudWatch metrics)"
+  value       = aws_lb.main.arn_suffix
+}
+
+output "alb_security_group_id" {
+  description = "Security group ID of the ALB (for reference)"
+  value       = var.alb_security_group_id
+}
+
+# ALB Listener Outputs
 output "alb_listener_http_arn" {
-  description = "ARN of the HTTP listener"
+  description = "ARN of the HTTP listener (for creating listener rules in CI/CD)"
   value       = aws_lb_listener.http.arn
 }
 
 output "alb_listener_https_arn" {
-  description = "ARN of the HTTPS listener"
-  value       = aws_lb_listener.https.arn
+  description = "ARN of the HTTPS listener (null if not created, for creating listener rules in CI/CD)"
+  value       = length(aws_lb_listener.https) > 0 ? aws_lb_listener.https[0].arn : null
 }
 
-# Target Group Outputs
-output "identity_service_target_group_arn" {
-  description = "ARN of the identity service target group"
-  value       = aws_lb_target_group.identity_service.arn
+# Networking Outputs (for CI/CD service deployments)
+output "vpc_id" {
+  description = "VPC ID (for creating target groups)"
+  value       = var.vpc_id
 }
 
-output "organization_service_target_group_arn" {
-  description = "ARN of the organization service target group"
-  value       = aws_lb_target_group.organization_service.arn
+output "private_subnet_ids" {
+  description = "Private subnet IDs (for ECS task network configuration)"
+  value       = var.private_subnet_ids
 }
 
-output "experiment_service_target_group_arn" {
-  description = "ARN of the experiment service target group"
-  value       = aws_lb_target_group.experiment_service.arn
+output "ecs_security_group_id" {
+  description = "ECS tasks security group ID (for service network configuration)"
+  value       = var.ecs_security_group_id
 }
 
-# ECS Service Outputs
-output "identity_service_name" {
-  description = "Name of the identity ECS service"
-  value       = aws_ecs_service.identity_service.name
+# IAM Role Outputs (for CI/CD task definitions)
+output "ecs_execution_role_arn" {
+  description = "ECS execution role ARN (for task definitions)"
+  value       = var.ecs_execution_role_arn
 }
 
-output "organization_service_name" {
-  description = "Name of the organization ECS service"
-  value       = aws_ecs_service.organization_service.name
+output "ecs_task_role_arn" {
+  description = "ECS task role ARN (for task definitions)"
+  value       = var.ecs_task_role_arn
 }
 
-output "experiment_service_name" {
-  description = "Name of the experiment ECS service"
-  value       = aws_ecs_service.experiment_service.name
-}
-
-output "metrics_service_name" {
-  description = "Name of the metrics ECS service (null if disabled)"
-  value       = var.enable_metrics_service ? aws_ecs_service.metrics_service[0].name : null
-}
-
-output "reporting_service_name" {
-  description = "Name of the reporting ECS service (null if disabled)"
-  value       = var.enable_reporting_service ? aws_ecs_service.reporting_service[0].name : null
-}
-
-output "notification_service_name" {
-  description = "Name of the notification ECS service (null if disabled)"
-  value       = var.enable_notification_service ? aws_ecs_service.notification_service[0].name : null
-}
-
-# Task Definition Outputs
-output "identity_service_task_definition_arn" {
-  description = "ARN of the identity service task definition"
-  value       = aws_ecs_task_definition.identity_service.arn
-}
-
-output "organization_service_task_definition_arn" {
-  description = "ARN of the organization service task definition"
-  value       = aws_ecs_task_definition.organization_service.arn
-}
-
-output "experiment_service_task_definition_arn" {
-  description = "ARN of the experiment service task definition"
-  value       = aws_ecs_task_definition.experiment_service.arn
-}
-
-# CloudWatch Log Group Outputs
-output "identity_service_log_group" {
-  description = "CloudWatch log group for identity service"
-  value       = aws_cloudwatch_log_group.identity_service.name
-}
-
-output "organization_service_log_group" {
-  description = "CloudWatch log group for organization service"
-  value       = aws_cloudwatch_log_group.organization_service.name
-}
-
-output "experiment_service_log_group" {
-  description = "CloudWatch log group for experiment service"
-  value       = aws_cloudwatch_log_group.experiment_service.name
-}
-
-# Service Configuration Summary
-output "service_summary" {
-  description = "Summary of deployed services"
+# Infrastructure Summary
+output "infrastructure_summary" {
+  description = "Summary of shared compute infrastructure for CI/CD reference"
   value = {
-    cluster_name = aws_ecs_cluster.main.name
-    alb_dns_name = aws_lb.main.dns_name
-    services = {
-      identity = {
-        name          = aws_ecs_service.identity_service.name
-        desired_count = var.identity_service_desired_count
-        cpu           = var.identity_service_cpu
-        memory        = var.identity_service_memory
-      }
-      organization = {
-        name          = aws_ecs_service.organization_service.name
-        desired_count = var.organization_service_desired_count
-        cpu           = var.organization_service_cpu
-        memory        = var.organization_service_memory
-      }
-      experiment = {
-        name          = aws_ecs_service.experiment_service.name
-        desired_count = var.experiment_service_desired_count
-        cpu           = var.experiment_service_cpu
-        memory        = var.experiment_service_memory
-      }
-    }
+    cluster_name             = aws_ecs_cluster.main.name
+    cluster_arn              = aws_ecs_cluster.main.arn
+    alb_dns_name             = aws_lb.main.dns_name
+    alb_arn                  = aws_lb.main.arn
+    http_listener_arn        = aws_lb_listener.http.arn
+    https_listener_arn       = length(aws_lb_listener.https) > 0 ? aws_lb_listener.https[0].arn : null
+    vpc_id                   = var.vpc_id
+    private_subnet_ids       = var.private_subnet_ids
+    ecs_security_group_id    = var.ecs_security_group_id
+    ecs_execution_role_arn   = var.ecs_execution_role_arn
+    ecs_task_role_arn        = var.ecs_task_role_arn
     fargate_spot_enabled     = var.use_fargate_spot
     container_insights       = var.enable_container_insights
-    autoscaling_enabled      = var.enable_autoscaling
   }
 }

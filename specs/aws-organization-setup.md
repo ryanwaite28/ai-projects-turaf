@@ -233,10 +233,10 @@ AWS Organization (o-l3zk5a91yj)
 **Trust Policy**: OIDC provider for token.actions.githubusercontent.com
 
 **Roles**:
-- `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
-- `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
-- `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
-- `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
+- `arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole`
 
 **Trust Policy Template**:
 ```json

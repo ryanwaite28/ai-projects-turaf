@@ -241,7 +241,7 @@ resource "aws_lambda_permission" "event_processor_eventbridge" {
 
 # SQS Event Source Mapping for Notification Processor
 resource "aws_lambda_event_source_mapping" "notification_processor" {
-  count = var.enable_notification_processor && var.notifications_queue_arn != "" ? 1 : 0
+  count = var.enable_notification_processor ? 1 : 0
   
   event_source_arn = var.notifications_queue_arn
   function_name    = aws_lambda_function.notification_processor[0].arn
@@ -254,7 +254,7 @@ resource "aws_lambda_event_source_mapping" "notification_processor" {
 
 # SQS Event Source Mapping for Report Generator
 resource "aws_lambda_event_source_mapping" "report_generator" {
-  count = var.enable_report_generator && var.reports_queue_arn != "" ? 1 : 0
+  count = var.enable_report_generator ? 1 : 0
   
   event_source_arn = var.reports_queue_arn
   function_name    = aws_lambda_function.report_generator[0].arn

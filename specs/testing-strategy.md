@@ -1,6 +1,9 @@
 # Testing Strategy Specification
 
-**Source**: PROJECT.md (Section 23a)
+**Source**: PROJECT.md (Section 23a)  
+**Last Updated**: March 25, 2026  
+**Status**: Current  
+**Related Documents**: [Architecture](architecture.md), [CI/CD Pipelines](ci-cd-pipelines.md), [Local Development](../docs/LOCAL_DEVELOPMENT.md)
 
 This specification defines the comprehensive testing strategy for the Turaf platform, including unit testing, integration testing with Testcontainers, and the hybrid approach for AWS service testing.
 

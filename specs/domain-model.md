@@ -1,6 +1,9 @@
 # Domain Model Specification
 
-**Source**: PROJECT.md (Section 6)
+**Source**: PROJECT.md (Sections 10-12)  
+**Last Updated**: March 25, 2026  
+**Status**: Current  
+**Related Documents**: [Architecture](architecture.md), [Event Schemas](event-schemas.md), [Identity Service](identity-service.md)
 
 This specification defines the core domain model for the Turaf platform using Domain-Driven Design principles.
 

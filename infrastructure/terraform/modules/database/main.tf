@@ -24,6 +24,7 @@ resource "random_password" "metrics_user" {
 }
 
 resource "random_password" "redis_auth_token" {
+  count   = var.enable_redis ? 1 : 0
   length  = 32
   special = false
 }
@@ -49,7 +50,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier     = "turaf-db-${var.environment}"
   engine         = "postgres"
-  engine_version = "15.4"
+  engine_version = "15.17"
   instance_class = var.db_instance_class
 
   allocated_storage     = var.db_allocated_storage
@@ -240,9 +241,9 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_elasticache_replication_group" "redis" {
-  count                         = var.enable_redis ? 1 : 0
-  replication_group_id          = "turaf-redis-${var.environment}"
-  replication_group_description = "Redis cluster for Turaf ${var.environment}"
+  count                = var.enable_redis ? 1 : 0
+  replication_group_id = "turaf-redis-${var.environment}"
+  description          = "Redis cluster for Turaf ${var.environment}"
   
   engine               = "redis"
   engine_version       = "7.0"
@@ -256,8 +257,7 @@ resource "aws_elasticache_replication_group" "redis" {
 
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
-  auth_token_enabled         = true
-  auth_token                 = random_password.redis_auth_token.result
+  auth_token                 = random_password.redis_auth_token[0].result
   kms_key_id                 = var.kms_key_id
 
   automatic_failover_enabled = var.redis_num_cache_nodes > 1
@@ -295,7 +295,7 @@ resource "aws_secretsmanager_secret_version" "redis_auth_token" {
   count     = var.enable_redis ? 1 : 0
   secret_id = aws_secretsmanager_secret.redis_auth_token[0].id
   secret_string = jsonencode({
-    auth_token = random_password.redis_auth_token.result
+    auth_token = random_password.redis_auth_token[0].result
     host       = aws_elasticache_replication_group.redis[0].primary_endpoint_address
     port       = aws_elasticache_replication_group.redis[0].port
   })

@@ -1,0 +1,183 @@
+# Turaf Development Environment - Demo-Ready Configuration
+# Full-featured configuration for comprehensive platform demonstration
+# Estimated Cost: ~$180-220/month
+
+# Environment
+environment = "dev"
+aws_region  = "us-east-1"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b",
+  "us-east-1c"
+]
+
+# Networking - Demo-Ready (NAT Gateway enabled)
+enable_nat_gateway = true   # Enable for full AWS service access (~$42/month)
+single_nat_gateway = true   # Single NAT for cost optimization (not HA)
+enable_flow_logs   = false  # Disabled to save cost (~$5/month)
+
+# Database - Production-like Configuration
+db_instance_class             = "db.t3.micro"      # Free Tier eligible
+db_allocated_storage          = 20                 # Free Tier: 20 GB
+db_max_allocated_storage      = 50                 # Auto-scaling limit
+backup_retention_days         = 7                  # 7 days for demo
+enable_multi_az               = false              # Single-AZ for cost
+deletion_protection           = false              # Allow easy cleanup
+enable_performance_insights   = false              # Disabled to save cost
+
+# Redis - ENABLED for Caching Demo
+enable_redis                  = true               # Enable for caching demo (~$12/month)
+redis_node_type               = "cache.t3.micro"   # Smallest instance
+redis_num_cache_nodes         = 1                  # Single node
+redis_snapshot_retention_days = 1                  # Minimal retention
+
+# DocumentDB - Disabled (Not needed for demo)
+enable_documentdb             = false              # Save ~$54/month
+documentdb_instance_class     = "db.t3.medium"     
+documentdb_instance_count     = 1
+documentdb_backup_retention_days = 1
+
+# ECS Fargate - Demo-Ready Configuration
+identity_service_desired_count      = 1
+organization_service_desired_count  = 1
+experiment_service_desired_count    = 1
+enable_metrics_service              = false  # Optional service disabled
+enable_reporting_service            = false  # Optional service disabled
+enable_notification_service         = false  # Optional service disabled
+
+# ECS Task Sizing - Standard Fargate (not Spot for reliability)
+ecs_task_cpu    = "512"   # 0.5 vCPU
+ecs_task_memory = "1024"  # 1 GB RAM
+use_fargate_spot = false  # Use standard Fargate for demo reliability
+
+# Container Insights - ENABLED
+enable_container_insights = true   # Enable for monitoring demo (~$3/month)
+enable_execute_command    = true   # Enable ECS Exec for debugging
+
+# Lambda Functions - ENABLED
+enable_lambda_reporting    = true   # Enable reporting Lambda (~$3/month)
+enable_lambda_notification = true   # Enable notification Lambda (~$2/month)
+lambda_reporting_memory    = 1024   # 1 GB
+lambda_notification_memory = 512    # 512 MB
+
+# Messaging - ENABLED
+enable_eventbridge       = true   # Enable EventBridge for events
+enable_sqs               = true   # Enable SQS queues
+enable_chat_queue        = false  # Optional queue disabled
+enable_notification_queue = true  # Enable for notifications
+enable_report_queue      = true   # Enable for reports
+
+# Monitoring - ENABLED
+enable_xray          = true   # Enable X-Ray tracing (~$2/month)
+enable_dashboards    = true   # Enable CloudWatch dashboards (~$3/month)
+enable_alarms        = true   # Enable CloudWatch alarms (~$1/month)
+enable_sns_alerts    = true   # Enable SNS for alerts
+log_retention_days   = 7      # 7 days log retention
+
+# CloudWatch Alarm Thresholds
+cpu_threshold          = 80    # CPU % threshold
+memory_threshold       = 80    # Memory % threshold
+response_time_threshold = 2.0  # Response time in seconds
+alarm_evaluation_periods = 2   # Number of periods
+alarm_period           = 300   # Period in seconds (5 minutes)
+
+# Storage
+enable_s3_versioning = false  # Disabled to save cost
+s3_lifecycle_enabled = true   # Enable lifecycle policies
+
+# Tags
+tags = {
+  Project     = "Turaf"
+  Environment = "dev"
+  ManagedBy   = "Terraform"
+  CostCenter  = "Development"
+  Owner       = "DevOps"
+  Purpose     = "Demo-Ready Platform"
+}
+
+# Domain
+domain_name = "turafapp.com"
+
+# ACM Certificate ARN
+# Update this with your actual certificate ARN from AWS Certificate Manager
+acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/PLACEHOLDER"
+
+# ECR Image URIs
+# These will be populated once container images are built
+identity_service_image      = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/identity-service:latest"
+organization_service_image  = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/organization-service:latest"
+experiment_service_image    = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/experiment-service:latest"
+
+# Alarm Email (optional)
+alarm_email = ""  # Set to receive CloudWatch alarm notifications
+
+# ============================================================================
+# DEMO-READY COST BREAKDOWN (~$180-220/month)
+# ============================================================================
+#
+# Compute (~$80-100/month):
+#   - ECS Fargate (Standard): 3 services × 1 task × 0.5 vCPU × 1GB × 730 hrs = ~$45/month
+#   - Lambda Functions: 2 functions with minimal usage = ~$5/month
+#   - ALB: Base $16/month + LCU charges ~$4/month = ~$20/month
+#   - Container Insights: ~$3/month
+#
+# Networking (~$50-65/month):
+#   - NAT Gateway: 1 gateway = $32/month + data transfer ~$10/month = ~$42/month
+#   - VPC Endpoints: 3 interface endpoints (ECR API, ECR DKR, Secrets) = ~$21/month
+#   - S3 Gateway Endpoint: Free
+#
+# Database & Caching (~$30-40/month):
+#   - RDS PostgreSQL: db.t3.micro = ~$15/month (after Free Tier)
+#   - ElastiCache Redis: cache.t3.micro, 1 node = ~$12/month
+#   - Secrets Manager: 6 secrets × $0.40 = ~$2.40/month
+#
+# Storage (~$5-10/month):
+#   - S3: Primary + reports buckets = ~$2/month
+#   - ECR: 3 repositories with images = ~$3/month
+#   - CloudWatch Logs: 7-day retention = ~$3/month
+#
+# Messaging & Events (~$2-5/month):
+#   - EventBridge: Custom event bus + rules = ~$1/month
+#   - SQS: Standard queues + DLQ (mostly Free Tier) = ~$1/month
+#
+# Monitoring (~$8-12/month):
+#   - CloudWatch Dashboards: 3 custom dashboards = ~$3/month
+#   - CloudWatch Alarms: 10 alarms = ~$1/month
+#   - X-Ray Tracing: Minimal usage = ~$2/month
+#   - SNS: Alert topic = ~$0.50/month
+#
+# TOTAL: ~$180-220/month
+#
+# ============================================================================
+# FEATURES ENABLED FOR DEMO
+# ============================================================================
+#
+# ✅ Full AWS networking with NAT Gateway
+# ✅ RDS PostgreSQL with multi-schema design
+# ✅ Redis caching for sessions and rate limiting
+# ✅ ECS Fargate (Standard) for reliability
+# ✅ Application Load Balancer with HTTPS
+# ✅ Lambda functions for event processing
+# ✅ EventBridge + SQS for event-driven architecture
+# ✅ X-Ray distributed tracing
+# ✅ Container Insights for ECS monitoring
+# ✅ CloudWatch dashboards and alarms
+# ✅ SNS alerts for operational notifications
+#
+# ============================================================================
+# COST OPTIMIZATION OPPORTUNITIES
+# ============================================================================
+#
+# To reduce costs, you can disable:
+#   - NAT Gateway: Set enable_nat_gateway = false (save ~$42/month)
+#     Note: Requires using VPC endpoints for all AWS services
+#   - Redis: Set enable_redis = false (save ~$12/month)
+#   - Lambda: Set enable_lambda_* = false (save ~$5/month)
+#   - Monitoring: Set enable_xray/dashboards/alarms = false (save ~$8/month)
+#   - Fargate Spot: Set use_fargate_spot = true (save ~$30/month, less reliable)
+#
+# Minimal configuration cost: ~$35-55/month
+#

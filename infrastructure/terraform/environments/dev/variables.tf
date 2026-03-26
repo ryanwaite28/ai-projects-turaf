@@ -208,131 +208,21 @@ variable "message_retention_seconds" {
   default     = 345600
 }
 
-# Compute Variables
+# Compute Variables - Shared Infrastructure Only
 variable "acm_certificate_arn" {
-  description = "ACM certificate ARN for HTTPS"
+  description = "ACM certificate ARN for HTTPS (optional for dev)"
   type        = string
-}
-
-variable "identity_service_image" {
-  description = "Identity service ECR image URL"
-  type        = string
-}
-
-variable "organization_service_image" {
-  description = "Organization service ECR image URL"
-  type        = string
-}
-
-variable "experiment_service_image" {
-  description = "Experiment service ECR image URL"
-  type        = string
-}
-
-variable "image_tag" {
-  description = "Docker image tag"
-  type        = string
-  default     = "latest"
+  default     = ""
 }
 
 variable "use_fargate_spot" {
-  description = "Use Fargate Spot"
+  description = "Use Fargate Spot for cost savings"
   type        = bool
   default     = true
 }
 
 variable "enable_container_insights" {
-  description = "Enable Container Insights"
-  type        = bool
-  default     = false
-}
-
-variable "enable_autoscaling" {
-  description = "Enable auto-scaling"
-  type        = bool
-  default     = false
-}
-
-variable "identity_service_cpu" {
-  description = "Identity service CPU units"
-  type        = number
-  default     = 256
-}
-
-variable "identity_service_memory" {
-  description = "Identity service memory in MB"
-  type        = number
-  default     = 512
-}
-
-variable "identity_service_desired_count" {
-  description = "Identity service desired task count"
-  type        = number
-  default     = 1
-}
-
-variable "organization_service_cpu" {
-  description = "Organization service CPU units"
-  type        = number
-  default     = 256
-}
-
-variable "organization_service_memory" {
-  description = "Organization service memory in MB"
-  type        = number
-  default     = 512
-}
-
-variable "organization_service_desired_count" {
-  description = "Organization service desired task count"
-  type        = number
-  default     = 1
-}
-
-variable "experiment_service_cpu" {
-  description = "Experiment service CPU units"
-  type        = number
-  default     = 256
-}
-
-variable "experiment_service_memory" {
-  description = "Experiment service memory in MB"
-  type        = number
-  default     = 512
-}
-
-variable "experiment_service_desired_count" {
-  description = "Experiment service desired task count"
-  type        = number
-  default     = 1
-}
-
-variable "enable_metrics_service" {
-  description = "Enable metrics service"
-  type        = bool
-  default     = false
-}
-
-variable "enable_reporting_service" {
-  description = "Enable reporting service"
-  type        = bool
-  default     = false
-}
-
-variable "enable_notification_service" {
-  description = "Enable notification service"
-  type        = bool
-  default     = false
-}
-
-variable "log_retention_days" {
-  description = "CloudWatch log retention days"
-  type        = number
-  default     = 7
-}
-
-variable "enable_execute_command" {
-  description = "Enable ECS Exec"
+  description = "Enable Container Insights (additional cost)"
   type        = bool
   default     = false
 }
@@ -342,6 +232,12 @@ variable "lambda_artifacts_bucket" {
   description = "S3 bucket for Lambda artifacts"
   type        = string
   default     = ""
+}
+
+variable "log_retention_days" {
+  description = "CloudWatch log retention days (for Lambda and other services)"
+  type        = number
+  default     = 7
 }
 
 variable "from_email" {

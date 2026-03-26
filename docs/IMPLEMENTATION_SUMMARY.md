@@ -59,10 +59,10 @@ This document summarizes the comprehensive updates made to integrate AWS account
 
 **Key Information Added**:
 - Repository URL: https://github.com/ryanwaite28/ai-projects-turaf
-- DEV Account IAM Role: `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
-- QA Account IAM Role: `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
-- PROD Account IAM Role: `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
-- Ops Account IAM Role: `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
+- DEV Account IAM Role: `arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole`
+- QA Account IAM Role: `arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole`
+- PROD Account IAM Role: `arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole`
+- Ops Account IAM Role: `arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole`
 
 ---
 
@@ -382,10 +382,10 @@ This document summarizes the comprehensive updates made to integrate AWS account
 ### IAM Role ARNs
 
 All documentation now includes specific IAM role ARNs:
-- `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
-- `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
-- `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
-- `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
+- `arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole`
+- `arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole`
 
 ### Organization Details
 

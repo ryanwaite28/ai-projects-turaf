@@ -1,8 +1,11 @@
 # AWS Infrastructure Specification
 
-**Source**: PROJECT.md (Sections 10, 47-56)
+**Source**: PROJECT.md (Sections 14-17, 24-25)  
+**Last Updated**: March 25, 2026  
+**Status**: Current  
+**Related Documents**: [Terraform Structure](terraform-structure.md), [CI/CD Pipelines](ci-cd-pipelines.md), [Infrastructure Plan](../infrastructure/docs/planning/INFRASTRUCTURE_PLAN.md)
 
-This specification defines the complete AWS infrastructure for the Turaf platform.
+This specification defines the complete AWS infrastructure for the Turaf platform across all environments (DEV, QA, PROD).
 
 ---
 

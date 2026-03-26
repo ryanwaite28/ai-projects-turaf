@@ -26,13 +26,16 @@ resource "aws_cloudwatch_event_rule" "experiment_completed" {
 
 # Target: Reporting Lambda
 resource "aws_cloudwatch_event_target" "experiment_completed_reporting" {
-  rule           = aws_cloudwatch_event_rule.experiment_completed.name
+  count = var.reporting_lambda_arn != "" ? 1 : 0
+  
+  rule      = aws_cloudwatch_event_rule.experiment_completed.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
-  arn            = var.reporting_lambda_arn
+  target_id = "ReportingLambda"
+  arn       = var.reporting_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600 # 1 hour
-    maximum_retry_attempts = 3
+    maximum_event_age_in_seconds = 3600
+    maximum_retry_attempts       = 2
   }
 
   dead_letter_config {
@@ -61,12 +64,13 @@ EOF
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "experiment_completed_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.experiment_completed.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 
@@ -100,12 +104,13 @@ resource "aws_cloudwatch_event_rule" "report_generated" {
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "report_generated_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.report_generated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 
@@ -139,12 +144,13 @@ resource "aws_cloudwatch_event_rule" "organization_created" {
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "organization_created_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.organization_created.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 
@@ -174,12 +180,13 @@ resource "aws_cloudwatch_event_rule" "organization_updated" {
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "organization_updated_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.organization_updated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 }
@@ -209,12 +216,13 @@ resource "aws_cloudwatch_event_rule" "user_created" {
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "user_created_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.user_created.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 
@@ -248,12 +256,13 @@ resource "aws_cloudwatch_event_rule" "metrics_calculated" {
 
 # Target: Notification Lambda
 resource "aws_cloudwatch_event_target" "metrics_calculated_notification" {
+  count = var.notification_lambda_arn != "" ? 1 : 0
+  
   rule           = aws_cloudwatch_event_rule.metrics_calculated.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   arn            = var.notification_lambda_arn
 
   retry_policy {
-    maximum_event_age      = 3600
     maximum_retry_attempts = 3
   }
 }
@@ -311,6 +320,8 @@ resource "aws_cloudwatch_metric_alarm" "dlq_messages" {
 
 # Permission for EventBridge to invoke Reporting Lambda
 resource "aws_lambda_permission" "allow_eventbridge_reporting" {
+  count = var.reporting_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.reporting_lambda_name
@@ -320,6 +331,8 @@ resource "aws_lambda_permission" "allow_eventbridge_reporting" {
 
 # Permission for EventBridge to invoke Notification Lambda (ExperimentCompleted)
 resource "aws_lambda_permission" "allow_eventbridge_notification_experiment" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeExperiment"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name
@@ -329,6 +342,8 @@ resource "aws_lambda_permission" "allow_eventbridge_notification_experiment" {
 
 # Permission for EventBridge to invoke Notification Lambda (ReportGenerated)
 resource "aws_lambda_permission" "allow_eventbridge_notification_report" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeReport"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name
@@ -338,6 +353,8 @@ resource "aws_lambda_permission" "allow_eventbridge_notification_report" {
 
 # Permission for EventBridge to invoke Notification Lambda (OrganizationCreated)
 resource "aws_lambda_permission" "allow_eventbridge_notification_org_created" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeOrgCreated"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name
@@ -347,6 +364,8 @@ resource "aws_lambda_permission" "allow_eventbridge_notification_org_created" {
 
 # Permission for EventBridge to invoke Notification Lambda (OrganizationUpdated)
 resource "aws_lambda_permission" "allow_eventbridge_notification_org_updated" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeOrgUpdated"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name
@@ -356,6 +375,8 @@ resource "aws_lambda_permission" "allow_eventbridge_notification_org_updated" {
 
 # Permission for EventBridge to invoke Notification Lambda (UserCreated)
 resource "aws_lambda_permission" "allow_eventbridge_notification_user" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeUser"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name
@@ -365,6 +386,8 @@ resource "aws_lambda_permission" "allow_eventbridge_notification_user" {
 
 # Permission for EventBridge to invoke Notification Lambda (MetricsCalculated)
 resource "aws_lambda_permission" "allow_eventbridge_notification_metrics" {
+  count = var.notification_lambda_name != "" ? 1 : 0
+  
   statement_id  = "AllowExecutionFromEventBridgeMetrics"
   action        = "lambda:InvokeFunction"
   function_name = var.notification_lambda_name

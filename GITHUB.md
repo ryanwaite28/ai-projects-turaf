@@ -120,26 +120,26 @@ GitHub Actions authenticates to AWS using OpenID Connect (OIDC) federation, elim
 ### IAM Roles per AWS Account
 
 **DEV Account (801651112319)**:
-- Role Name: `GitHubActionsRole-Dev`
-- Role ARN: `arn:aws:iam::801651112319:role/GitHubActionsRole-Dev`
+- Role Name: `GitHubActionsDeploymentRole`
+- Role ARN: `arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole`
 - Trust Policy: Repository `ryanwaite28/ai-projects-turaf` with branch `develop`
 - Permissions: ECR, ECS, Lambda, S3, CloudFront, Terraform state
 
 **QA Account (965932217544)**:
-- Role Name: `GitHubActionsRole-QA`
-- Role ARN: `arn:aws:iam::965932217544:role/GitHubActionsRole-QA`
+- Role Name: `GitHubActionsDeploymentRole`
+- Role ARN: `arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole`
 - Trust Policy: Repository `ryanwaite28/ai-projects-turaf` with branches `release/*`
 - Permissions: ECR, ECS, Lambda, S3, CloudFront, Terraform state
 
 **PROD Account (811783768245)**:
-- Role Name: `GitHubActionsRole-Prod`
-- Role ARN: `arn:aws:iam::811783768245:role/GitHubActionsRole-Prod`
+- Role Name: `GitHubActionsDeploymentRole`
+- Role ARN: `arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole`
 - Trust Policy: Repository `ryanwaite28/ai-projects-turaf` with branch `main`
 - Permissions: ECR, ECS, Lambda, S3, CloudFront, Terraform state (read-heavy, write-restricted)
 
 **Ops Account (146072879609)**:
-- Role Name: `GitHubActionsRole-Ops`
-- Role ARN: `arn:aws:iam::146072879609:role/GitHubActionsRole-Ops`
+- Role Name: `GitHubActionsDeploymentRole`
+- Role ARN: `arn:aws:iam::146072879609:role/GitHubActionsDeploymentRole`
 - Trust Policy: Repository `ryanwaite28/ai-projects-turaf` (all branches)
 - Permissions: Cross-account access for centralized DevOps tooling
 
@@ -174,7 +174,7 @@ GitHub Actions authenticates to AWS using OpenID Connect (OIDC) federation, elim
 - name: Configure AWS Credentials
   uses: aws-actions/configure-aws-credentials@v4
   with:
-    role-to-assume: arn:aws:iam::801651112319:role/GitHubActionsRole-Dev
+    role-to-assume: arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole
     aws-region: us-east-1
     role-session-name: GitHubActions-Deploy-Dev
 ```
@@ -630,6 +630,7 @@ Bug Fixes:
 - [AWS OIDC with GitHub Actions](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
 - [Semantic Versioning](https://semver.org/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
+- [IAM Roles Reference](docs/IAM_ROLES.md) - Authoritative source for all IAM role names and ARNs
 - PROJECT.md - Overall project specifications
 - AWS_ACCOUNTS.md - AWS account details and organization structure
 

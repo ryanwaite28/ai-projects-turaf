@@ -1,6 +1,9 @@
 # Event Flow Specification
 
-**Source**: PROJECT.md (Sections 7, 8, 39)
+**Source**: PROJECT.md (Sections 13, 27)  
+**Last Updated**: March 25, 2026  
+**Status**: Current  
+**Related Documents**: [Event Schemas](event-schemas.md), [Architecture](architecture.md), [AWS Infrastructure](aws-infrastructure.md)
 
 This specification defines the event-driven architecture, event flow patterns, and event schemas for the Turaf platform.
 
