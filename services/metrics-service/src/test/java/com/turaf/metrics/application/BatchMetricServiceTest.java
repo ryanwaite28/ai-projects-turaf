@@ -1,7 +1,7 @@
 package com.turaf.metrics.application;
 
 import com.turaf.common.event.EventPublisher;
-import com.turaf.common.multitenancy.TenantContextHolder;
+import com.turaf.common.tenant.TenantContextHolder;
 import com.turaf.metrics.application.dto.BatchRecordRequest;
 import com.turaf.metrics.application.dto.RecordMetricRequest;
 import com.turaf.metrics.domain.Metric;

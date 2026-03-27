@@ -193,6 +193,7 @@ AWS_ROLE_TO_ASSUME: "arn:aws:iam::801651112319:role/github-actions-deploy-role"
 **Optional Secrets** (for enhanced security):
 ```yaml
 SONAR_TOKEN: "<sonarcloud-token>"
+SONAR_HOST_URL: "<sonarcloud-host-url>"
 CODECOV_TOKEN: "<codecov-token>"
 SLACK_WEBHOOK_URL: "<slack-webhook-for-notifications>"
 ```

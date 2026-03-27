@@ -63,12 +63,14 @@ jobs:
 
 ## Acceptance Criteria
 
-- [ ] Security workflow created
-- [ ] Dependency scanning works
-- [ ] Container scanning works
-- [ ] Code scanning works
-- [ ] Vulnerabilities reported
-- [ ] Daily scans scheduled
+- [x] Security workflow created
+- [x] Dependency scanning works (Snyk)
+- [x] Container scanning works (Trivy)
+- [x] Code scanning works (CodeQL for Java and JavaScript)
+- [x] Secret scanning works (Gitleaks)
+- [x] Vulnerabilities reported to GitHub Security tab
+- [x] Daily scans scheduled (2 AM UTC)
+- [x] Runs on PRs and pushes
 
 ## References
 

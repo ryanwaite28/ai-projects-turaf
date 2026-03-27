@@ -190,52 +190,77 @@ TTL: 300
 
 ## SSL/TLS Certificate Management (ACM)
 
-### Wildcard Certificate
+### Multi-Account Certificate Strategy
 
-**Certificate Details**:
+**Architecture**: Each AWS account requires its own ACM certificate because certificates cannot be shared across accounts. All certificates use the same wildcard domain (`*.turafapp.com`) but are validated via separate CNAME records in the shared Route 53 hosted zone.
+
+### Certificate Provisioning Per Account
+
+#### Root Account Certificate (072456928432)
 - **Domain**: `*.turafapp.com`
-- **Subject Alternative Names**: `turafapp.com`
-- **Validation Method**: DNS
-- **Region**: us-east-1 (for CloudFront compatibility)
-- **Account**: Root account (shared via cross-account access)
+- **SAN**: `turafapp.com`
+- **Region**: us-east-1
+- **Usage**: CloudFront distributions, root account ALBs
+- **Status**: ✅ Issued
+- **ARN**: `arn:aws:acm:us-east-1:072456928432:certificate/c660ca8d-5584-4d6f-b75f-e5f10fc5a8ab`
 
-**Request Certificate**:
+#### DEV Account Certificate (801651112319)
+- **Domain**: `*.turafapp.com`
+- **SAN**: `turafapp.com`
+- **Region**: us-east-1
+- **Usage**: DEV environment ALB HTTPS listeners
+- **Status**: ✅ Issued
+- **ARN**: `arn:aws:acm:us-east-1:801651112319:certificate/8b83b688-7458-4627-9fd4-ff3b2801bf70`
+
+#### QA Account Certificate (965932217544)
+- **Domain**: `*.turafapp.com`
+- **SAN**: `turafapp.com`
+- **Region**: us-east-1
+- **Usage**: QA environment ALB HTTPS listeners
+- **Status**: ✅ Issued
+- **ARN**: `arn:aws:acm:us-east-1:965932217544:certificate/906b4a44-11e3-4ee7-b10d-9f715ffc0ee6`
+
+#### PROD Account Certificate (811783768245)
+- **Domain**: `*.turafapp.com`
+- **SAN**: `turafapp.com`
+- **Region**: us-east-1
+- **Usage**: PROD environment ALB HTTPS listeners
+- **Status**: ✅ Issued
+- **ARN**: `arn:aws:acm:us-east-1:811783768245:certificate/779b5c14-8fc0-44fe-80b4-090bdee1ef62`
+
+### Request Certificate (Per Account)
+
 ```bash
+# Authenticate to target account
+aws sso login --profile turaf-<env>
+
+# Request certificate
 aws acm request-certificate \
   --domain-name "*.turafapp.com" \
   --subject-alternative-names "turafapp.com" \
   --validation-method DNS \
-  --region us-east-1
+  --region us-east-1 \
+  --profile turaf-<env>
 ```
 
-**DNS Validation**:
+### DNS Validation (Shared Route 53)
+
 ```bash
-# Get validation records
+# Get validation records from each account
 aws acm describe-certificate \
   --certificate-arn <CERTIFICATE_ARN> \
   --region us-east-1 \
-  --query 'Certificate.DomainValidationOptions[*].[ResourceRecord.Name,ResourceRecord.Value]' \
-  --output table
+  --profile turaf-<env> \
+  --query 'Certificate.DomainValidationOptions[*].ResourceRecord'
 
-# Add CNAME records to Route 53 for validation
+# Add CNAME validation records to Route 53 (root account)
+aws route53 change-resource-record-sets \
+  --hosted-zone-id <HOSTED_ZONE_ID> \
+  --change-batch file://acm-validation-<env>.json \
+  --profile turaf-root
 ```
 
-### Environment-Specific Certificates (Optional)
-
-**Dev Certificate**:
-- Domain: `*.dev.turafapp.com`
-- Account: dev (801651112319)
-- Region: us-east-1
-
-**QA Certificate**:
-- Domain: `*.qa.turafapp.com`
-- Account: qa (965932217544)
-- Region: us-east-1
-
-**Prod Certificate**:
-- Domain: `*.turafapp.com` (shared with root)
-- Account: prod (811783768245)
-- Region: us-east-1
+**Note**: Each certificate will have a unique validation CNAME record. All validation records are added to the same Route 53 hosted zone in the root account.
 
 ### Certificate Renewal
 

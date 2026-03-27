@@ -1,6 +1,6 @@
 package com.turaf.metrics.infrastructure.events;
 
-import com.turaf.common.event.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 import com.turaf.common.event.EventPublisher;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

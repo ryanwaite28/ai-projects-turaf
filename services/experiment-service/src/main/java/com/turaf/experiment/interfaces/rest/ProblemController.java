@@ -1,5 +1,6 @@
 package com.turaf.experiment.interfaces.rest;
 
+import com.turaf.common.security.AuthorizationService;
 import com.turaf.common.security.UserPrincipal;
 import com.turaf.experiment.application.ProblemService;
 import com.turaf.experiment.application.dto.CreateProblemRequest;
@@ -21,27 +22,36 @@ import java.util.List;
 public class ProblemController {
     
     private final ProblemService problemService;
+    private final AuthorizationService authorizationService;
 
-    public ProblemController(ProblemService problemService) {
+    public ProblemController(ProblemService problemService,
+                            AuthorizationService authorizationService) {
         this.problemService = problemService;
+        this.authorizationService = authorizationService;
     }
 
     @PostMapping
     public ResponseEntity<ProblemDto> createProblem(
             @Valid @RequestBody CreateProblemRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         ProblemDto problem = problemService.createProblem(request, principal.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(problem);
     }
 
     @GetMapping
-    public ResponseEntity<List<ProblemDto>> getAllProblems() {
+    public ResponseEntity<List<ProblemDto>> getAllProblems(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         List<ProblemDto> problems = problemService.getAllProblems();
         return ResponseEntity.ok(problems);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProblemDto> getProblem(@PathVariable String id) {
+    public ResponseEntity<ProblemDto> getProblem(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         ProblemDto problem = problemService.getProblem(ProblemId.of(id));
         return ResponseEntity.ok(problem);
     }
@@ -49,13 +59,18 @@ public class ProblemController {
     @PutMapping("/{id}")
     public ResponseEntity<ProblemDto> updateProblem(
             @PathVariable String id,
-            @Valid @RequestBody UpdateProblemRequest request) {
+            @Valid @RequestBody UpdateProblemRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         ProblemDto problem = problemService.updateProblem(ProblemId.of(id), request);
         return ResponseEntity.ok(problem);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProblem(@PathVariable String id) {
+    public ResponseEntity<Void> deleteProblem(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         problemService.deleteProblem(ProblemId.of(id));
         return ResponseEntity.noContent().build();
     }

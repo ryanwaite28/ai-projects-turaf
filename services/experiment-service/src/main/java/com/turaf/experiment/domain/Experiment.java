@@ -1,7 +1,7 @@
 package com.turaf.experiment.domain;
 
 import com.turaf.common.domain.AggregateRoot;
-import com.turaf.common.domain.TenantAware;
+import com.turaf.common.tenant.TenantAware;
 import com.turaf.experiment.domain.event.ExperimentCompleted;
 import com.turaf.experiment.domain.event.ExperimentCreated;
 import com.turaf.experiment.domain.event.ExperimentStarted;

@@ -1,7 +1,7 @@
 package com.turaf.organization.infrastructure.events;
 
+import com.turaf.common.domain.DomainEvent;
 import com.turaf.organization.application.EventPublisher;
-import com.turaf.organization.domain.common.DomainEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

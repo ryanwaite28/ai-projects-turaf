@@ -1,7 +1,7 @@
 package com.turaf.experiment.application;
 
 import com.turaf.common.event.EventPublisher;
-import com.turaf.common.security.TenantContextHolder;
+import com.turaf.common.tenant.TenantContextHolder;
 import com.turaf.experiment.application.dto.CreateExperimentRequest;
 import com.turaf.experiment.application.dto.ExperimentDto;
 import com.turaf.experiment.application.dto.UpdateExperimentRequest;

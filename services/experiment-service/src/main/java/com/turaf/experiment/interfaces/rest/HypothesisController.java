@@ -1,5 +1,6 @@
 package com.turaf.experiment.interfaces.rest;
 
+import com.turaf.common.security.AuthorizationService;
 import com.turaf.common.security.UserPrincipal;
 import com.turaf.experiment.application.HypothesisService;
 import com.turaf.experiment.application.dto.CreateHypothesisRequest;
@@ -22,22 +23,28 @@ import java.util.List;
 public class HypothesisController {
     
     private final HypothesisService hypothesisService;
+    private final AuthorizationService authorizationService;
 
-    public HypothesisController(HypothesisService hypothesisService) {
+    public HypothesisController(HypothesisService hypothesisService,
+                               AuthorizationService authorizationService) {
         this.hypothesisService = hypothesisService;
+        this.authorizationService = authorizationService;
     }
 
     @PostMapping
     public ResponseEntity<HypothesisDto> createHypothesis(
             @Valid @RequestBody CreateHypothesisRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         HypothesisDto hypothesis = hypothesisService.createHypothesis(request, principal.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(hypothesis);
     }
 
     @GetMapping
     public ResponseEntity<List<HypothesisDto>> getHypotheses(
-            @RequestParam(required = false) String problemId) {
+            @RequestParam(required = false) String problemId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         
         if (problemId != null) {
             List<HypothesisDto> hypotheses = hypothesisService.getHypothesesByProblem(ProblemId.of(problemId));
@@ -49,7 +56,10 @@ public class HypothesisController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<HypothesisDto> getHypothesis(@PathVariable String id) {
+    public ResponseEntity<HypothesisDto> getHypothesis(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         HypothesisDto hypothesis = hypothesisService.getHypothesis(HypothesisId.of(id));
         return ResponseEntity.ok(hypothesis);
     }
@@ -57,13 +67,18 @@ public class HypothesisController {
     @PutMapping("/{id}")
     public ResponseEntity<HypothesisDto> updateHypothesis(
             @PathVariable String id,
-            @Valid @RequestBody UpdateHypothesisRequest request) {
+            @Valid @RequestBody UpdateHypothesisRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         HypothesisDto hypothesis = hypothesisService.updateHypothesis(HypothesisId.of(id), request);
         return ResponseEntity.ok(hypothesis);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHypothesis(@PathVariable String id) {
+    public ResponseEntity<Void> deleteHypothesis(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         hypothesisService.deleteHypothesis(HypothesisId.of(id));
         return ResponseEntity.noContent().build();
     }

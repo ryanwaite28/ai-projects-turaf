@@ -4,28 +4,36 @@
 ARG SERVICE_NAME
 
 # Stage 1: Build
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 
 ARG SERVICE_NAME
 WORKDIR /build
 
 # Copy parent POM
-COPY pom.xml ./
+COPY services/pom.xml /build/services/pom.xml
 
 # Copy common module (shared dependency)
-COPY common/pom.xml ./common/
-COPY common/src ./common/src
+COPY services/common/pom.xml /build/services/common/pom.xml
+COPY services/common/src /build/services/common/src
 
 # Copy service-specific files
-COPY services/${SERVICE_NAME}/pom.xml ./services/${SERVICE_NAME}/
-COPY services/${SERVICE_NAME}/src ./services/${SERVICE_NAME}/src
+COPY services/${SERVICE_NAME}/pom.xml /build/services/${SERVICE_NAME}/
+COPY services/${SERVICE_NAME}/src /build/services/${SERVICE_NAME}/src
 
-# Build the service
+# Install parent POM to local Maven repo
+WORKDIR /build/services
+RUN mvn -N clean install
+
+# Build common module (install to local Maven repo)
+WORKDIR /build/services/common
+RUN mvn clean install -DskipTests
+
+# Build the specific service
 WORKDIR /build/services/${SERVICE_NAME}
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}
@@ -36,11 +44,11 @@ WORKDIR /app
 COPY --from=build /build/services/${SERVICE_NAME}/target/*.jar app.jar
 
 # Add curl for health checks
-RUN apk add --no-cache curl
-
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+ 
 # Create non-root user
-RUN addgroup -g 1001 spring && \
-    adduser -D -u 1001 -G spring spring && \
+RUN groupadd -g 1001 spring && \
+    useradd -u 1001 -g spring -s /bin/bash -m spring && \
     chown -R spring:spring /app
 
 USER spring

@@ -10,9 +10,9 @@ Configure AWS OIDC federation for GitHub Actions to authenticate without long-li
 
 ## Prerequisites
 
-- [ ] AWS account access for all accounts (801651112319, 965932217544, 811783768245, 146072879609)
-- [ ] GitHub repository created: https://github.com/ryanwaite28/ai-projects-turaf
-- [ ] Admin permissions in each AWS account
+- [x] AWS account access for all accounts (801651112319, 965932217544, 811783768245, 146072879609)
+- [x] GitHub repository created: https://github.com/ryanwaite28/ai-projects-turaf
+- [x] Admin permissions in each AWS account
 
 ## Scope
 
@@ -282,14 +282,14 @@ terraform apply -target=module.github_oidc
 
 ## Acceptance Criteria
 
-- [ ] OIDC provider created in DEV account (801651112319)
-- [ ] OIDC provider created in QA account (965932217544)
-- [ ] OIDC provider created in PROD account (811783768245)
-- [ ] OIDC provider created in Ops account (146072879609)
-- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in DEV
-- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in QA
-- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in PROD
-- [ ] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in Ops
+- [x] OIDC provider created in DEV account (801651112319)
+- [x] OIDC provider created in QA account (965932217544)
+- [x] OIDC provider created in PROD account (811783768245)
+- [x] OIDC provider created in Ops account (146072879609)
+- [x] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in DEV
+- [x] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in QA
+- [x] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in PROD
+- [x] IAM role `GitHubActionsDeploymentRole` configured with correct trust policy in Ops
 - [ ] Trust policies scoped to repository: `ryanwaite28/ai-projects-turaf`
 - [ ] DEV role restricted to `develop` branch
 - [ ] QA role restricted to `release/*` branches

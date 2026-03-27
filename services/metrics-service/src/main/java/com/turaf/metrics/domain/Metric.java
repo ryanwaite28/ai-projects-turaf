@@ -1,17 +1,19 @@
 package com.turaf.metrics.domain;
 
-import com.turaf.common.domain.Entity;
-import com.turaf.common.multitenancy.TenantAware;
+import com.turaf.common.domain.AggregateRoot;
+import com.turaf.common.tenant.TenantAware;
+import com.turaf.metrics.domain.event.MetricRecorded;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
-public class Metric extends Entity<MetricId> implements TenantAware {
+public class Metric extends AggregateRoot<MetricId> implements TenantAware {
 
-    private final String organizationId;
+    private String organizationId;
     private final String experimentId;
     private final String name;
     private final Double value;
@@ -29,6 +31,16 @@ public class Metric extends Entity<MetricId> implements TenantAware {
         this.type = Objects.requireNonNull(type, "MetricType cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
         this.tags = new HashMap<>();
+        
+        registerEvent(new MetricRecorded(
+            UUID.randomUUID().toString(),
+            id.getValue(),
+            organizationId,
+            experimentId,
+            name,
+            value,
+            timestamp
+        ));
     }
 
     public Metric(MetricId id, String organizationId, String experimentId,
@@ -42,6 +54,16 @@ public class Metric extends Entity<MetricId> implements TenantAware {
         this.type = Objects.requireNonNull(type, "MetricType cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
         this.tags = new HashMap<>(tags != null ? tags : Collections.emptyMap());
+        
+        registerEvent(new MetricRecorded(
+            UUID.randomUUID().toString(),
+            id.getValue(),
+            organizationId,
+            experimentId,
+            name,
+            value,
+            timestamp
+        ));
     }
 
     public void addTag(String key, String value) {
@@ -95,6 +117,11 @@ public class Metric extends Entity<MetricId> implements TenantAware {
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
     }
 
     public String getExperimentId() {

@@ -1,0 +1,127 @@
+name: Deploy Notification Service to DEV
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'services/notification-service/**'
+      - '.github/workflows/service-notification-dev.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  SERVICE_NAME: notification-service
+  ENVIRONMENT: dev
+  AWS_ACCOUNT_ID: 801651112319
+  ECR_REPOSITORY: turaf-notification-service
+
+jobs:
+  deploy:
+    name: Build and Deploy to DEV
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsDeploymentRole
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Terraform Init
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=turaf-terraform-state-${{ env.ENVIRONMENT }}" \
+            -backend-config="key=${{ env.SERVICE_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Plan
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Wait for ECS service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Get service status
+        run: |
+          aws ecs describe-services \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Deployments:deployments[0].status}'
+      
+      - name: Health check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names turaf-alb-${{ env.ENVIRONMENT }} \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)
+          
+          for i in {1..30}; do
+            if curl -f http://$ALB_DNS/api/${{ env.SERVICE_NAME }}/health; then
+              echo "✅ Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be healthy... ($i/30)"
+            sleep 10
+          done
+          
+          echo "❌ Service health check failed"
+          exit 1
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

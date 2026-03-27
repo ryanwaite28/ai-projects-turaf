@@ -34,7 +34,7 @@ public class UserCreated implements DomainEvent {
     }
 
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
     

@@ -32,7 +32,7 @@ public class UserProfileUpdated implements DomainEvent {
     }
 
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
 

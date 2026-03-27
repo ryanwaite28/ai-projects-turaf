@@ -1,6 +1,6 @@
 package com.turaf.metrics.domain.event;
 
-import com.turaf.common.event.DomainEvent;
+import com.turaf.common.domain.DomainEvent;
 
 import java.time.Instant;
 

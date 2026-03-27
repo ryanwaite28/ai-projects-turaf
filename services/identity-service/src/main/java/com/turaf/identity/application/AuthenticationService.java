@@ -34,7 +34,7 @@ public class AuthenticationService {
         UserId userId = UserId.generate();
         Password password = Password.fromRaw(request.getPassword(), passwordEncoder);
 
-        User user = new User(userId, email, password, request.getName());
+        User user = new User(userId, request.getOrganizationId(), email, password, request.getName());
         User savedUser = userRepository.save(user);
 
         savedUser.getDomainEvents().forEach(eventPublisher::publish);

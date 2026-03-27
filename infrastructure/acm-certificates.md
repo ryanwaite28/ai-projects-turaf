@@ -1,7 +1,8 @@
 # ACM Certificates
 
-## Wildcard Certificate
+## Certificate Details
 
+### Root Account Certificate
 - **ARN**: `arn:aws:acm:us-east-1:072456928432:certificate/c660ca8d-5584-4d6f-b75f-e5f10fc5a8ab`
 - **Domain**: `*.turafapp.com`
 - **Subject Alternative Names**: 
@@ -9,9 +10,49 @@
   - `turafapp.com`
 - **Region**: us-east-1
 - **Account**: root (072456928432)
-- **Status**: ISSUED ✅
+- **Status**: ISSUED 
 - **Issued**: 2024-03-23
 - **Expires**: 2026-10-06 (auto-renews 60 days before expiration)
+- **Usage**: CloudFront distributions
+
+### DEV Account Certificate
+- **ARN**: `arn:aws:acm:us-east-1:801651112319:certificate/8b83b688-7458-4627-9fd4-ff3b2801bf70`
+- **Domain**: `*.turafapp.com`
+- **Subject Alternative Names**: 
+  - `*.turafapp.com`
+  - `turafapp.com`
+- **Region**: us-east-1
+- **Account**: dev (801651112319)
+- **Status**: ISSUED 
+- **Issued**: 2026-03-26
+- **Expires**: Auto-renews 60 days before expiration
+- **Usage**: DEV environment ALB HTTPS listeners
+
+### QA Account Certificate
+- **ARN**: `arn:aws:acm:us-east-1:965932217544:certificate/906b4a44-11e3-4ee7-b10d-9f715ffc0ee6`
+- **Domain**: `*.turafapp.com`
+- **Subject Alternative Names**: 
+  - `*.turafapp.com`
+  - `turafapp.com`
+- **Region**: us-east-1
+- **Account**: qa (965932217544)
+- **Status**: ISSUED 
+- **Issued**: 2026-03-26
+- **Expires**: Auto-renews 60 days before expiration
+- **Usage**: QA environment ALB HTTPS listeners
+
+### PROD Account Certificate
+- **ARN**: `arn:aws:acm:us-east-1:811783768245:certificate/779b5c14-8fc0-44fe-80b4-090bdee1ef62`
+- **Domain**: `*.turafapp.com`
+- **Subject Alternative Names**: 
+  - `*.turafapp.com`
+  - `turafapp.com`
+- **Region**: us-east-1
+- **Account**: prod (811783768245)
+- **Status**: ISSUED 
+- **Issued**: 2026-03-26
+- **Expires**: Auto-renews 60 days before expiration
+- **Usage**: PROD environment ALB HTTPS listeners
 - **Validation Method**: DNS
 - **Key Algorithm**: RSA-2048
 - **Signature Algorithm**: SHA256WITHRSA

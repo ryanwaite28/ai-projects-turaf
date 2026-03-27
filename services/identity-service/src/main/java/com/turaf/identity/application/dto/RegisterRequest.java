@@ -18,13 +18,17 @@ public class RegisterRequest {
     @Size(max = 100, message = "Name cannot exceed 100 characters")
     private String name;
 
+    @NotBlank(message = "Organization ID is required")
+    private String organizationId;
+
     public RegisterRequest() {
     }
 
-    public RegisterRequest(String email, String password, String name) {
+    public RegisterRequest(String email, String password, String name, String organizationId) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.organizationId = organizationId;
     }
 
     public String getEmail() {
@@ -49,5 +53,13 @@ public class RegisterRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
     }
 }

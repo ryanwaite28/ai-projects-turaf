@@ -44,6 +44,7 @@ public class UserJpaEntity {
     public User toDomain(PasswordEncoder encoder) {
         User user = new User(
             UserId.of(id),
+            organizationId,
             new Email(email),
             Password.fromHashed(password, encoder),
             name

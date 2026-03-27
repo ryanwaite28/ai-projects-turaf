@@ -1,5 +1,7 @@
 package com.turaf.organization.interfaces.rest;
 
+import com.turaf.common.security.AuthorizationService;
+import com.turaf.common.security.UserPrincipal;
 import com.turaf.organization.application.OrganizationService;
 import com.turaf.organization.application.dto.CreateOrganizationRequest;
 import com.turaf.organization.application.dto.OrganizationDto;
@@ -17,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -30,9 +31,12 @@ import org.springframework.web.bind.annotation.*;
 public class OrganizationController {
     
     private final OrganizationService organizationService;
+    private final AuthorizationService authorizationService;
     
-    public OrganizationController(OrganizationService organizationService) {
+    public OrganizationController(OrganizationService organizationService,
+                                  AuthorizationService authorizationService) {
         this.organizationService = organizationService;
+        this.authorizationService = authorizationService;
     }
     
     @PostMapping
@@ -45,9 +49,9 @@ public class OrganizationController {
     })
     public ResponseEntity<OrganizationDto> createOrganization(
             @Valid @RequestBody CreateOrganizationRequest request,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
         
-        UserId createdBy = extractUserId(principal);
+        UserId createdBy = UserId.of(principal.getUserId());
         OrganizationDto organization = organizationService.createOrganization(request, createdBy);
         return ResponseEntity.status(HttpStatus.CREATED).body(organization);
     }
@@ -59,7 +63,9 @@ public class OrganizationController {
         @ApiResponse(responseCode = "404", description = "Organization not found")
     })
     public ResponseEntity<OrganizationDto> getOrganization(
-            @Parameter(description = "Organization ID") @PathVariable String id) {
+            @Parameter(description = "Organization ID") @PathVariable String id,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(id);
         
         OrganizationDto organization = organizationService.getOrganization(OrganizationId.of(id));
         return ResponseEntity.ok(organization);
@@ -72,7 +78,9 @@ public class OrganizationController {
         @ApiResponse(responseCode = "404", description = "Organization not found")
     })
     public ResponseEntity<OrganizationDto> getOrganizationBySlug(
-            @Parameter(description = "Organization slug") @PathVariable String slug) {
+            @Parameter(description = "Organization slug") @PathVariable String slug,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateTenantAccess(principal);
         
         OrganizationDto organization = organizationService.getOrganizationBySlug(slug);
         return ResponseEntity.ok(organization);
@@ -90,7 +98,8 @@ public class OrganizationController {
     public ResponseEntity<OrganizationDto> updateOrganization(
             @Parameter(description = "Organization ID") @PathVariable String id,
             @Valid @RequestBody UpdateOrganizationRequest request,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(id);
         
         OrganizationDto organization = organizationService.updateOrganization(
             OrganizationId.of(id),
@@ -109,17 +118,11 @@ public class OrganizationController {
     })
     public ResponseEntity<Void> deleteOrganization(
             @Parameter(description = "Organization ID") @PathVariable String id,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(id);
         
         organizationService.deleteOrganization(OrganizationId.of(id));
         return ResponseEntity.noContent().build();
     }
     
-    /**
-     * Extract user ID from authentication principal.
-     * This is a simplified implementation - in production, you'd use a custom UserDetails implementation.
-     */
-    private UserId extractUserId(UserDetails principal) {
-        return UserId.of(principal.getUsername());
-    }
 }

@@ -1,32 +1,52 @@
-# Task: Setup CD QA Pipeline
+# Task: QA Deployment Pattern Documentation
 
 **Service**: CI/CD  
 **Phase**: 11  
-**Estimated Time**: 4 hours  
+**Estimated Time**: 1 hour  
+**Type**: Pattern Documentation
 
 ## Objective
 
-Setup GitHub Actions CD pipeline for deploying services to QA environment using service-specific Terraform with manual approval.
+Document the GitHub Actions deployment pattern for QA environment. This task describes the workflow structure, triggers, manual approval process, and deployment steps that services follow when deploying to QA.
+
+**Note**: This task documents the PATTERN. For actual workflow implementation, see **Task 008: Setup Per-Service Deployment Workflows**.
 
 **Architecture Note**: Services now manage their own infrastructure (ECS service, task definition, target group, listener rule) via Terraform in CI/CD pipelines. Shared infrastructure (cluster, ALB, databases) is managed separately.
 
 ## Prerequisites
 
-- [x] Task 002: CD DEV pipeline setup
-- [ ] Shared infrastructure deployed to QA (ECS cluster, ALB, VPC)
-- [ ] Service Terraform directories created (`services/<service>/terraform/`)
+- [x] Task 001: CI pipeline setup
+- [x] Task 002: DEV deployment pattern documented
+- [x] Task 007: AWS OIDC configured
+- [ ] Task 005: Shared infrastructure deployed to QA (ECS cluster, ALB, VPC)
+- [ ] Task 008: Per-service workflows implemented
 - [ ] QA environment protection rules configured in GitHub
 
 ## Scope
 
-**Files to Create**:
-- `.github/workflows/service-identity-qa.yml`
-- `.github/workflows/service-organization-qa.yml`
-- `.github/workflows/service-experiment-qa.yml`
+**This task documents the pattern for**:
+- QA environment workflow structure
+- Trigger conditions (release/* branches, path filters)
+- Manual approval requirements
+- Build and push steps
+- Terraform deployment steps
+- Integration testing steps
 
-## Implementation Details
+**Actual workflow files are created in Task 008**.
 
-### Service Deployment Workflow (Example: Identity Service to QA)
+## QA Deployment Pattern
+
+### Workflow Structure
+
+Each service follows this pattern for QA deployments:
+
+**Trigger**: Push to `release/*` branches with changes to service directory  
+**Environment**: QA (AWS Account: 965932217544)  
+**Approval**: Required (manual approval via GitHub environment protection)  
+**Security Scanning**: Enhanced (in CI pipeline)  
+**Integration Tests**: Required after deployment
+
+### Example Workflow Pattern (Identity Service)
 
 ```yaml
 name: Deploy Identity Service to QA
@@ -145,35 +165,46 @@ jobs:
           # npm run test:integration:qa
 ```
 
+## Pattern Characteristics
+
+### QA-Specific Features
+- **Manual Approval**: Required before deployment
+- **Branch**: `release/*`
+- **Frequency**: On push to release branches
+- **Image Tags**: `${github.sha}` and `qa-latest`
+- **Desired Count**: 2 tasks (high availability testing)
+- **Circuit Breaker**: Enabled for auto-rollback
+- **Integration Tests**: Run after deployment
+- **Reviewers**: 1-2 team members required
+
+### Workflow Jobs
+1. **build-and-push**: Build Docker image and push to ECR
+2. **deploy-service**: Run Terraform to deploy/update service infrastructure (requires approval)
+3. **verify-deployment**: Wait for stability and run integration tests
+
 ## Acceptance Criteria
 
-- [ ] Service deployment workflows created for all services
-- [ ] GitHub environment protection configured for QA (manual approval)
-- [ ] Service Terraform directories configured for QA environment
-- [ ] AWS OIDC authentication works for QA account
-- [ ] Docker images built and pushed to QA ECR
-- [ ] Service-specific Terraform deploys successfully
-- [ ] ECS services created and running in QA
-- [ ] ALB routing configured correctly
-- [ ] Integration tests pass after deployment
-- [ ] Manual approval workflow functions correctly
-- [ ] Deployment circuit breaker configured
-- [ ] Rollback on failure works
+- [x] QA deployment pattern documented
+- [x] Workflow structure defined
+- [x] Trigger conditions specified
+- [x] Manual approval process documented
+- [x] Example workflow provided
+- [ ] Pattern implemented in Task 008
 
-## Testing Requirements
+## Validation Approach
 
-**Validation**:
-- Push changes to `release/*` branch
-- Verify workflow triggers based on path filter
-- Confirm manual approval is required
-- Approve deployment in GitHub UI
-- Check Docker image pushed to QA ECR
-- Verify Terraform creates/updates service resources
-- Check ECS service status and task count (desired: 2)
-- Verify ALB target group shows healthy targets
-- Test service endpoint via ALB
-- Run integration tests against QA environment
-- Verify CloudWatch logs are being written
+**When implemented (Task 008), validate by**:
+- Pushing changes to `release/*` branch
+- Verifying workflow triggers based on path filter
+- Confirming manual approval is required
+- Approving deployment in GitHub UI
+- Checking Docker image pushed to QA ECR with correct tags
+- Verifying Terraform creates/updates service resources
+- Checking ECS service status and task count (desired: 2)
+- Verifying ALB target group shows healthy targets
+- Testing service endpoint via ALB
+- Running integration tests against QA environment
+- Verifying CloudWatch logs are being written
 
 ## GitHub Environment Protection
 
@@ -185,7 +216,10 @@ Configure in GitHub repository settings:
 
 ## References
 
-- Specification: `specs/ci-cd-pipelines.md` (Service Deployment Pattern)
-- Infrastructure Pattern: `.windsurf/plans/completed/cicd/cicd-service-deployment-pattern.md`
-- Infrastructure Summary: `infrastructure/docs/architecture/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
-- Related Tasks: 002-setup-cd-dev-pipeline, 004-setup-cd-prod-pipeline
+- **Specification**: `specs/ci-cd-pipelines.md` (Service Deployment Pattern)
+- **Implementation**: Task 008 (Setup Per-Service Deployment Workflows)
+- **Related Patterns**: 
+  - Task 002: DEV Deployment Pattern
+  - Task 004: PROD Deployment Pattern
+- **Infrastructure**: `infrastructure/docs/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
+- **IAM Roles**: `docs/IAM_ROLES.md`

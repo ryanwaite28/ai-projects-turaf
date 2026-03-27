@@ -1,7 +1,7 @@
 package com.turaf.experiment.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.turaf.common.security.TenantContextHolder;
+import com.turaf.common.tenant.TenantContextHolder;
 import com.turaf.experiment.application.dto.*;
 import com.turaf.experiment.domain.*;
 import com.turaf.experiment.infrastructure.persistence.*;

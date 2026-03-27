@@ -1,35 +1,48 @@
-# Task: Setup CD DEV Pipeline
+# Task: DEV Deployment Pattern Documentation
 
 **Service**: CI/CD  
 **Phase**: 11  
-**Estimated Time**: 4 hours  
+**Estimated Time**: 1 hour  
+**Type**: Pattern Documentation
 
 ## Objective
 
-Setup GitHub Actions CD pipeline for deploying services to DEV environment using service-specific Terraform.
+Document the GitHub Actions deployment pattern for DEV environment. This task describes the workflow structure, triggers, and deployment steps that services follow when deploying to DEV.
+
+**Note**: This task documents the PATTERN. For actual workflow implementation, see **Task 008: Setup Per-Service Deployment Workflows**.
 
 **Architecture Note**: Services now manage their own infrastructure (ECS service, task definition, target group, listener rule) via Terraform in CI/CD pipelines. Shared infrastructure (cluster, ALB, databases) is managed separately.
 
 ## Prerequisites
 
 - [x] Task 001: CI pipeline setup
-- [ ] AWS OIDC configured
-- [ ] Shared infrastructure deployed (ECS cluster, ALB, VPC)
-- [ ] Service Terraform directories created (`services/<service>/terraform/`)
+- [x] Task 007: AWS OIDC configured
+- [ ] Task 005: Shared infrastructure deployed (ECS cluster, ALB, VPC)
+- [ ] Task 008: Per-service workflows implemented
 
 ## Scope
 
-**Files to Create**:
-- `.github/workflows/service-identity-dev.yml`
-- `.github/workflows/service-organization-dev.yml`
-- `.github/workflows/service-experiment-dev.yml`
-- `services/identity-service/terraform/` (backend.tf, data.tf, main.tf, variables.tf, outputs.tf)
-- `services/organization-service/terraform/` (backend.tf, data.tf, main.tf, variables.tf, outputs.tf)
-- `services/experiment-service/terraform/` (backend.tf, data.tf, main.tf, variables.tf, outputs.tf)
+**This task documents the pattern for**:
+- DEV environment workflow structure
+- Trigger conditions (develop branch, path filters)
+- Build and push steps
+- Terraform deployment steps
+- Verification and health check steps
 
-## Implementation Details
+**Actual workflow files are created in Task 008**.
 
-### Service Deployment Workflow (Example: Identity Service)
+## DEV Deployment Pattern
+
+### Workflow Structure
+
+Each service follows this pattern for DEV deployments:
+
+**Trigger**: Push to `develop` branch with changes to service directory  
+**Environment**: DEV (AWS Account: 801651112319)  
+**Approval**: None (auto-deploy)  
+**Security Scanning**: Basic (in CI pipeline)
+
+### Example Workflow Pattern (Identity Service)
 
 ```yaml
 name: Deploy Identity Service to DEV
@@ -149,34 +162,48 @@ jobs:
           exit 1
 ```
 
+## Pattern Characteristics
+
+### DEV-Specific Features
+- **Auto-deployment**: No manual approval required
+- **Branch**: `develop`
+- **Frequency**: On every push to service directory
+- **Image Tags**: `${github.sha}` and `dev-latest`
+- **Desired Count**: 1 task (cost optimization)
+- **Circuit Breaker**: Enabled for auto-rollback
+- **Health Checks**: 30 attempts with 10s intervals
+
+### Workflow Jobs
+1. **build-and-push**: Build Docker image and push to ECR
+2. **deploy-service**: Run Terraform to deploy/update service infrastructure
+3. **verify-deployment**: Wait for stability and run health checks
+
 ## Acceptance Criteria
 
-- [ ] Service deployment workflows created for all services
-- [ ] Service Terraform directories created with all required files
-- [ ] AWS OIDC authentication works
-- [ ] Docker images built and pushed to ECR
-- [ ] Service-specific Terraform deploys successfully
-- [ ] ECS services created and running
-- [ ] ALB routing configured correctly
-- [ ] Health checks pass
-- [ ] Deployment circuit breaker configured
-- [ ] Rollback on failure works
+- [x] DEV deployment pattern documented
+- [x] Workflow structure defined
+- [x] Trigger conditions specified
+- [x] Example workflow provided
+- [ ] Pattern implemented in Task 008
 
-## Testing Requirements
+## Validation Approach
 
-**Validation**:
-- Push changes to a service directory
-- Verify workflow triggers based on path filter
-- Check Docker image pushed to ECR
-- Verify Terraform creates/updates service resources
-- Check ECS service status and task count
-- Verify ALB target group shows healthy targets
-- Test service endpoint via ALB
-- Verify CloudWatch logs are being written
+**When implemented (Task 008), validate by**:
+- Pushing changes to a service directory on `develop` branch
+- Verifying workflow triggers based on path filter
+- Checking Docker image pushed to ECR with correct tags
+- Verifying Terraform creates/updates service resources
+- Checking ECS service status and task count
+- Verifying ALB target group shows healthy targets
+- Testing service endpoint via ALB
+- Verifying CloudWatch logs are being written
 
 ## References
 
-- Specification: `specs/ci-cd-pipelines-UPDATED.md` (Service Deployment Pattern)
-- Infrastructure Pattern: `.windsurf/plans/cicd-service-deployment-pattern.md`
-- Infrastructure Summary: `infrastructure/docs/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
-- Related Tasks: 003-setup-cd-qa-pipeline
+- **Specification**: `specs/ci-cd-pipelines.md` (Service Deployment Pattern)
+- **Implementation**: Task 008 (Setup Per-Service Deployment Workflows)
+- **Related Patterns**: 
+  - Task 003: QA Deployment Pattern
+  - Task 004: PROD Deployment Pattern
+- **Infrastructure**: `infrastructure/docs/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
+- **IAM Roles**: `docs/IAM_ROLES.md`

@@ -10,8 +10,8 @@ Setup GitHub Actions CI pipeline for linting, testing, building, and code qualit
 
 ## Prerequisites
 
-- [ ] GitHub repository created
-- [ ] Understanding of GitHub Actions
+- [x] GitHub repository created
+- [x] Understanding of GitHub Actions
 
 ## Scope
 
@@ -92,13 +92,13 @@ jobs:
 
 ## Acceptance Criteria
 
-- [ ] CI workflow created
-- [ ] Linting runs on PRs
-- [ ] Tests run on PRs
-- [ ] Build succeeds
-- [ ] Code coverage reported
-- [ ] Security scanning enabled
-- [ ] Workflow triggers correctly
+- [x] CI workflow created
+- [x] Linting runs on PRs
+- [x] Tests run on PRs
+- [x] Build succeeds
+- [x] Code coverage reported
+- [x] Security scanning enabled
+- [x] Workflow triggers correctly
 
 ## Testing Requirements
 

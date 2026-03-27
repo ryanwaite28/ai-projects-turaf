@@ -1,7 +1,7 @@
 package com.turaf.experiment.application;
 
 import com.turaf.common.event.EventPublisher;
-import com.turaf.common.security.TenantContextHolder;
+import com.turaf.common.tenant.TenantContextHolder;
 import com.turaf.experiment.application.dto.CreateHypothesisRequest;
 import com.turaf.experiment.application.dto.HypothesisDto;
 import com.turaf.experiment.application.dto.UpdateHypothesisRequest;

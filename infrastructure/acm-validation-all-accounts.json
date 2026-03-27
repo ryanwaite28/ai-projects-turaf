@@ -1,0 +1,43 @@
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_341967d037a5a4f91cbb082c83f192bb.turafapp.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_0a815804e11e4498b1b625f9582694dc.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_f0402f9bb5618e739c8ffc0afcd67b9a.turafapp.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_3a192f97ef5d24b796f4b0d1eecd6874.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_5b3bd40979cbe432c005f1beba447248.turafapp.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_03084fa5e346ddab921b05835c92359f.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    }
+  ]
+}

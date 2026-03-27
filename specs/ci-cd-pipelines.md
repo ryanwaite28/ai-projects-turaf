@@ -413,7 +413,78 @@ resource "aws_ecs_service" "service" {
 
 ## CI Pipeline (ci.yml)
 
-**Unchanged** - Continues to run tests, linting, security scans on all code.
+### Purpose and Scope
+
+The CI pipeline serves as a **repository-wide quality gate** that runs on all code changes before deployment. It differs fundamentally from service deployment workflows:
+
+**CI Pipeline Role**:
+- **Type**: Centralized quality checks
+- **When**: On every PR and code push (all branches)
+- **What**: Lint, test, build, security scan
+- **Scope**: All services in the monorepo (`./services` directory)
+- **Purpose**: Prevent bad code from merging (quality gatekeeper)
+- **Deployment**: None - verification only
+
+**Service Deployment Workflows** (Task 008):
+- **Type**: Individual service deployments
+- **When**: After code is merged to target branch
+- **What**: Build Docker image → Deploy to ECS → Health check
+- **Scope**: One service at a time
+- **Purpose**: Deploy services independently to AWS
+- **Deployment**: Yes - updates running services
+
+### Workflow Execution Flow
+
+```
+Developer pushes code
+    ↓
+CI Pipeline runs (quality gates)
+    ├─ Lint all services
+    ├─ Test all services  
+    ├─ Build all services
+    └─ Security scan
+    ↓
+✅ CI passes → Code can be merged
+    ↓
+Code merged to develop/release/main
+    ↓
+Per-Service Deployment Workflows trigger
+    ├─ Only for services with changes
+    ├─ Build Docker image
+    ├─ Deploy to appropriate environment
+    └─ Health check
+```
+
+### CI Jobs
+
+**1. Lint**
+- Runs Checkstyle on all Java code
+- Enforces code style standards
+- Blocks merge on violations
+
+**2. Test**
+- Executes all unit and integration tests
+- Generates JaCoCo coverage reports
+- Uploads coverage to Codecov
+- Requires 80%+ coverage (PROJECT.md Section 23a)
+
+**3. Build**
+- Compiles all services with Maven
+- Verifies no compilation errors
+- Uploads build artifacts (7-day retention)
+
+**4. Security Scan**
+- Runs Snyk vulnerability scanning
+- Checks dependencies for known vulnerabilities
+- Uploads SARIF results to GitHub Code Scanning
+- Threshold: HIGH and CRITICAL vulnerabilities
+
+### Key Distinction
+
+**CI Pipeline = "Can this code be merged?"** (Quality verification)  
+**Deployment Workflows = "Deploy this service to AWS"** (Infrastructure automation)
+
+The CI pipeline is a **gatekeeper** that runs first. Service deployment workflows only run **after** code passes CI and is merged to the appropriate branch.
 
 ---
 
@@ -594,6 +665,7 @@ gh workflow run service-identity-dev.yml
 
 **Repository Secrets**:
 - `SONAR_TOKEN`
+- `SONAR_HOST_URL`
 - `CODECOV_TOKEN`
 - `SLACK_WEBHOOK_URL`
 

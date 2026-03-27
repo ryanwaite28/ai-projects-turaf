@@ -51,6 +51,48 @@ This specification defines the complete AWS infrastructure for the Turaf platfor
 
 ---
 
+## Shared Infrastructure Resources
+
+### ACM SSL/TLS Certificates
+
+**Multi-Account Strategy**: Each AWS account has its own ACM certificate for ALB HTTPS listeners. Certificates cannot be shared across accounts.
+
+**Certificate Inventory**:
+
+| Account | ARN | Domain | Usage | Status |
+|---------|-----|--------|-------|--------|
+| **Root** (072456928432) | `arn:aws:acm:us-east-1:072456928432:certificate/c660ca8d-5584-4d6f-b75f-e5f10fc5a8ab` | `*.turafapp.com` | CloudFront distributions | ISSUED |
+| **DEV** (801651112319) | `arn:aws:acm:us-east-1:801651112319:certificate/8b83b688-7458-4627-9fd4-ff3b2801bf70` | `*.turafapp.com` | DEV ALB HTTPS listeners | ISSUED |
+| **QA** (965932217544) | `arn:aws:acm:us-east-1:965932217544:certificate/906b4a44-11e3-4ee7-b10d-9f715ffc0ee6` | `*.turafapp.com` | QA ALB HTTPS listeners | ISSUED |
+| **PROD** (811783768245) | `arn:aws:acm:us-east-1:811783768245:certificate/779b5c14-8fc0-44fe-80b4-090bdee1ef62` | `*.turafapp.com` | PROD ALB HTTPS listeners | ISSUED |
+
+**Certificate Properties**:
+- **Domain**: `*.turafapp.com` (wildcard)
+- **SAN**: `turafapp.com`
+- **Region**: us-east-1 (required for CloudFront, works for ALB in any region)
+- **Validation**: DNS (CNAME records in Route 53)
+- **Auto-Renewal**: Enabled (60 days before expiration)
+- **Key Algorithm**: RSA-2048
+
+**Terraform Reference**:
+```hcl
+# Reference environment-specific certificate
+data "aws_acm_certificate" "main" {
+  domain   = "*.turafapp.com"
+  statuses = ["ISSUED"]
+}
+
+# Use in ALB HTTPS listener
+resource "aws_lb_listener" "https" {
+  certificate_arn = data.aws_acm_certificate.main.arn
+  # ...
+}
+```
+
+**Documentation**: See `infrastructure/acm-certificates.md` for complete certificate details and validation records.
+
+---
+
 ## Environment Deployment Strategy
 
 Each environment is deployed to a dedicated AWS account:
@@ -277,12 +319,20 @@ resource "aws_nat_gateway" "main" {
 
 ### Application Load Balancer
 
-**Configuration**:
-- Name: `turaf-alb-{env}`
-- Scheme: Internet-facing
-- Subnets: Public subnets (2 AZs)
-- Security Group: ALB security group
-- SSL Certificate: ACM certificate for `*.turafapp.com`
+**Public ALB Configuration**:
+- **Name**: `turaf-alb-{env}`
+- **Scheme**: Internet-facing
+- **Subnets**: Public subnets (2 AZs)
+- **Security Group**: ALB security group
+- **DNS**: `api.{env}.turafapp.com` (Route 53 Alias record)
+
+**SSL/TLS Configuration**:
+- **Certificate**: Environment-specific ACM certificate
+  - DEV: `arn:aws:acm:us-east-1:801651112319:certificate/8b83b688-7458-4627-9fd4-ff3b2801bf70`
+  - QA: `arn:aws:acm:us-east-1:965932217544:certificate/906b4a44-11e3-4ee7-b10d-9f715ffc0ee6`
+  - PROD: `arn:aws:acm:us-east-1:811783768245:certificate/779b5c14-8fc0-44fe-80b4-090bdee1ef62`
+- **SSL Policy**: `ELBSecurityPolicy-TLS-1-2-2017-01`
+- **Protocols**: TLS 1.2, TLS 1.3
 
 **Target Groups** (one per service):
 - identity-service: `/api/v1/auth/*`
@@ -297,14 +347,21 @@ resource "aws_nat_gateway" "main" {
 - Healthy threshold: 2
 - Unhealthy threshold: 3
 
-**Listener Rules**:
+**HTTPS Listener (Port 443)**:
 ```hcl
+# Data source for environment-specific ACM certificate
+data "aws_acm_certificate" "main" {
+  domain   = "*.turafapp.com"
+  statuses = ["ISSUED"]
+  most_recent = true
+}
+
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate.main.arn
+  certificate_arn   = data.aws_acm_certificate.main.arn
   
   default_action {
     type = "fixed-response"
@@ -312,6 +369,22 @@ resource "aws_lb_listener" "https" {
       content_type = "text/plain"
       message_body = "Not Found"
       status_code  = "404"
+    }
+  }
+}
+
+# HTTP to HTTPS redirect (Port 80)
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+  
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
     }
   }
 }

@@ -1,33 +1,58 @@
-# Task: Setup CD PROD Pipeline
+# Task: PROD Deployment Pattern Documentation
 
 **Service**: CI/CD  
 **Phase**: 11  
-**Estimated Time**: 5 hours  
+**Estimated Time**: 1 hour  
+**Type**: Pattern Documentation
 
 ## Objective
 
-Setup GitHub Actions CD pipeline for deploying services to PROD environment using service-specific Terraform with blue-green deployment strategy and strict approval gates.
+Document the GitHub Actions deployment pattern for PROD environment. This task describes the workflow structure, triggers, security scanning, blue-green deployment strategy, and strict approval gates that services follow when deploying to production.
+
+**Note**: This task documents the PATTERN. For actual workflow implementation, see **Task 008: Setup Per-Service Deployment Workflows**.
 
 **Architecture Note**: Services manage their own infrastructure via Terraform in CI/CD pipelines. Production deployments use ECS blue-green deployment with automatic rollback on failure.
 
 ## Prerequisites
 
-- [x] Task 003: CD QA pipeline setup
-- [ ] Shared infrastructure deployed to PROD (ECS cluster, ALB, VPC)
-- [ ] Service Terraform directories created (`services/<service>/terraform/`)
+- [x] Task 001: CI pipeline setup
+- [x] Task 002: DEV deployment pattern documented
+- [x] Task 003: QA deployment pattern documented
+- [x] Task 007: AWS OIDC configured
+- [ ] Task 005: Shared infrastructure deployed to PROD (ECS cluster, ALB, VPC)
+- [ ] Task 008: Per-service workflows implemented
 - [ ] PROD environment protection rules configured in GitHub
 - [ ] Blue-green deployment strategy tested in QA
 
 ## Scope
 
-**Files to Create**:
-- `.github/workflows/service-identity-prod.yml`
-- `.github/workflows/service-organization-prod.yml`
-- `.github/workflows/service-experiment-prod.yml`
+**This task documents the pattern for**:
+- PROD environment workflow structure
+- Trigger conditions (main branch, releases, path filters)
+- Security scanning requirements (Trivy)
+- Manual approval requirements (2+ reviewers)
+- Blue-green deployment strategy
+- Build and push steps
+- Terraform deployment steps
+- E2E testing and monitoring steps
 
-## Implementation Details
+**Actual workflow files are created in Task 008**.
 
-### Service Deployment Workflow (Example: Identity Service to PROD)
+## PROD Deployment Pattern
+
+### Workflow Structure
+
+Each service follows this pattern for PROD deployments:
+
+**Trigger**: Push to `main` branch or GitHub release with changes to service directory  
+**Environment**: PROD (AWS Account: 811783768245)  
+**Approval**: Required (2+ reviewers via GitHub environment protection)  
+**Security Scanning**: Mandatory (Trivy - blocks on CRITICAL/HIGH vulnerabilities)  
+**Deployment Strategy**: Blue-Green via ECS CODE_DEPLOY  
+**E2E Tests**: Required after deployment  
+**Monitoring**: 5-minute observation period with auto-rollback on alarms
+
+### Example Workflow Pattern (Identity Service)
 
 ```yaml
 name: Deploy Identity Service to PROD
@@ -177,42 +202,56 @@ jobs:
           fi
 ```
 
+## Pattern Characteristics
+
+### PROD-Specific Features
+- **Strict Approval**: 2+ senior reviewers required
+- **Branch**: `main` (or GitHub releases)
+- **Frequency**: Controlled releases only
+- **Image Tags**: `${github.sha}` and `prod-latest`
+- **Desired Count**: 3 tasks (high availability)
+- **Security Scanning**: Trivy (blocks CRITICAL/HIGH)
+- **Deployment Strategy**: Blue-Green (CODE_DEPLOY)
+- **Traffic Shifting**: Linear or Canary
+- **Auto-Rollback**: Enabled on CloudWatch alarms
+- **E2E Tests**: Required post-deployment
+- **Monitoring Period**: 5 minutes
+- **Wait Timer**: 10-minute cooling-off period
+
+### Workflow Jobs
+1. **build-and-push**: Security scan, build Docker image, push to ECR
+2. **deploy-service**: Run Terraform for blue-green deployment (requires approval)
+3. **verify-deployment**: Wait for stability, run E2E tests, monitor metrics
+
 ## Acceptance Criteria
 
-- [ ] Service deployment workflows created for all services
-- [ ] GitHub environment protection configured for PROD (multiple approvers)
-- [ ] Service Terraform configured with blue-green deployment
-- [ ] AWS OIDC authentication works for PROD account
-- [ ] Security scanning (Trivy) blocks vulnerable images
-- [ ] Docker images built and pushed to PROD ECR
-- [ ] Service-specific Terraform deploys successfully
-- [ ] ECS services use CODE_DEPLOY deployment controller
-- [ ] Blue-green deployment executes correctly
-- [ ] ALB routing switches to new task set
-- [ ] E2E tests pass after deployment
-- [ ] CloudWatch alarms configured for auto-rollback
-- [ ] Automatic rollback on failure works
-- [ ] Manual approval workflow requires 2+ reviewers
-- [ ] Deployment monitoring verifies success
+- [x] PROD deployment pattern documented
+- [x] Workflow structure defined
+- [x] Trigger conditions specified
+- [x] Security scanning requirements documented
+- [x] Blue-green deployment strategy documented
+- [x] Manual approval process documented (2+ reviewers)
+- [x] Example workflow provided
+- [ ] Pattern implemented in Task 008
 
-## Testing Requirements
+## Validation Approach
 
-**Validation**:
-- Push changes to `main` branch or create GitHub release
-- Verify workflow triggers based on path filter
-- Confirm manual approval is required (2+ reviewers)
-- Approve deployment in GitHub UI
-- Verify security scan passes (no CRITICAL/HIGH vulnerabilities)
-- Check Docker image pushed to PROD ECR
-- Verify Terraform creates blue-green deployment
-- Monitor CodeDeploy deployment progress
-- Check ECS service shows two task sets during deployment
-- Verify ALB traffic shifts to new task set
-- Test service endpoint via ALB
-- Run E2E tests against PROD environment
-- Verify CloudWatch alarms don't trigger
-- Confirm old task set is terminated after success
-- Test rollback by introducing failing health checks
+**When implemented (Task 008), validate by**:
+- Pushing changes to `main` branch or creating GitHub release
+- Verifying workflow triggers based on path filter
+- Confirming manual approval is required (2+ reviewers)
+- Approving deployment in GitHub UI
+- Verifying security scan passes (no CRITICAL/HIGH vulnerabilities)
+- Checking Docker image pushed to PROD ECR with correct tags
+- Verifying Terraform creates blue-green deployment
+- Monitoring CodeDeploy deployment progress
+- Checking ECS service shows two task sets during deployment
+- Verifying ALB traffic shifts to new task set
+- Testing service endpoint via ALB
+- Running E2E tests against PROD environment
+- Verifying CloudWatch alarms don't trigger
+- Confirming old task set is terminated after success
+- Testing rollback by introducing failing health checks
 
 ## GitHub Environment Protection
 
@@ -247,7 +286,10 @@ deployment_configuration {
 
 ## References
 
-- Specification: `specs/ci-cd-pipelines.md` (Service Deployment Pattern, Blue-Green section)
-- Infrastructure Pattern: `.windsurf/plans/completed/cicd/cicd-service-deployment-pattern.md`
-- Infrastructure Summary: `infrastructure/docs/architecture/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
-- Related Tasks: 003-setup-cd-qa-pipeline, 005-setup-infrastructure-pipeline
+- **Specification**: `specs/ci-cd-pipelines.md` (Service Deployment Pattern, Blue-Green section)
+- **Implementation**: Task 008 (Setup Per-Service Deployment Workflows)
+- **Related Patterns**: 
+  - Task 002: DEV Deployment Pattern
+  - Task 003: QA Deployment Pattern
+- **Infrastructure**: `infrastructure/docs/INFRASTRUCTURE_RESTRUCTURE_SUMMARY.md`
+- **IAM Roles**: `docs/IAM_ROLES.md`

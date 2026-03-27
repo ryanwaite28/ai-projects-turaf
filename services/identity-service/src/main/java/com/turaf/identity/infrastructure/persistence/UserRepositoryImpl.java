@@ -37,13 +37,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
-        return jpaRepository.findAll().stream()
-            .map(entity -> entity.toDomain(passwordEncoder))
-            .collect(Collectors.toList());
-    }
-
-    @Override
     public Optional<User> findByEmail(Email email) {
         return jpaRepository.findByEmail(email.getValue())
             .map(entity -> entity.toDomain(passwordEncoder));

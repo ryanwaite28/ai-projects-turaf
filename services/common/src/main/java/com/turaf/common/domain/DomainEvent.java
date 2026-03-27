@@ -3,15 +3,15 @@ package com.turaf.common.domain;
 import java.time.Instant;
 
 /**
- * Interface for all domain events.
- * Domain events represent something significant that happened in the domain.
- * They are immutable and should be named in the past tense (e.g., ExperimentStarted, MetricRecorded).
+ * Base interface for all domain events in the system.
+ * Domain events represent something that happened in the domain that domain experts care about.
  * 
- * All domain events must have:
+ * All domain events must be immutable and should contain:
  * - A unique event ID for idempotency
- * - An event type for routing and processing
- * - A timestamp of when the event occurred
- * - An organization ID for multi-tenancy
+ * - The event type for routing and processing
+ * - The timestamp when the event occurred
+ * - The organization ID for multi-tenancy
+ * - A correlation ID for distributed tracing
  */
 public interface DomainEvent {
     
@@ -36,13 +36,21 @@ public interface DomainEvent {
      *
      * @return The event timestamp
      */
-    Instant getTimestamp();
+    Instant getOccurredAt();
     
     /**
-     * Gets the organization ID this event belongs to.
-     * Used for multi-tenancy and data isolation.
+     * Returns the organization ID associated with this event.
+     * Used for multi-tenant event filtering and routing.
      *
      * @return The organization ID
      */
     String getOrganizationId();
+    
+    /**
+     * Returns the correlation ID for distributed tracing.
+     * Used to track event chains across services.
+     *
+     * @return The correlation ID
+     */
+    String getCorrelationId();
 }

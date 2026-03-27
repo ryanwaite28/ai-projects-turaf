@@ -16,25 +16,33 @@ Request SSL/TLS certificates from AWS Certificate Manager (ACM) for all domains 
 
 ## Acceptance Criteria
 
-- [x] Wildcard certificate requested for *.turafapp.com
-- [x] DNS validation records created in Route 53
-- [x] Certificate validated and issued
-- [x] Certificate ARN documented
-- [ ] Optional: Environment-specific certificates requested (deferred)
+- [x] Root account wildcard certificate requested for *.turafapp.com
+- [x] Root account DNS validation records created in Route 53
+- [x] Root account certificate validated and issued
+- [x] Root account certificate ARN documented
+- [x] DEV account certificate requested (801651112319)
+- [x] QA account certificate requested (965932217544)
+- [x] PROD account certificate requested (811783768245)
+- [x] All environment certificates validated and issued
+- [x] All certificate ARNs documented
 
 ---
 
 ## Implementation
 
-### 1. Request Wildcard Certificate
+### 1. Request Root Account Wildcard Certificate
 
 ```bash
+# Authenticate to root account
+aws sso login --profile turaf-root
+
 # Request certificate in us-east-1 (required for CloudFront)
 aws acm request-certificate \
   --domain-name "*.turafapp.com" \
   --subject-alternative-names "turafapp.com" \
   --validation-method DNS \
-  --region us-east-1
+  --region us-east-1 \
+  --profile turaf-root
 
 # Save certificate ARN from output
 ```
@@ -111,18 +119,20 @@ aws route53 change-resource-record-sets \
   --change-batch file://acm-validation-records.json
 ```
 
-### 4. Wait for Certificate Validation
+### 4. Wait for Root Certificate Validation
 
 ```bash
 # Wait for validation (can take 5-30 minutes)
 aws acm wait certificate-validated \
   --certificate-arn $CERT_ARN \
-  --region us-east-1
+  --region us-east-1 \
+  --profile turaf-root
 
 # Check status
 aws acm describe-certificate \
   --certificate-arn $CERT_ARN \
   --region us-east-1 \
+  --profile turaf-root \
   --query 'Certificate.Status'
 ```
 
@@ -130,37 +140,120 @@ aws acm describe-certificate \
 
 ---
 
-## Optional: Environment-Specific Certificates
+## Multi-Account Certificate Provisioning
 
-### Dev Certificate
+**Objective**: Request certificates in DEV, QA, and PROD accounts for ALB HTTPS listeners.
+
+**Note**: ACM certificates cannot be shared across AWS accounts. Each environment requires its own certificate.
+
+### 5. Request DEV Account Certificate
 
 ```bash
-# Request dev certificate (in dev account)
+# Authenticate to DEV account
+aws sso login --profile turaf-dev
+
+# Request certificate
 aws acm request-certificate \
-  --domain-name "*.dev.turafapp.com" \
+  --domain-name "*.turafapp.com" \
+  --subject-alternative-names "turafapp.com" \
   --validation-method DNS \
   --region us-east-1 \
   --profile turaf-dev
 
-# Follow same validation process
+# Save DEV certificate ARN
+DEV_CERT_ARN="<ARN_FROM_OUTPUT>"
 ```
 
-### QA Certificate
+### 6. Request QA Account Certificate
 
 ```bash
-# Request qa certificate (in qa account)
+# Authenticate to QA account
+aws sso login --profile turaf-qa
+
+# Request certificate
 aws acm request-certificate \
-  --domain-name "*.qa.turafapp.com" \
+  --domain-name "*.turafapp.com" \
+  --subject-alternative-names "turafapp.com" \
   --validation-method DNS \
   --region us-east-1 \
   --profile turaf-qa
 
-# Follow same validation process
+# Save QA certificate ARN
+QA_CERT_ARN="<ARN_FROM_OUTPUT>"
 ```
 
-### Prod Certificate
+### 7. Request PROD Account Certificate
 
-**Note**: Production can use the wildcard certificate from root account via cross-account sharing, or request its own.
+```bash
+# Authenticate to PROD account
+aws sso login --profile turaf-prod
+
+# Request certificate
+aws acm request-certificate \
+  --domain-name "*.turafapp.com" \
+  --subject-alternative-names "turafapp.com" \
+  --validation-method DNS \
+  --region us-east-1 \
+  --profile turaf-prod
+
+# Save PROD certificate ARN
+PROD_CERT_ARN="<ARN_FROM_OUTPUT>"
+```
+
+### 8. Add Validation Records for All Certificates
+
+```bash
+# For each certificate, get validation CNAME record
+# DEV
+aws acm describe-certificate \
+  --certificate-arn $DEV_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-dev \
+  --query 'Certificate.DomainValidationOptions[0].ResourceRecord'
+
+# QA
+aws acm describe-certificate \
+  --certificate-arn $QA_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-qa \
+  --query 'Certificate.DomainValidationOptions[0].ResourceRecord'
+
+# PROD
+aws acm describe-certificate \
+  --certificate-arn $PROD_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-prod \
+  --query 'Certificate.DomainValidationOptions[0].ResourceRecord'
+
+# Add all validation CNAME records to Route 53 (root account)
+# Each certificate will have a unique validation record
+aws route53 change-resource-record-sets \
+  --hosted-zone-id $HOSTED_ZONE_ID \
+  --change-batch file://acm-validation-all-accounts.json \
+  --profile turaf-root
+```
+
+### 9. Wait for All Certificates to Validate
+
+```bash
+# DEV
+aws acm wait certificate-validated \
+  --certificate-arn $DEV_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-dev
+
+# QA
+aws acm wait certificate-validated \
+  --certificate-arn $QA_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-qa
+
+# PROD
+aws acm wait certificate-validated \
+  --certificate-arn $PROD_CERT_ARN \
+  --region us-east-1 \
+  --profile turaf-prod
+```
 
 ---
 
@@ -283,6 +376,43 @@ aws acm describe-certificate \
 
 # Delete and recreate if needed
 ```
+
+---
+
+## Implementation Results
+
+### ✅ Certificate Requests Completed (2026-03-26)
+
+**DEV Account Certificate**:
+- **ARN**: `arn:aws:acm:us-east-1:801651112319:certificate/8b83b688-7458-4627-9fd4-ff3b2801bf70`
+- **Account**: 801651112319
+- **Status**: ISSUED ✅
+- **Validation**: DNS (CNAME)
+- **Issued**: 2026-03-26
+
+**QA Account Certificate**:
+- **ARN**: `arn:aws:acm:us-east-1:965932217544:certificate/906b4a44-11e3-4ee7-b10d-9f715ffc0ee6`
+- **Account**: 965932217544
+- **Status**: ISSUED ✅
+- **Validation**: DNS (CNAME)
+- **Issued**: 2026-03-26
+
+**PROD Account Certificate**:
+- **ARN**: `arn:aws:acm:us-east-1:811783768245:certificate/779b5c14-8fc0-44fe-80b4-090bdee1ef62`
+- **Account**: 811783768245
+- **Status**: ISSUED ✅
+- **Validation**: DNS (CNAME)
+- **Issued**: 2026-03-26
+
+**Validation Records Added to Route 53**:
+- All three validation CNAME records added to hosted zone `Z055341020TQZLU2CKWOE`
+- Validation completed successfully in < 2 minutes
+- Records file: `infrastructure/acm-validation-all-accounts.json`
+
+**Documentation Updated**:
+- ✅ `infrastructure/acm-certificates.md` - All certificate ARNs documented
+- ✅ `specs/domain-dns-management.md` - Certificate status updated to ISSUED
+- ✅ Task acceptance criteria marked complete
 
 ---
 

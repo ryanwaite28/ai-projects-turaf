@@ -1,5 +1,7 @@
 package com.turaf.organization.interfaces.rest;
 
+import com.turaf.common.security.AuthorizationService;
+import com.turaf.common.security.UserPrincipal;
 import com.turaf.organization.application.MembershipService;
 import com.turaf.organization.application.dto.AddMemberRequest;
 import com.turaf.organization.application.dto.MemberDto;
@@ -17,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,9 +33,12 @@ import java.util.List;
 public class MembershipController {
     
     private final MembershipService membershipService;
+    private final AuthorizationService authorizationService;
     
-    public MembershipController(MembershipService membershipService) {
+    public MembershipController(MembershipService membershipService,
+                               AuthorizationService authorizationService) {
         this.membershipService = membershipService;
+        this.authorizationService = authorizationService;
     }
     
     @PostMapping
@@ -50,9 +54,9 @@ public class MembershipController {
     public ResponseEntity<MemberDto> addMember(
             @Parameter(description = "Organization ID") @PathVariable String organizationId,
             @Valid @RequestBody AddMemberRequest request,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
-        
-        UserId addedBy = extractUserId(principal);
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(organizationId);
+        UserId addedBy = UserId.of(principal.getUserId());
         MemberDto member = membershipService.addMember(
             OrganizationId.of(organizationId),
             request,
@@ -70,7 +74,8 @@ public class MembershipController {
     })
     public ResponseEntity<List<MemberDto>> getMembers(
             @Parameter(description = "Organization ID") @PathVariable String organizationId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(organizationId);
         
         List<MemberDto> members = membershipService.getMembers(OrganizationId.of(organizationId));
         return ResponseEntity.ok(members);
@@ -86,7 +91,8 @@ public class MembershipController {
     public ResponseEntity<MemberDto> getMember(
             @Parameter(description = "Organization ID") @PathVariable String organizationId,
             @Parameter(description = "User ID") @PathVariable String userId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(organizationId);
         
         MemberDto member = membershipService.getMember(
             OrganizationId.of(organizationId),
@@ -108,7 +114,8 @@ public class MembershipController {
             @Parameter(description = "Organization ID") @PathVariable String organizationId,
             @Parameter(description = "User ID") @PathVariable String userId,
             @RequestBody UpdateRoleRequest request,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(organizationId);
         
         MemberDto member = membershipService.updateMemberRole(
             OrganizationId.of(organizationId),
@@ -129,22 +136,15 @@ public class MembershipController {
     public ResponseEntity<Void> removeMember(
             @Parameter(description = "Organization ID") @PathVariable String organizationId,
             @Parameter(description = "User ID") @PathVariable String userId,
-            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails principal) {
-        
-        UserId removedBy = extractUserId(principal);
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        authorizationService.validateOrganizationAccess(organizationId);
+        UserId removedBy = UserId.of(principal.getUserId());
         membershipService.removeMember(
             OrganizationId.of(organizationId),
             UserId.of(userId),
             removedBy
         );
         return ResponseEntity.noContent().build();
-    }
-    
-    /**
-     * Extract user ID from authentication principal.
-     */
-    private UserId extractUserId(UserDetails principal) {
-        return UserId.of(principal.getUsername());
     }
     
     /**

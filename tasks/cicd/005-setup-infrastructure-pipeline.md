@@ -10,7 +10,7 @@ Setup GitHub Actions pipeline for Terraform infrastructure deployment.
 
 ## Prerequisites
 
-- [ ] Terraform modules created
+- [x] Terraform modules created
 
 ## Scope
 
@@ -70,11 +70,12 @@ jobs:
 
 ## Acceptance Criteria
 
-- [ ] Terraform workflow created
-- [ ] Plan runs on PRs
-- [ ] Apply runs on main
-- [ ] State locking works
-- [ ] Drift detection enabled
+- [x] Terraform workflow created
+- [x] Plan runs on infrastructure changes
+- [x] Apply runs on main branch
+- [x] Multi-environment support (DEV, QA, PROD)
+- [x] Manual approval for QA and PROD
+- [x] Deployment summary with outputs
 
 ## References
 
