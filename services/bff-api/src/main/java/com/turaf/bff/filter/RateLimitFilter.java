@@ -37,7 +37,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (RequestNotPermitted e) {
             log.warn("Rate limit exceeded for key: {}", rateLimiterKey);
-            response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+            response.setStatus(429); // HTTP 429 Too Many Requests
             response.setContentType("application/json");
             response.getWriter().write(
                 "{\"error\":\"Too Many Requests\"," +

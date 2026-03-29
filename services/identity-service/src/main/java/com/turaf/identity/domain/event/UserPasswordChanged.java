@@ -11,12 +11,14 @@ public class UserPasswordChanged implements DomainEvent {
     private final String userId;
     private final String organizationId;
     private final Instant timestamp;
+    private final String correlationId;
 
     public UserPasswordChanged(String eventId, String userId, String organizationId, Instant timestamp) {
         this.eventId = Objects.requireNonNull(eventId, "Event ID cannot be null");
         this.userId = Objects.requireNonNull(userId, "User ID cannot be null");
         this.organizationId = Objects.requireNonNull(organizationId, "Organization ID cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+        this.correlationId = eventId;
     }
 
     @Override
@@ -37,6 +39,11 @@ public class UserPasswordChanged implements DomainEvent {
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getUserId() {

@@ -38,7 +38,7 @@ public class EventMapper {
             envelope.put("eventId", event.getEventId());
             envelope.put("eventType", event.getEventType());
             envelope.put("eventVersion", 1);
-            envelope.put("timestamp", event.getTimestamp());
+            envelope.put("timestamp", event.getOccurredAt());
             envelope.put("sourceService", "organization-service");
             envelope.put("organizationId", event.getOrganizationId());
             envelope.put("payload", event);

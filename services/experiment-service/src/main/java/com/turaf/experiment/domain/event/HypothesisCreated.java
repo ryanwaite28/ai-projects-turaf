@@ -14,6 +14,7 @@ public class HypothesisCreated implements DomainEvent {
     private final String expectedOutcome;
     private final String createdBy;
     private final Instant timestamp;
+    private final String correlationId;
 
     public HypothesisCreated(String eventId, String hypothesisId, String organizationId,
                              String problemId, String statement, String expectedOutcome,
@@ -26,6 +27,7 @@ public class HypothesisCreated implements DomainEvent {
         this.expectedOutcome = expectedOutcome;
         this.createdBy = Objects.requireNonNull(createdBy);
         this.timestamp = Objects.requireNonNull(timestamp);
+        this.correlationId = eventId;
     }
 
     @Override
@@ -39,13 +41,18 @@ public class HypothesisCreated implements DomainEvent {
     }
 
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
 
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getHypothesisId() {

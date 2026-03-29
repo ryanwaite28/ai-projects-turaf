@@ -24,17 +24,21 @@ public class MetricRepositoryImpl implements MetricRepository {
     }
 
     @Override
-    public void save(Metric metric) {
+    public Metric save(Metric metric) {
         MetricJpaEntity entity = MetricJpaEntity.fromDomain(metric);
-        jpaRepository.save(entity);
+        MetricJpaEntity saved = jpaRepository.save(entity);
+        return saved.toDomain();
     }
 
     @Override
-    public void saveAll(List<Metric> metrics) {
+    public List<Metric> saveAll(List<Metric> metrics) {
         List<MetricJpaEntity> entities = metrics.stream()
             .map(MetricJpaEntity::fromDomain)
             .collect(Collectors.toList());
-        jpaRepository.saveAll(entities);
+        List<MetricJpaEntity> saved = jpaRepository.saveAll(entities);
+        return saved.stream()
+            .map(MetricJpaEntity::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -92,6 +96,11 @@ public class MetricRepositoryImpl implements MetricRepository {
         aggregations.put("count", count != null ? count.doubleValue() : 0.0);
         
         return aggregations;
+    }
+
+    @Override
+    public void delete(Metric metric) {
+        jpaRepository.deleteById(metric.getId().getValue());
     }
 
     @Override

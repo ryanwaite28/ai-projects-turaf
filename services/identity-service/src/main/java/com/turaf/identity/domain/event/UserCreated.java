@@ -13,6 +13,7 @@ public class UserCreated implements DomainEvent {
     private final String email;
     private final String name;
     private final Instant timestamp;
+    private final String correlationId;
     
     public UserCreated(String eventId, String userId, String organizationId, String email, String name) {
         this.eventId = Objects.requireNonNull(eventId, "Event ID cannot be null");
@@ -21,6 +22,7 @@ public class UserCreated implements DomainEvent {
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.name = Objects.requireNonNull(name, "Name cannot be null");
         this.timestamp = Instant.now();
+        this.correlationId = eventId;
     }
 
     @Override
@@ -41,6 +43,11 @@ public class UserCreated implements DomainEvent {
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
     
     public String getUserId() {

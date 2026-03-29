@@ -17,6 +17,9 @@ public class Conversation {
     @Id
     private String id;
     
+    @Column(name = "organization_id", nullable = false)
+    private String organizationId;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ConversationType type;

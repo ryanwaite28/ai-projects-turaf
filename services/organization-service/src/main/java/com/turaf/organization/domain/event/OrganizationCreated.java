@@ -16,6 +16,7 @@ public class OrganizationCreated implements DomainEvent {
     private final String slug;
     private final String createdBy;
     private final Instant timestamp;
+    private final String correlationId;
     
     public OrganizationCreated(String eventId, String organizationId, String name,
                               String slug, String createdBy, Instant timestamp) {
@@ -25,6 +26,7 @@ public class OrganizationCreated implements DomainEvent {
         this.slug = Objects.requireNonNull(slug, "Slug cannot be null");
         this.createdBy = Objects.requireNonNull(createdBy, "Created by cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+        this.correlationId = eventId;
     }
     
     @Override
@@ -38,13 +40,18 @@ public class OrganizationCreated implements DomainEvent {
     }
     
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
     
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
     
     public String getName() {

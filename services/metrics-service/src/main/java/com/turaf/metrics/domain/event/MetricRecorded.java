@@ -15,6 +15,7 @@ public class MetricRecorded implements DomainEvent {
     private final String metricType;
     private final Instant timestamp;
     private final Instant occurredAt;
+    private final String correlationId;
 
     public MetricRecorded(String eventId, String organizationId, String experimentId,
                          String metricId, String metricName, Double value,
@@ -28,6 +29,7 @@ public class MetricRecorded implements DomainEvent {
         this.metricType = metricType;
         this.timestamp = timestamp;
         this.occurredAt = Instant.now();
+        this.correlationId = eventId;
     }
 
     @Override
@@ -45,8 +47,14 @@ public class MetricRecorded implements DomainEvent {
         return occurredAt;
     }
 
+    @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getExperimentId() {

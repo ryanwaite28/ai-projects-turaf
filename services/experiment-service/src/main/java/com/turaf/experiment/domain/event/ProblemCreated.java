@@ -13,6 +13,7 @@ public class ProblemCreated implements DomainEvent {
     private final String description;
     private final String createdBy;
     private final Instant timestamp;
+    private final String correlationId;
 
     public ProblemCreated(String eventId, String problemId, String organizationId,
                           String title, String description, String createdBy, Instant timestamp) {
@@ -23,6 +24,7 @@ public class ProblemCreated implements DomainEvent {
         this.description = description;
         this.createdBy = Objects.requireNonNull(createdBy);
         this.timestamp = Objects.requireNonNull(timestamp);
+        this.correlationId = eventId;
     }
 
     @Override
@@ -36,13 +38,18 @@ public class ProblemCreated implements DomainEvent {
     }
 
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
 
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getProblemId() {

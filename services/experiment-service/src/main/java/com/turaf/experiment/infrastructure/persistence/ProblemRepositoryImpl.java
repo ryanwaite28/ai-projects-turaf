@@ -44,7 +44,6 @@ public class ProblemRepositoryImpl implements ProblemRepository {
             .collect(Collectors.toList());
     }
 
-    @Override
     public List<Problem> findAll() {
         return jpaRepository.findAll()
             .stream()

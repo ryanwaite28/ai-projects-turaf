@@ -2,6 +2,7 @@ package com.turaf.experiment.domain;
 
 import com.turaf.common.domain.ValueObject;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -43,5 +44,10 @@ public class ProblemId extends ValueObject {
     @Override
     public String toString() {
         return value;
+    }
+
+    @Override
+    protected List<Object> getEqualityComponents() {
+        return List.of(value);
     }
 }

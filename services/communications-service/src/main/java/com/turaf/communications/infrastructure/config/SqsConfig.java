@@ -15,7 +15,7 @@ public class SqsConfig {
     @Value("${aws.region}")
     private String region;
     
-    @Value("${aws.sqs.endpoint:}")
+    @Value("${aws.endpoint:}")
     private String endpoint;
     
     @Bean

@@ -29,7 +29,7 @@ public class MemberDto {
     public static MemberDto fromDomain(OrganizationMember member) {
         MemberDto dto = new MemberDto();
         dto.id = member.getId();
-        dto.organizationId = member.getOrganizationId().getValue();
+        dto.organizationId = member.getOrganizationId();
         dto.userId = member.getUserId().getValue();
         dto.role = member.getRole().name();
         dto.addedBy = member.getAddedBy().getValue();

@@ -39,7 +39,6 @@ com/turaf/communications/application/service/MessageService.class
 com/turaf/communications/CommunicationsServiceApplication.class
 com/turaf/communications/application/dto/MarkAsReadRequest.class
 com/turaf/communications/application/dto/CreateConversationRequest.class
-com/turaf/communications/domain/event/DomainEvent.class
 com/turaf/communications/application/dto/MessageDTO$MessageDTOBuilder.class
 com/turaf/communications/application/dto/MessageCreatedDTO.class
 com/turaf/communications/interfaces/rest/GlobalExceptionHandler.class

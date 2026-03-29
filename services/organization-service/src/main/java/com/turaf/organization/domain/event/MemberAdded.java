@@ -18,6 +18,7 @@ public class MemberAdded implements DomainEvent {
     private final String role;
     private final String addedBy;
     private final Instant timestamp;
+    private final String correlationId;
     
     public MemberAdded(String eventId, String organizationId, String userId,
                       String userEmail, String userName, String role,
@@ -30,6 +31,7 @@ public class MemberAdded implements DomainEvent {
         this.role = Objects.requireNonNull(role, "Role cannot be null");
         this.addedBy = Objects.requireNonNull(addedBy, "Added by cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+        this.correlationId = eventId;
     }
     
     @Override
@@ -43,13 +45,18 @@ public class MemberAdded implements DomainEvent {
     }
     
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
     
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
     
     public String getUserId() {

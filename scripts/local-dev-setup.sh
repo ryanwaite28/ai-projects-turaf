@@ -72,7 +72,7 @@ echo ""
 echo "🐳 Starting Docker infrastructure..."
 
 # Start infrastructure services first
-docker-compose up -d postgres localstack redis
+docker-compose up -d postgres ministack redis
 
 echo "⏳ Waiting for infrastructure to be ready..."
 sleep 10
@@ -85,13 +85,13 @@ until docker-compose exec -T postgres pg_isready -U turaf_admin -d turaf > /dev/
 done
 echo -e "\n${GREEN}✅ PostgreSQL is ready${NC}"
 
-# Wait for LocalStack
-echo "Waiting for LocalStack..."
+# Wait for MiniStack
+echo "Waiting for MiniStack..."
 until curl -s http://localhost:4566/_localstack/health > /dev/null 2>&1; do
     echo -n "."
     sleep 2
 done
-echo -e "\n${GREEN}✅ LocalStack is ready${NC}"
+echo -e "\n${GREEN}✅ MiniStack is ready${NC}"
 
 echo ""
 echo "🚀 Starting application services..."
@@ -147,7 +147,7 @@ echo "   Metrics Service:      http://localhost:8084"
 echo "   WebSocket Gateway:    ws://localhost:3000"
 echo ""
 echo "🔧 Management Tools:"
-echo "   LocalStack:           http://localhost:4566"
+echo "   MiniStack:            http://localhost:4566"
 echo "   PgAdmin (optional):   http://localhost:5050"
 echo ""
 echo "📊 Health Checks:"

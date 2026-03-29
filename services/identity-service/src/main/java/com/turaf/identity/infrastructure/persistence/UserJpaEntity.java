@@ -23,6 +23,9 @@ public class UserJpaEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "organization_id", nullable = false, length = 36)
+    private String organizationId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -32,11 +35,12 @@ public class UserJpaEntity {
     protected UserJpaEntity() {
     }
 
-    public UserJpaEntity(String id, String email, String password, String name, Instant createdAt, Instant updatedAt) {
+    public UserJpaEntity(String id, String email, String password, String name, String organizationId, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.name = name;
+        this.organizationId = organizationId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -44,7 +48,7 @@ public class UserJpaEntity {
     public User toDomain(PasswordEncoder encoder) {
         User user = new User(
             UserId.of(id),
-            organizationId,
+            this.organizationId,
             new Email(email),
             Password.fromHashed(password, encoder),
             name
@@ -59,6 +63,7 @@ public class UserJpaEntity {
             user.getEmail().getValue(),
             user.getPassword().getHashedValue(),
             user.getName(),
+            user.getOrganizationId(),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );
@@ -94,6 +99,14 @@ public class UserJpaEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
     }
 
     public Instant getCreatedAt() {

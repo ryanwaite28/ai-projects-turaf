@@ -2,6 +2,7 @@ package com.turaf.experiment.domain;
 
 import com.turaf.common.domain.ValueObject;
 
+import java.util.List;
 import java.util.Objects;
 
 public class StateTransition extends ValueObject {
@@ -37,5 +38,10 @@ public class StateTransition extends ValueObject {
     @Override
     public String toString() {
         return from + " -> " + to;
+    }
+
+    @Override
+    protected List<Object> getEqualityComponents() {
+        return List.of(from, to);
     }
 }

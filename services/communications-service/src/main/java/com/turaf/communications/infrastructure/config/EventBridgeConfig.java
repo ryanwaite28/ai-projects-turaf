@@ -11,10 +11,10 @@ import java.net.URI;
 @Configuration
 public class EventBridgeConfig {
     
-    @Value("${aws.region}")
+    @Value("${aws.region:us-east-1}")
     private String region;
     
-    @Value("${aws.eventbridge.endpoint:}")
+    @Value("${aws.endpoint:}")
     private String endpoint;
     
     @Bean

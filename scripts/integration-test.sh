@@ -68,13 +68,13 @@ else
     exit 1
 fi
 
-# Test LocalStack
+# Test MiniStack
 echo ""
-echo "☁️  Testing LocalStack..."
+echo "☁️  Testing MiniStack..."
 if curl -s http://localhost:4566/_localstack/health | grep -q "running"; then
-    echo -e "${GREEN}✅ LocalStack is running${NC}"
+    echo -e "${GREEN}✅ MiniStack is running${NC}"
 else
-    echo -e "${RED}❌ LocalStack health check failed${NC}"
+    echo -e "${RED}❌ MiniStack health check failed${NC}"
     exit 1
 fi
 
@@ -109,7 +109,7 @@ echo "📝 Test Summary:"
 echo "   ✅ Health checks: All services healthy"
 echo "   ✅ API endpoints: Properly secured"
 echo "   ✅ Database: Connected and accessible"
-echo "   ✅ LocalStack: Running and healthy"
+echo "   ✅ MiniStack: Running and healthy"
 echo "   ✅ Redis: Connected and responding"
 echo "   ✅ Integration tests: All passed"
 echo ""

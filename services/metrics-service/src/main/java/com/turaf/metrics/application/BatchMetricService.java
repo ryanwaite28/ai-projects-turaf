@@ -1,7 +1,7 @@
 package com.turaf.metrics.application;
 
-import com.turaf.common.event.EventPublisher;
 import com.turaf.common.tenant.TenantContextHolder;
+import com.turaf.metrics.infrastructure.events.SpringEventPublisher;
 import com.turaf.metrics.application.dto.BatchRecordRequest;
 import com.turaf.metrics.application.dto.RecordMetricRequest;
 import com.turaf.metrics.domain.*;
@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
 public class BatchMetricService {
 
     private final MetricRepository metricRepository;
-    private final EventPublisher eventPublisher;
+    private final SpringEventPublisher eventPublisher;
 
     private static final int BATCH_SIZE = 1000;
 
-    public BatchMetricService(MetricRepository metricRepository, EventPublisher eventPublisher) {
+    public BatchMetricService(MetricRepository metricRepository, SpringEventPublisher eventPublisher) {
         this.metricRepository = metricRepository;
         this.eventPublisher = eventPublisher;
     }

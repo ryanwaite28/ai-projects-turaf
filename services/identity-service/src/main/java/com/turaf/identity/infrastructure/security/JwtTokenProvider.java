@@ -43,41 +43,41 @@ public class JwtTokenProvider {
     }
 
     public UserId getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        Claims claims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
 
         return UserId.of(claims.getSubject());
     }
 
     public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        Claims claims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
 
         return claims.get("email", String.class);
     }
 
     public String getOrganizationIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        Claims claims = Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
 
         return claims.get("organizationId", String.class);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+            Jwts.parser()
+                .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token);
+                .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;

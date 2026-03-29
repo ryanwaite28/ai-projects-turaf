@@ -11,6 +11,7 @@ public class MetricBatchRecorded implements DomainEvent {
     private final String experimentId;
     private final int metricCount;
     private final Instant occurredAt;
+    private final String correlationId;
 
     public MetricBatchRecorded(String eventId, String organizationId, String experimentId, int metricCount) {
         this.eventId = eventId;
@@ -18,6 +19,7 @@ public class MetricBatchRecorded implements DomainEvent {
         this.experimentId = experimentId;
         this.metricCount = metricCount;
         this.occurredAt = Instant.now();
+        this.correlationId = eventId;
     }
 
     @Override
@@ -35,8 +37,14 @@ public class MetricBatchRecorded implements DomainEvent {
         return occurredAt;
     }
 
+    @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getExperimentId() {

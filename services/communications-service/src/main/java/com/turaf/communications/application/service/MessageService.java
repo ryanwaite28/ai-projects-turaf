@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,9 +62,11 @@ public class MessageService {
             .collect(Collectors.toList());
         
         MessageDeliveredEvent event = new MessageDeliveredEvent(
+            UUID.randomUUID().toString(),
             message.getId(),
             message.getConversationId(),
             message.getSenderId(),
+            conversation.getOrganizationId(),
             conversation.getType(),
             recipientIds,
             message.getContent(),

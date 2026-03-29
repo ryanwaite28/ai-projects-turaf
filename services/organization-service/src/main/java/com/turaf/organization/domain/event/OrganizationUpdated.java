@@ -16,6 +16,7 @@ public class OrganizationUpdated implements DomainEvent {
     private final String fieldName;
     private final String newValue;
     private final Instant timestamp;
+    private final String correlationId;
     
     public OrganizationUpdated(String eventId, String organizationId, String fieldName,
                               String newValue, Instant timestamp) {
@@ -24,6 +25,7 @@ public class OrganizationUpdated implements DomainEvent {
         this.fieldName = Objects.requireNonNull(fieldName, "Field name cannot be null");
         this.newValue = newValue;
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+        this.correlationId = eventId;
     }
     
     @Override
@@ -37,13 +39,18 @@ public class OrganizationUpdated implements DomainEvent {
     }
     
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
     
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
     
     public String getFieldName() {

@@ -55,7 +55,7 @@ public class OrganizationMemberJpaEntity {
     public OrganizationMember toDomain() {
         return new OrganizationMember(
             id,
-            OrganizationId.of(organizationId),
+            organizationId,
             UserId.of(userId),
             role,
             UserId.of(addedBy),
@@ -73,7 +73,7 @@ public class OrganizationMemberJpaEntity {
     public static OrganizationMemberJpaEntity fromDomain(OrganizationMember member) {
         OrganizationMemberJpaEntity entity = new OrganizationMemberJpaEntity();
         entity.id = member.getId();
-        entity.organizationId = member.getOrganizationId().getValue();
+        entity.organizationId = member.getOrganizationId();
         entity.userId = member.getUserId().getValue();
         entity.role = member.getRole();
         entity.addedBy = member.getAddedBy().getValue();

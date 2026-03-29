@@ -17,12 +17,12 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
-  
+
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    schemas: communications_schema
-    locations: classpath:db/migration
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET:default-secret-for-development-only-change-in-production}
 
 server:
   port: 8085
@@ -40,6 +40,7 @@ management:
 
 aws:
   region: ${AWS_REGION:us-east-1}
+  endpoint: ${AWS_ENDPOINT:}
   sqs:
     direct-messages-queue: ${SQS_DIRECT_QUEUE:communications-direct-messages.fifo}
     group-messages-queue: ${SQS_GROUP_QUEUE:communications-group-messages.fifo}

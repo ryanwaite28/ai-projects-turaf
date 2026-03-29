@@ -53,7 +53,6 @@ public class HypothesisRepositoryImpl implements HypothesisRepository {
             .collect(Collectors.toList());
     }
 
-    @Override
     public List<Hypothesis> findAll() {
         return jpaRepository.findAll()
             .stream()

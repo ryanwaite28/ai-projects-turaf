@@ -12,7 +12,7 @@ Complete guide for setting up and running the Turaf platform locally using Docke
 4. [Environment Configuration](#environment-configuration)
 5. [Running Services](#running-services)
 6. [Database Management](#database-management)
-7. [LocalStack (AWS Services)](#localstack-aws-services)
+7. [MiniStack (AWS Services)](#ministack-aws-services)
 8. [Troubleshooting](#troubleshooting)
 9. [Development Workflows](#development-workflows)
 
@@ -30,7 +30,7 @@ Complete guide for setting up and running the Turaf platform locally using Docke
 
 ### Optional Tools
 
-- **AWS CLI** 2.0+ for LocalStack interaction ([Download](https://aws.amazon.com/cli/))
+- **AWS CLI** 2.0+ for MiniStack interaction ([Download](https://aws.amazon.com/cli/))
 - **PostgreSQL Client** (psql) for direct database access
 - **IntelliJ IDEA** or **VS Code** for development
 
@@ -86,8 +86,8 @@ docker-compose logs -f identity-service
 **Option B: Run Infrastructure Only (Hybrid Development)**
 
 ```bash
-# Start only database and LocalStack
-docker-compose up -d postgres localstack
+# Start only database and MiniStack
+docker-compose up -d postgres ministack
 
 # Run services locally via Maven
 cd services/identity-service
@@ -162,8 +162,8 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 │  └──────────────────────────────────────────────────┘      │
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │         LocalStack (AWS Mock) (:4566)                │   │
-│  │  • S3 Buckets  • EventBridge  • SQS  • SNS          │   │
+│  │     MiniStack (AWS Emulator) (:4566)                 │   │
+│  │  • S3  • EventBridge  • SQS  • SNS  • Secrets Mgr   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -217,7 +217,7 @@ ORGANIZATION_USER_PASSWORD=organization_password_change_me
 EXPERIMENT_USER_PASSWORD=experiment_password_change_me
 METRICS_USER_PASSWORD=metrics_password_change_me
 
-# LocalStack
+# MiniStack
 AWS_ENDPOINT_URL=http://localhost:4566
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
@@ -274,7 +274,7 @@ docker-compose logs -f identity-service
 
 **Service Startup Order**:
 1. PostgreSQL (with schema initialization)
-2. LocalStack (with AWS resources)
+2. MiniStack (with AWS resources)
 3. Identity Service
 4. Organization Service
 5. Experiment Service
@@ -293,11 +293,11 @@ docker-compose ps
 
 **Start Infrastructure Only**:
 ```bash
-# Start database and LocalStack
-docker-compose up -d postgres localstack
+# Start database and MiniStack
+docker-compose up -d postgres ministack
 
 # Verify infrastructure is ready
-docker-compose ps postgres localstack
+docker-compose ps postgres ministack
 ```
 
 **Run Services Locally via Maven**:
@@ -443,11 +443,11 @@ docker-compose up -d
 
 ---
 
-## LocalStack (AWS Services)
+## MiniStack (AWS Services)
 
 ### Available Services
 
-LocalStack provides local AWS service mocking:
+[MiniStack](https://github.com/Nahuel990/ministack) (`nahuelnucera/ministack`) provides local AWS service emulation. It is a free, open-source, MIT-licensed alternative to LocalStack with a ~150MB image footprint:
 
 | Service | Purpose | Endpoint |
 |---------|---------|----------|
@@ -455,28 +455,30 @@ LocalStack provides local AWS service mocking:
 | EventBridge | Event bus | http://localhost:4566 |
 | SQS | Message queues | http://localhost:4566 |
 | SNS | Pub/sub messaging | http://localhost:4566 |
+| DynamoDB | NoSQL database | http://localhost:4566 |
+| SES | Email service | http://localhost:4566 |
 | Secrets Manager | Secret storage | http://localhost:4566 |
 
-### Using AWS CLI with LocalStack
+### Using AWS CLI with MiniStack
 
 ```bash
-# Set endpoint
+# Set endpoint for the session
 export AWS_ENDPOINT_URL=http://localhost:4566
-
-# Or use awslocal (wrapper)
-alias awslocal="aws --endpoint-url=http://localhost:4566"
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_DEFAULT_REGION=us-east-1
 
 # List S3 buckets
-awslocal s3 ls
+aws --endpoint-url=http://localhost:4566 s3 ls
 
 # List SQS queues
-awslocal sqs list-queues
+aws --endpoint-url=http://localhost:4566 sqs list-queues
 
 # List EventBridge buses
-awslocal events list-event-buses
+aws --endpoint-url=http://localhost:4566 events list-event-buses
 
 # Get secret
-awslocal secretsmanager get-secret-value \
+aws --endpoint-url=http://localhost:4566 secretsmanager get-secret-value \
   --secret-id turaf/db/identity-user-password
 ```
 
@@ -503,13 +505,20 @@ The initialization script creates:
 - `turaf-notifications`
 - `turaf-alerts`
 
+**DynamoDB Tables**:
+- `processed_notification_events` (with TTL enabled)
+- `processed_events` (with TTL enabled)
+
+**SES Identities**:
+- `notifications@turaf.com`
+
 **Secrets**:
 - Database user passwords (all services)
 
-### LocalStack Health Check
+### MiniStack Health Check
 
 ```bash
-# Check LocalStack status
+# Check MiniStack status
 curl http://localhost:4566/_localstack/health
 
 # Expected response shows available services
@@ -574,19 +583,19 @@ mvn flyway:repair
 mvn flyway:migrate
 ```
 
-### LocalStack Not Responding
+### MiniStack Not Responding
 
-**Problem**: LocalStack services unavailable
+**Problem**: MiniStack services unavailable
 
 ```bash
-# Check LocalStack status
-docker-compose ps localstack
+# Check MiniStack status
+docker-compose ps ministack
 
-# Restart LocalStack
-docker-compose restart localstack
+# Restart MiniStack
+docker-compose restart ministack
 
 # Check initialization logs
-docker-compose logs localstack | grep "initialization complete"
+docker-compose logs ministack | grep "initialization complete"
 
 # Verify health
 curl http://localhost:4566/_localstack/health
@@ -650,7 +659,7 @@ docker-compose down
 **Hybrid Workflow** (Faster iteration):
 ```bash
 # 1. Start infrastructure only
-docker-compose up -d postgres localstack
+docker-compose up -d postgres ministack
 
 # 2. Run service you're working on locally
 cd services/identity-service
@@ -720,19 +729,19 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 ```
 
-### Working with LocalStack
+### Working with MiniStack
 
 ```bash
 # Upload file to S3
-awslocal s3 cp report.pdf s3://turaf-reports-local/
+aws --endpoint-url=http://localhost:4566 s3 cp report.pdf s3://turaf-reports-local/
 
 # Send message to SQS
-awslocal sqs send-message \
+aws --endpoint-url=http://localhost:4566 sqs send-message \
   --queue-url http://localhost:4566/000000000000/turaf-experiment-events \
   --message-body '{"event":"experiment.created","id":"123"}'
 
 # Publish to SNS
-awslocal sns publish \
+aws --endpoint-url=http://localhost:4566 sns publish \
   --topic-arn arn:aws:sns:us-east-1:000000000000:turaf-notifications \
   --message "Test notification"
 ```
@@ -774,7 +783,7 @@ awslocal sns publish \
 ## Additional Resources
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [LocalStack Documentation](https://docs.localstack.cloud/)
+- [MiniStack Documentation](https://github.com/Nahuel990/ministack)
 - [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Flyway Documentation](https://flywaydb.org/documentation/)
@@ -787,11 +796,11 @@ awslocal sns publish \
 
 **Database Questions**: See [Database Management](#database-management)
 
-**LocalStack Questions**: See [LocalStack](#localstack-aws-services)
+**MiniStack Questions**: See [MiniStack](#ministack-aws-services)
 
 **Service Issues**: Check service logs and health endpoints
 
 ---
 
-**Last Updated**: March 19, 2026  
+**Last Updated**: March 27, 2026  
 **Version**: 1.0.0

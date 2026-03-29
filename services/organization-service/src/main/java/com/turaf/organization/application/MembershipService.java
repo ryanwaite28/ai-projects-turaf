@@ -66,7 +66,7 @@ public class MembershipService {
         
         OrganizationMember member = new OrganizationMember(
             UUID.randomUUID().toString(),
-            organizationId,
+            organizationId.getValue(),
             userId,
             role,
             addedBy
@@ -80,7 +80,7 @@ public class MembershipService {
             userId.getValue(),
             request.getUserEmail(),
             request.getUserName(),
-            role,
+            role.name(),
             addedBy.getValue(),
             Instant.now()
         );

@@ -4,7 +4,7 @@
 ARG SERVICE_NAME
 
 # Stage 1: Build
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 ARG SERVICE_NAME
 WORKDIR /build
@@ -22,18 +22,18 @@ COPY services/${SERVICE_NAME}/src /build/services/${SERVICE_NAME}/src
 
 # Install parent POM to local Maven repo
 WORKDIR /build/services
-RUN mvn -N clean install
+RUN mvn -N clean install -Dmaven.wagon.http.retryHandler.count=3
 
 # Build common module (install to local Maven repo)
 WORKDIR /build/services/common
-RUN mvn clean install -DskipTests
+RUN mvn clean install -DskipTests -Dmaven.wagon.http.retryHandler.count=3
 
 # Build the specific service
 WORKDIR /build/services/${SERVICE_NAME}
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dmaven.wagon.http.retryHandler.count=3
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}

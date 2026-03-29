@@ -988,30 +988,34 @@ Integration tests use **Testcontainers** to provide isolated, reproducible test 
 
 The platform uses a **hybrid approach** to balance test coverage with infrastructure costs:
 
-### LocalStack for Free-Tier Services
+### MiniStack for Local AWS Emulation
 
-Use LocalStack containers for AWS services in the free tier:
+Use [MiniStack](https://github.com/Nahuel990/ministack) (`nahuelnucera/ministack`) as a free, open-source AWS emulator for local development and integration tests. MiniStack is a drop-in replacement for LocalStack with all services free, ~150MB image footprint, and MIT licensed.
+
+Emulated services used by this project:
 
 - **SQS** (Simple Queue Service) - Message queuing
 - **S3** (Object Storage) - File storage
-- **DynamoDB** (NoSQL Database) - Key-value storage
+- **DynamoDB** (NoSQL Database) - Key-value storage and idempotency tracking
+- **SES** (Simple Email Service) - Email notifications
 - **Lambda** (Serverless Functions) - Function execution
 - **SNS** (Simple Notification Service) - Pub/sub messaging
+- **EventBridge** (Event Bus) - Event routing and rules
+- **Secrets Manager** - Secret storage
 
-### Mocks for Paid Services
+### Mocks for Unsupported Services
 
-Use Spring `@MockBean` for AWS services not in LocalStack free tier:
+Use Spring `@MockBean` for AWS services not emulated by MiniStack:
 
-- **EventBridge** (Event Bus) - Not in free tier
-- **CloudWatch Logs/Metrics** - Limited in free tier
-- **Step Functions** - Not in free tier
-- **AppSync** - Not in free tier
+- **CloudWatch Logs/Metrics** - Observability
+- **Step Functions** - Workflow orchestration
+- **AppSync** - GraphQL API
 
 This approach provides:
 
 - **Zero AWS costs** for integration tests
-- **Realistic testing** for core messaging and storage
-- **Business logic validation** for event-driven workflows
+- **Realistic testing** for core messaging, storage, and event-driven workflows
+- **Full EventBridge testing** locally without mocks
 - **Fast execution** in CI/CD pipelines
 
 ---
@@ -1025,7 +1029,7 @@ Integration tests run at specific stages in the CI/CD pipeline:
 1. **Lint** - Code quality checks
 2. **Unit Tests** - Fast domain and service tests
 3. **Build** - Compile and package
-4. **Integration Tests** - Testcontainers + LocalStack tests
+4. **Integration Tests** - Testcontainers + MiniStack tests
 5. **Security Scan** - Vulnerability scanning
 
 ### CD Pipeline (Environment-Specific)

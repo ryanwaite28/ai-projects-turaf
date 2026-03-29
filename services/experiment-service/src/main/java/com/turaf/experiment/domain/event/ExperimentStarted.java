@@ -11,6 +11,7 @@ public class ExperimentStarted implements DomainEvent {
     private final String organizationId;
     private final String hypothesisId;
     private final Instant timestamp;
+    private final String correlationId;
 
     public ExperimentStarted(String eventId, String experimentId, String organizationId,
                              String hypothesisId, Instant timestamp) {
@@ -19,6 +20,7 @@ public class ExperimentStarted implements DomainEvent {
         this.organizationId = Objects.requireNonNull(organizationId);
         this.hypothesisId = Objects.requireNonNull(hypothesisId);
         this.timestamp = Objects.requireNonNull(timestamp);
+        this.correlationId = eventId;
     }
 
     @Override
@@ -32,13 +34,18 @@ public class ExperimentStarted implements DomainEvent {
     }
 
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
 
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public String getExperimentId() {

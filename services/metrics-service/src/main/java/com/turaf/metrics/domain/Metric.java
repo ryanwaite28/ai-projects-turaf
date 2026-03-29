@@ -34,11 +34,12 @@ public class Metric extends AggregateRoot<MetricId> implements TenantAware {
         
         registerEvent(new MetricRecorded(
             UUID.randomUUID().toString(),
-            id.getValue(),
             organizationId,
             experimentId,
+            id.getValue(),
             name,
             value,
+            type.name(),
             timestamp
         ));
     }
@@ -57,11 +58,12 @@ public class Metric extends AggregateRoot<MetricId> implements TenantAware {
         
         registerEvent(new MetricRecorded(
             UUID.randomUUID().toString(),
-            id.getValue(),
             organizationId,
             experimentId,
+            id.getValue(),
             name,
             value,
+            type.name(),
             timestamp
         ));
     }

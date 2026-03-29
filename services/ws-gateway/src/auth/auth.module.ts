@@ -26,6 +26,6 @@ import { WsAuthGuard } from './ws-auth.guard';
     }),
   ],
   providers: [JwtStrategy, WsAuthGuard],
-  exports: [WsAuthGuard],
+  exports: [WsAuthGuard, JwtModule],
 })
 export class AuthModule {}

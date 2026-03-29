@@ -15,6 +15,7 @@ public class MemberRemoved implements DomainEvent {
     private final String userId;
     private final String removedBy;
     private final Instant timestamp;
+    private final String correlationId;
     
     public MemberRemoved(String eventId, String organizationId, String userId,
                         String removedBy, Instant timestamp) {
@@ -23,6 +24,7 @@ public class MemberRemoved implements DomainEvent {
         this.userId = Objects.requireNonNull(userId, "User ID cannot be null");
         this.removedBy = Objects.requireNonNull(removedBy, "Removed by cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+        this.correlationId = eventId;
     }
     
     @Override
@@ -36,13 +38,18 @@ public class MemberRemoved implements DomainEvent {
     }
     
     @Override
-    public Instant getTimestamp() {
+    public Instant getOccurredAt() {
         return timestamp;
     }
     
     @Override
     public String getOrganizationId() {
         return organizationId;
+    }
+    
+    @Override
+    public String getCorrelationId() {
+        return correlationId;
     }
     
     public String getUserId() {

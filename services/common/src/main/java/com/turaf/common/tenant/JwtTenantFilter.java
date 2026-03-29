@@ -123,11 +123,11 @@ public class JwtTenantFilter extends OncePerRequestFilter {
      * @throws io.jsonwebtoken.JwtException if token is invalid
      */
     private Claims parseJwt(String token) {
-        return Jwts.parserBuilder()
-            .setSigningKey(secretKey)
+        return Jwts.parser()
+            .verifyWith(secretKey)
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
     }
     
     @Override

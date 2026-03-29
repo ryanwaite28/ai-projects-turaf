@@ -5,6 +5,8 @@ import com.turaf.identity.application.exception.InvalidTokenException;
 import com.turaf.identity.application.exception.UserAlreadyExistsException;
 import com.turaf.identity.application.exception.UserNotFoundException;
 import com.turaf.identity.interfaces.rest.dto.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException ex) {
@@ -63,6 +67,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        logger.error("Unexpected error occurred", ex);
         ErrorResponse error = new ErrorResponse("INTERNAL_ERROR", "An unexpected error occurred");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }

@@ -11,6 +11,9 @@ import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class EventBridgePublisher implements EventPublisher {
     
@@ -49,6 +52,35 @@ public class EventBridgePublisher implements EventPublisher {
         } catch (Exception e) {
             logger.error("Error publishing event to EventBridge", e);
             throw new RuntimeException("Failed to publish event", e);
+        }
+    }
+
+    @Override
+    public void publishBatch(List<DomainEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return;
+        }
+
+        try {
+            List<PutEventsRequestEntry> entries = events.stream()
+                .map(event -> eventMapper.toEventBridgeEntry(event, eventBusName))
+                .collect(Collectors.toList());
+
+            PutEventsRequest request = PutEventsRequest.builder()
+                .entries(entries)
+                .build();
+
+            PutEventsResponse response = eventBridgeClient.putEvents(request);
+
+            if (response.failedEntryCount() > 0) {
+                logger.error("Failed to publish {} events to EventBridge", response.failedEntryCount());
+                throw new RuntimeException("Failed to publish batch events to EventBridge");
+            }
+
+            logger.info("Successfully published {} events to EventBridge", events.size());
+        } catch (Exception e) {
+            logger.error("Error publishing batch events to EventBridge", e);
+            throw new RuntimeException("Failed to publish batch events", e);
         }
     }
 }

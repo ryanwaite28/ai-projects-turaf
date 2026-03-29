@@ -70,7 +70,6 @@ public class ExperimentRepositoryImpl implements ExperimentRepository {
             .collect(Collectors.toList());
     }
 
-    @Override
     public List<Experiment> findAll() {
         return jpaRepository.findAll()
             .stream()

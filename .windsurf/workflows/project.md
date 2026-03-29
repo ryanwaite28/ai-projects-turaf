@@ -6,14 +6,21 @@ This workflow is designed for use with Windsurf (or similar AI IDEs) to efficien
 
 ## 📚 Required Reading
 
-**Before starting any work, read**: [BEST_PRACTICES.md](../BEST_PRACTICES.md)
+**Before starting any work, read these documents**:
 
-This document provides:
-- Efficient AI workflow patterns (60% faster context gathering)
-- Documentation hierarchy and navigation
-- Plan lifecycle management
-- Prompt templates and examples
-- Common workflows with step-by-step guidance
+1. **[Windsurf Rules](../rules.md)** - MANDATORY rules for consistency and quality
+   - Documentation hierarchy and single source of truth
+   - AWS account standards and infrastructure rules
+   - Architecture and design standards
+   - Testing, CI/CD, and deployment standards
+   - Security and code quality requirements
+
+2. **[BEST_PRACTICES.md](../../BEST_PRACTICES.md)** - Efficient AI workflow patterns
+   - 60% faster context gathering techniques
+   - Documentation hierarchy and navigation
+   - Plan lifecycle management
+   - Prompt templates and examples
+   - Common workflows with step-by-step guidance
 
 ---
 
@@ -221,9 +228,9 @@ Generate only the code necessary for this task.
 Include tests following the testing strategy (PROJECT.md Section 23a):
 - Unit tests for domain logic and services (80%+ coverage)
 - Integration tests for repositories and AWS integrations
-- Use Testcontainers + LocalStack for integration tests
-- Mock paid AWS services (EventBridge, CloudWatch) with @MockBean
-- Use LocalStack for free-tier services (SQS, S3, DynamoDB)
+- Use Testcontainers + MiniStack for integration tests
+- Mock unsupported AWS services (CloudWatch) with @MockBean
+- Use MiniStack for emulated services (SQS, S3, DynamoDB, EventBridge, SNS, Secrets Manager)
 
 Do NOT change other services or violate service boundaries.
 Track progress using task checklists in the task files.
@@ -283,8 +290,8 @@ After each task or feature:
   - Check test reports in PR checks
   - Verify coverage uploaded to Codecov
 * Verify event-driven interactions
-  - Integration tests should validate SQS message flow (LocalStack)
-  - Mock EventBridge calls should be verified with @MockBean
+  - Integration tests should validate SQS message flow (MiniStack)
+  - Integration tests should validate EventBridge event publishing (MiniStack)
   - Check event schemas match specifications
 
 ---
@@ -326,7 +333,7 @@ After each task or feature:
 
 - Write unit tests first for TDD approach
 - Use Testcontainers for integration tests (portable, reproducible)
-- Apply hybrid AWS approach: LocalStack for free services, @MockBean for paid
+- Apply hybrid AWS approach: MiniStack for emulated services, @MockBean for unsupported
 - Verify tests pass locally before committing
 - Aim for 80%+ code coverage across all services
 

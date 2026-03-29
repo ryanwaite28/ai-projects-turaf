@@ -9,14 +9,8 @@ services:
       - POSTGRES_DB=${DB_NAME:-turaf}
       - POSTGRES_USER=${DB_ADMIN_USER:-turaf_admin}
       - POSTGRES_PASSWORD=${DB_ADMIN_PASSWORD:-admin_password_change_me}
-      - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
-      - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
-      - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
-      - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
-      - COMMUNICATIONS_USER_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/postgres/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     ports:
       - "${DB_PORT:-5432}:5432"
     networks:
@@ -28,35 +22,53 @@ services:
       retries: 5
       start_period: 10s
 
-  # LocalStack for AWS service mocking
-  localstack:
-    image: localstack/localstack:latest
-    container_name: turaf-localstack
+  # MiniStack for AWS service emulation (free, open-source LocalStack alternative)
+  ministack:
+    image: nahuelnucera/ministack
+    container_name: turaf-ministack
     environment:
-      - SERVICES=s3,sqs,sns,events,secretsmanager,lambda
-      - DEBUG=${LOCALSTACK_DEBUG:-0}
-      - DATA_DIR=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - LOG_LEVEL=${MINISTACK_LOG_LEVEL:-INFO}
       - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
       - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
       - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
       - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+      - COMMUNICATIONS_USER_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
     volumes:
-      - localstack_data:/tmp/localstack
-      - ./infrastructure/docker/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./infrastructure/docker/ministack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
     ports:
-      - "4566:4566"  # LocalStack gateway
-      - "4571:4571"  # LocalStack web UI (optional)
+      - "4566:4566"
     networks:
       - turaf-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4566/_localstack/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Centralized Flyway Migrations
+  flyway-service:
+    image: flyway/flyway:10-alpine
+    container_name: turaf-flyway
+    command: -configFiles=/flyway/conf/flyway.conf migrate
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-turaf}
+      - FLYWAY_USER=${DB_ADMIN_USER:-turaf_admin}
+      - FLYWAY_PASSWORD=${DB_ADMIN_PASSWORD:-admin_password_change_me}
+      - FLYWAY_PLACEHOLDERS_IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
+      - FLYWAY_PLACEHOLDERS_ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
+      - FLYWAY_PLACEHOLDERS_EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
+      - FLYWAY_PLACEHOLDERS_METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+      - FLYWAY_PLACEHOLDERS_COMMUNICATIONS_USER_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
+    volumes:
+      - ./services/flyway-service/migrations:/flyway/migrations:ro
+      - ./services/flyway-service/flyway.conf:/flyway/conf/flyway.conf:ro
+    networks:
+      - turaf-network
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # Identity Service
   identity-service:
@@ -72,12 +84,19 @@ services:
       - DB_USERNAME=identity_user
       - IDENTITY_USER_PASSWORD=${IDENTITY_USER_PASSWORD:-identity_password_change_me}
       - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ENDPOINT=http://ministack:4566
+      - EVENTBRIDGE_BUS=turaf-event-bus
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     ports:
       - "${IDENTITY_SERVICE_PORT:-8081}:8081"
     networks:
       - turaf-network
     depends_on:
-      postgres:
+      flyway-service:
+        condition: service_completed_successfully
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -99,12 +118,20 @@ services:
       - DB_NAME=${DB_NAME:-turaf}
       - DB_USERNAME=organization_user
       - ORGANIZATION_USER_PASSWORD=${ORGANIZATION_USER_PASSWORD:-organization_password_change_me}
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ENDPOINT=http://ministack:4566
+      - EVENTBRIDGE_BUS=turaf-event-bus
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     ports:
       - "${ORGANIZATION_SERVICE_PORT:-8082}:8082"
     networks:
       - turaf-network
     depends_on:
-      postgres:
+      flyway-service:
+        condition: service_completed_successfully
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -126,12 +153,20 @@ services:
       - DB_NAME=${DB_NAME:-turaf}
       - DB_USERNAME=experiment_user
       - EXPERIMENT_USER_PASSWORD=${EXPERIMENT_USER_PASSWORD:-experiment_password_change_me}
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ENDPOINT=http://ministack:4566
+      - EVENTBRIDGE_BUS=turaf-event-bus
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     ports:
       - "${EXPERIMENT_SERVICE_PORT:-8083}:8083"
     networks:
       - turaf-network
     depends_on:
-      postgres:
+      flyway-service:
+        condition: service_completed_successfully
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
@@ -153,12 +188,20 @@ services:
       - DB_NAME=${DB_NAME:-turaf}
       - DB_USERNAME=metrics_user
       - METRICS_USER_PASSWORD=${METRICS_USER_PASSWORD:-metrics_password_change_me}
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ENDPOINT=http://ministack:4566
+      - EVENTBRIDGE_BUS=turaf-event-bus
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     ports:
       - "${METRICS_SERVICE_PORT:-8084}:8084"
     networks:
       - turaf-network
     depends_on:
-      postgres:
+      flyway-service:
+        condition: service_completed_successfully
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
@@ -233,15 +276,18 @@ services:
       - SQS_DIRECT_QUEUE=communications-direct-messages.fifo
       - SQS_GROUP_QUEUE=communications-group-messages.fifo
       - EVENTBRIDGE_BUS=turaf-event-bus
-      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ENDPOINT=http://ministack:4566
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     ports:
       - "${COMMUNICATIONS_SERVICE_PORT:-8085}:8085"
     networks:
       - turaf-network
     depends_on:
-      postgres:
-        condition: service_healthy
-      localstack:
+      flyway-service:
+        condition: service_completed_successfully
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8085/communications/actuator/health"]
@@ -262,9 +308,9 @@ services:
       - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-for-local-development-only-change-in-production-must-be-at-least-32-characters-long}
       - REDIS_URL=redis://redis:6379
       - AWS_REGION=${AWS_REGION:-us-east-1}
-      - AWS_SQS_ENDPOINT=http://localstack:4566
-      - SQS_DIRECT_QUEUE_URL=http://localstack:4566/000000000000/communications-direct-messages.fifo
-      - SQS_GROUP_QUEUE_URL=http://localstack:4566/000000000000/communications-group-messages.fifo
+      - AWS_SQS_ENDPOINT=http://ministack:4566
+      - SQS_DIRECT_QUEUE_URL=http://ministack:4566/000000000000/communications-direct-messages.fifo
+      - SQS_GROUP_QUEUE_URL=http://ministack:4566/000000000000/communications-group-messages.fifo
       - ALLOWED_ORIGINS=http://localhost:4200
     ports:
       - "${WS_GATEWAY_PORT:-3000}:3000"
@@ -273,7 +319,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      localstack:
+      ministack:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -311,8 +357,8 @@ networks:
 volumes:
   postgres_data:
     name: turaf-postgres-data
-  localstack_data:
-    name: turaf-localstack-data
+  ministack_data:
+    name: turaf-ministack-data
   redis_data:
     name: turaf-redis-data
   pgadmin_data:

@@ -83,19 +83,19 @@ public class EventMapper {
                 eventData.put("experimentId", e.getExperimentId());
                 eventData.put("organizationId", e.getOrganizationId());
                 eventData.put("hypothesisId", e.getHypothesisId());
-                eventData.put("startedAt", e.getStartedAt());
+                eventData.put("startedAt", e.getOccurredAt());
             } else if (event instanceof ExperimentCompleted) {
                 ExperimentCompleted e = (ExperimentCompleted) event;
                 eventData.put("experimentId", e.getExperimentId());
                 eventData.put("organizationId", e.getOrganizationId());
                 eventData.put("hypothesisId", e.getHypothesisId());
-                eventData.put("completedAt", e.getCompletedAt());
+                eventData.put("completedAt", e.getOccurredAt());
             } else if (event instanceof ExperimentCancelled) {
                 ExperimentCancelled e = (ExperimentCancelled) event;
                 eventData.put("experimentId", e.getExperimentId());
                 eventData.put("organizationId", e.getOrganizationId());
                 eventData.put("hypothesisId", e.getHypothesisId());
-                eventData.put("cancelledAt", e.getCancelledAt());
+                eventData.put("cancelledAt", e.getOccurredAt());
             }
             
             return objectMapper.writeValueAsString(eventData);
