@@ -48,7 +48,7 @@
           <mat-icon>show_chart</mat-icon>
         </div>
         <div class="summary-info">
-          <div class="summary-value">{{ summary.metricsByType[type] || 0 }}</div>
+          <div class="summary-value">{{ summary.metricsByType[type as any] || 0 }}</div>
           <div class="summary-label">{{ type }}</div>
         </div>
       </mat-card-content>
@@ -73,10 +73,10 @@
   <!-- Metrics Table -->
   <div class="table-section">
     <app-metrics-table
-      [metrics]="metrics$ | async"
-      [aggregatedMetrics]="aggregatedMetrics$ | async"
+      [metrics]="(metrics$ | async) || []"
+      [aggregatedMetrics]="(aggregatedMetrics$ | async) || []"
       [showAggregated]="showAggregated"
-      [loading]="loading$ | async"
+      [loading]="(loading$ | async) || false"
       (metricSelected)="onMetricSelected($event.name)">
     </app-metrics-table>
   </div>

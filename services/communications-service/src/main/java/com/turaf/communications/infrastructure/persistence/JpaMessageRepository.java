@@ -19,7 +19,7 @@ public interface JpaMessageRepository extends JpaRepository<Message, String> {
            "  (SELECT msg.createdAt FROM Message msg " +
            "   JOIN ReadState rs ON rs.lastReadMessageId = msg.id " +
            "   WHERE rs.userId = :userId AND rs.conversationId = :conversationId), " +
-           "  TIMESTAMP '1970-01-01 00:00:00')")
+           "  CAST('1970-01-01 00:00:00' AS timestamp))")
     int countUnreadMessages(@Param("userId") String userId, 
                            @Param("conversationId") String conversationId);
 }

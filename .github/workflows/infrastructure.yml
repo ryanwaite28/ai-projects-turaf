@@ -2,7 +2,7 @@ name: Deploy Shared Infrastructure
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'infrastructure/terraform/**'
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets[format('AWS_ROLE_{0}', upper(matrix.environment))] }}
+          role-to-assume: ${{ matrix.environment == 'dev' && secrets.AWS_ROLE_DEV || (matrix.environment == 'qa' && secrets.AWS_ROLE_QA || secrets.AWS_ROLE_PROD) }}
           aws-region: us-east-1
       
       - name: Setup Terraform
@@ -66,7 +66,7 @@ jobs:
     name: Deploy to DEV
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'dev'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'dev'
     
     steps:
       - name: Checkout code

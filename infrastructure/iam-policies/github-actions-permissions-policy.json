@@ -60,6 +60,30 @@
         "logs:PutLogEvents"
       ],
       "Resource": "arn:aws:logs:*:*:log-group:/aws/ecs/*"
+    },
+    {
+      "Sid": "ArchitectureTestReports",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::turaf-architecture-test-reports-*",
+        "arn:aws:s3:::turaf-architecture-test-reports-*/*"
+      ]
+    },
+    {
+      "Sid": "CloudFrontInvalidation",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation",
+        "cloudfront:ListInvalidations"
+      ],
+      "Resource": "arn:aws:cloudfront::*:distribution/*"
     }
   ]
 }

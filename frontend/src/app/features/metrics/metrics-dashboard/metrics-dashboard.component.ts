@@ -139,4 +139,12 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
   onMetricSelected(metricName: string): void {
     this.loadMetricTimeSeries(metricName);
   }
+  
+  /**
+   * Gets metric types from summary for iteration
+   */
+  getMetricTypes(summary: any): string[] {
+    if (!summary || !summary.metricsByType) return [];
+    return Object.keys(summary.metricsByType);
+  }
 }

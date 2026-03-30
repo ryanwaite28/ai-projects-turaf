@@ -87,7 +87,7 @@ export class ReportListComponent implements OnInit, OnDestroy {
    */
   filterByType(type: string | null): void {
     this.selectedType = type;
-    this.store.dispatch(setReportsFilters({ filters: { type: type || undefined } }));
+    this.store.dispatch(setReportsFilters({ filters: { type: type as ReportType | undefined } }));
     this.loadReports();
   }
   
@@ -96,7 +96,7 @@ export class ReportListComponent implements OnInit, OnDestroy {
    */
   filterByFormat(format: string | null): void {
     this.selectedFormat = format;
-    this.store.dispatch(setReportsFilters({ filters: { format: format || undefined } }));
+    this.store.dispatch(setReportsFilters({ filters: { format: format as ReportFormat | undefined } }));
     this.loadReports();
   }
   
@@ -105,7 +105,7 @@ export class ReportListComponent implements OnInit, OnDestroy {
    */
   filterByStatus(status: string | null): void {
     this.selectedStatus = status;
-    this.store.dispatch(setReportsFilters({ filters: { status: status || undefined } }));
+    this.store.dispatch(setReportsFilters({ filters: { status: status as ReportStatus | undefined } }));
     this.loadReports();
   }
   

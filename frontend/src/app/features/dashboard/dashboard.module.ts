@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
@@ -39,7 +40,8 @@ import { MetricsChartComponent } from './widgets/metrics-chart.component';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatButtonToggleModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatFormFieldModule
   ]
 })
 export class DashboardModule { }

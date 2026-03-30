@@ -36,6 +36,7 @@ services:
       - COMMUNICATIONS_USER_PASSWORD=${COMMUNICATIONS_USER_PASSWORD:-communications_password_change_me}
     volumes:
       - ./infrastructure/docker/ministack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+      - ./infrastructure/docker/ministack/init-lambda-services.sh:/etc/localstack/init/ready.d/init-lambda-services.sh:ro
     ports:
       - "4566:4566"
     networks:
