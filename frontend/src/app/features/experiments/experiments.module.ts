@@ -12,6 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { ExperimentsRoutingModule } from './experiments-routing.module';
 import { ExperimentListComponent } from './experiment-list/experiment-list.component';
@@ -43,7 +44,8 @@ import { ExperimentControlsComponent } from './experiment-controls/experiment-co
     MatProgressBarModule,
     MatMenuModule,
     MatChipsModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatFormFieldModule
   ]
 })
 export class ExperimentsModule { }

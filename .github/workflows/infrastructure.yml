@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets[format('AWS_ROLE_{0}', upper(matrix.environment))] }}
+          role-to-assume: ${{ matrix.environment == 'dev' && secrets.AWS_ROLE_DEV || (matrix.environment == 'qa' && secrets.AWS_ROLE_QA || secrets.AWS_ROLE_PROD) }}
           aws-region: us-east-1
       
       - name: Setup Terraform

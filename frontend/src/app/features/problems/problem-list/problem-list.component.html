@@ -29,7 +29,7 @@
       <div class="table-container">
         <table 
           mat-table 
-          [dataSource]="problems$ | async" 
+          [dataSource]="(problems$ | async) || []" 
           class="problems-table">
           
           <!-- Title Column -->

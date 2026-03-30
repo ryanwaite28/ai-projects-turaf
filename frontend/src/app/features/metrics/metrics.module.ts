@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { MetricsRoutingModule } from './metrics-routing.module';
 import { MetricsDashboardComponent } from './metrics-dashboard/metrics-dashboard.component';
@@ -37,7 +38,8 @@ import { MetricsTableComponent } from './metrics-table/metrics-table.component';
     MatTableModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatFormFieldModule
   ]
 })
 export class MetricsModule { }

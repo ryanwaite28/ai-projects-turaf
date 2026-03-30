@@ -86,7 +86,7 @@
       <div class="table-container">
         <table 
           mat-table 
-          [dataSource]="reports$ | async" 
+          [dataSource]="(reports$ | async) || []" 
           class="reports-table">
           
           <!-- Name Column -->

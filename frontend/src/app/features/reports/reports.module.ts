@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { ReportsRoutingModule } from './reports-routing.module';
 import { ReportListComponent } from './report-list/report-list.component';
@@ -39,7 +40,8 @@ import { ReportPreviewComponent } from './report-preview/report-preview.componen
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatTooltipModule,
-    MatChipsModule
+    MatChipsModule,
+    MatFormFieldModule
   ]
 })
 export class ReportsModule { }

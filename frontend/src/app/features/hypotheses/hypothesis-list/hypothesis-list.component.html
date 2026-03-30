@@ -39,7 +39,7 @@
       <div class="table-container">
         <table 
           mat-table 
-          [dataSource]="hypotheses$ | async" 
+          [dataSource]="(hypotheses$ | async) || []" 
           class="hypotheses-table">
           
           <!-- Title Column -->

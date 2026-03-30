@@ -86,7 +86,7 @@ class ExperimentServiceTest {
 **Tools**:
 - Testcontainers for container management
 - LocalStack for AWS services (free tier)
-- @MockBean for paid AWS services
+- @MockBean for paid AWS services (not mocked by MiniStack)
 - @SpringBootTest for full context
 
 **Coverage Target**: 70%+ for infrastructure layer
