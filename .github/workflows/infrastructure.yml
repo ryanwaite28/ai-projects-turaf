@@ -2,7 +2,7 @@ name: Deploy Shared Infrastructure
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/*]
     paths:
       - 'infrastructure/terraform/**'
   workflow_dispatch:
@@ -11,6 +11,7 @@ on:
         description: 'Environment to deploy'
         required: true
         type: choice
+        default: dev
         options:
           - dev
           - qa
@@ -67,6 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-plan
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'dev'
+    environment: dev
     
     steps:
       - name: Checkout code
@@ -109,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-apply-dev
     if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
-    environment: qa-infrastructure
+    environment: qa
     
     steps:
       - name: Checkout code
@@ -152,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-apply-qa
     if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
-    environment: prod-infrastructure
+    environment: prod
     
     steps:
       - name: Checkout code
