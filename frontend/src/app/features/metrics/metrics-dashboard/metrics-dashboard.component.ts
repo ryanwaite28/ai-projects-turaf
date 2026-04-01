@@ -147,4 +147,12 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
     if (!summary || !summary.metricsByType) return [];
     return Object.keys(summary.metricsByType);
   }
+  
+  /**
+   * Gets metric count for a specific type
+   */
+  getMetricCountByType(summary: any, type: string): number {
+    if (!summary || !summary.metricsByType) return 0;
+    return summary.metricsByType[type as any] || 0;
+  }
 }

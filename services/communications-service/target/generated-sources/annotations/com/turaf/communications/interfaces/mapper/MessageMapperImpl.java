@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-29T09:10:02-0500",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 21.0.10 (Amazon.com Inc.)"
+    date = "2026-03-30T06:48:14-0400",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
 public class MessageMapperImpl implements MessageMapper {
@@ -23,11 +23,11 @@ public class MessageMapperImpl implements MessageMapper {
 
         MessageDTO.MessageDTOBuilder messageDTO = MessageDTO.builder();
 
-        messageDTO.id( message.getId() );
-        messageDTO.conversationId( message.getConversationId() );
-        messageDTO.senderId( message.getSenderId() );
         messageDTO.content( message.getContent() );
+        messageDTO.conversationId( message.getConversationId() );
         messageDTO.createdAt( message.getCreatedAt() );
+        messageDTO.id( message.getId() );
+        messageDTO.senderId( message.getSenderId() );
 
         return messageDTO.build();
     }

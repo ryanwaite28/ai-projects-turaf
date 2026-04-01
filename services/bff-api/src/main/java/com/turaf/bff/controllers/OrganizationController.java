@@ -83,4 +83,41 @@ public class OrganizationController {
             .doOnComplete(() -> log.info("Retrieved members"))
             .doOnError(error -> log.error("Failed to get members for organization {}", id, error));
     }
+    
+    @PostMapping("/{id}/members")
+    public Mono<ResponseEntity<MemberDto>> addMember(
+            @PathVariable String id,
+            @Valid @RequestBody com.turaf.bff.dto.AddMemberRequest request,
+            @AuthenticationPrincipal UserContext userContext) {
+        log.info("Add member to organization: {}", id);
+        return organizationServiceClient.addMember(id, request, userContext.getUserId())
+            .map(ResponseEntity::ok)
+            .doOnSuccess(response -> log.info("Member added to organization"))
+            .doOnError(error -> log.error("Failed to add member to organization {}", id, error));
+    }
+    
+    @PatchMapping("/{id}/members/{memberId}")
+    public Mono<ResponseEntity<MemberDto>> updateMemberRole(
+            @PathVariable String id,
+            @PathVariable String memberId,
+            @Valid @RequestBody com.turaf.bff.dto.UpdateMemberRoleRequest request,
+            @AuthenticationPrincipal UserContext userContext) {
+        log.info("Update member role in organization: {}", id);
+        return organizationServiceClient.updateMemberRole(id, memberId, request, userContext.getUserId())
+            .map(ResponseEntity::ok)
+            .doOnSuccess(response -> log.info("Member role updated"))
+            .doOnError(error -> log.error("Failed to update member role in organization {}", id, error));
+    }
+    
+    @DeleteMapping("/{id}/members/{memberId}")
+    public Mono<ResponseEntity<Void>> removeMember(
+            @PathVariable String id,
+            @PathVariable String memberId,
+            @AuthenticationPrincipal UserContext userContext) {
+        log.info("Remove member from organization: {}", id);
+        return organizationServiceClient.removeMember(id, memberId, userContext.getUserId())
+            .map(ResponseEntity::ok)
+            .doOnSuccess(response -> log.info("Member removed from organization"))
+            .doOnError(error -> log.error("Failed to remove member from organization {}", id, error));
+    }
 }

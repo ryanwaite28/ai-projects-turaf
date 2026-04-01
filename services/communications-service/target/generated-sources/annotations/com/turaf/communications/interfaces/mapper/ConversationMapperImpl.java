@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-29T09:10:02-0500",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 21.0.10 (Amazon.com Inc.)"
+    date = "2026-03-30T06:48:14-0400",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
 public class ConversationMapperImpl implements ConversationMapper {
@@ -25,11 +25,11 @@ public class ConversationMapperImpl implements ConversationMapper {
 
         ConversationDTO.ConversationDTOBuilder conversationDTO = ConversationDTO.builder();
 
+        conversationDTO.createdAt( conversation.getCreatedAt() );
         conversationDTO.id( conversation.getId() );
-        conversationDTO.type( conversation.getType() );
         conversationDTO.name( conversation.getName() );
         conversationDTO.participants( toParticipantDTOList( conversation.getParticipants() ) );
-        conversationDTO.createdAt( conversation.getCreatedAt() );
+        conversationDTO.type( conversation.getType() );
         conversationDTO.updatedAt( conversation.getUpdatedAt() );
 
         return conversationDTO.build();
@@ -58,9 +58,9 @@ public class ConversationMapperImpl implements ConversationMapper {
         ParticipantDTO.ParticipantDTOBuilder participantDTO = ParticipantDTO.builder();
 
         participantDTO.id( participant.getId() );
-        participantDTO.userId( participant.getUserId() );
-        participantDTO.role( participant.getRole() );
         participantDTO.joinedAt( participant.getJoinedAt() );
+        participantDTO.role( participant.getRole() );
+        participantDTO.userId( participant.getUserId() );
 
         return participantDTO.build();
     }

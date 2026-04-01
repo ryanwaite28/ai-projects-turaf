@@ -108,4 +108,16 @@ public class ExperimentServiceClient {
             .doOnSuccess(exp -> log.debug("Experiment completed: {}", id))
             .doOnError(error -> log.error("Failed to complete experiment: {}", id, error));
     }
+    
+    public Mono<ExperimentDto> cancelExperiment(String id, String userId, String organizationId) {
+        log.debug("Calling Experiment Service: POST /experiments/{}/cancel", id);
+        return webClient.post()
+            .uri(SERVICE_PATH + "/experiments/{id}/cancel", id)
+            .header("X-User-Id", userId)
+            .header("X-Organization-Id", organizationId)
+            .retrieve()
+            .bodyToMono(ExperimentDto.class)
+            .doOnSuccess(exp -> log.debug("Experiment cancelled: {}", id))
+            .doOnError(error -> log.error("Failed to cancel experiment: {}", id, error));
+    }
 }

@@ -1,6 +1,7 @@
 package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.LoginRequest;
+import com.turaf.bff.dto.LoginResponseDto;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
@@ -20,44 +21,44 @@ public class IdentityServiceClient {
         this.webClient = webClient;
     }
     
-    public Mono<UserDto> login(LoginRequest request) {
+    public Mono<LoginResponseDto> login(LoginRequest request) {
         log.debug("Calling Identity Service: POST /auth/login");
         return webClient.post()
             .uri(SERVICE_PATH + "/auth/login")
             .bodyValue(request)
             .retrieve()
-            .bodyToMono(UserDto.class)
-            .doOnSuccess(user -> log.debug("Login successful for user: {}", user.getEmail()))
+            .bodyToMono(LoginResponseDto.class)
+            .doOnSuccess(response -> log.debug("Login successful for user: {}", response.getUser().getEmail()))
             .doOnError(error -> log.error("Failed to login", error));
     }
     
-    public Mono<UserDto> register(RegisterRequest request) {
+    public Mono<LoginResponseDto> register(RegisterRequest request) {
         log.debug("Calling Identity Service: POST /auth/register");
         return webClient.post()
             .uri(SERVICE_PATH + "/auth/register")
             .bodyValue(request)
             .retrieve()
-            .bodyToMono(UserDto.class)
-            .doOnSuccess(user -> log.debug("Registration successful for user: {}", user.getEmail()))
+            .bodyToMono(LoginResponseDto.class)
+            .doOnSuccess(response -> log.debug("Registration successful for user: {}", response.getUser().getEmail()))
             .doOnError(error -> log.error("Failed to register", error));
     }
     
-    public Mono<UserDto> getCurrentUser(String token) {
-        log.debug("Calling Identity Service: GET /auth/me");
+    public Mono<UserDto> getCurrentUser(String userId) {
+        log.debug("Calling Identity Service: GET /users/me");
         return webClient.get()
-            .uri(SERVICE_PATH + "/auth/me")
-            .header("Authorization", "Bearer " + token)
+            .uri(SERVICE_PATH + "/users/me")
+            .header("X-User-Id", userId)
             .retrieve()
             .bodyToMono(UserDto.class)
             .doOnSuccess(user -> log.debug("Retrieved current user: {}", user.getId()))
             .doOnError(error -> log.error("Failed to get current user", error));
     }
     
-    public Mono<Void> logout(String token) {
+    public Mono<Void> logout(String userId) {
         log.debug("Calling Identity Service: POST /auth/logout");
         return webClient.post()
             .uri(SERVICE_PATH + "/auth/logout")
-            .header("Authorization", "Bearer " + token)
+            .header("X-User-Id", userId)
             .retrieve()
             .bodyToMono(Void.class)
             .doOnSuccess(v -> log.debug("Logout successful"))

@@ -107,4 +107,16 @@ public class ExperimentController {
             .doOnSuccess(response -> log.info("Experiment completed"))
             .doOnError(error -> log.error("Failed to complete experiment {}", id, error));
     }
+    
+    @PostMapping("/{id}/cancel")
+    public Mono<ResponseEntity<ExperimentDto>> cancelExperiment(
+            @PathVariable String id,
+            @RequestParam String organizationId,
+            @AuthenticationPrincipal UserContext userContext) {
+        log.info("Cancel experiment: {}", id);
+        return experimentServiceClient.cancelExperiment(id, userContext.getUserId(), organizationId)
+            .map(ResponseEntity::ok)
+            .doOnSuccess(response -> log.info("Experiment cancelled"))
+            .doOnError(error -> log.error("Failed to cancel experiment {}", id, error));
+    }
 }

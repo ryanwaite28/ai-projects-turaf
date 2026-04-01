@@ -88,4 +88,39 @@ public class OrganizationServiceClient {
             .doOnComplete(() -> log.debug("Retrieved members for organization: {}", organizationId))
             .doOnError(error -> log.error("Failed to get members for organization: {}", organizationId, error));
     }
+    
+    public Mono<MemberDto> addMember(String organizationId, com.turaf.bff.dto.AddMemberRequest request, String userId) {
+        log.debug("Calling Organization Service: POST /organizations/{}/members", organizationId);
+        return webClient.post()
+            .uri(SERVICE_PATH + "/organizations/{id}/members", organizationId)
+            .header("X-User-Id", userId)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(MemberDto.class)
+            .doOnSuccess(member -> log.debug("Member added to organization: {}", organizationId))
+            .doOnError(error -> log.error("Failed to add member to organization: {}", organizationId, error));
+    }
+    
+    public Mono<MemberDto> updateMemberRole(String organizationId, String memberId, com.turaf.bff.dto.UpdateMemberRoleRequest request, String userId) {
+        log.debug("Calling Organization Service: PUT /organizations/{}/members/{}/role", organizationId, memberId);
+        return webClient.put()
+            .uri(SERVICE_PATH + "/organizations/{orgId}/members/{userId}/role", organizationId, memberId)
+            .header("X-User-Id", userId)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(MemberDto.class)
+            .doOnSuccess(member -> log.debug("Member role updated in organization: {}", organizationId))
+            .doOnError(error -> log.error("Failed to update member role in organization: {}", organizationId, error));
+    }
+    
+    public Mono<Void> removeMember(String organizationId, String memberId, String userId) {
+        log.debug("Calling Organization Service: DELETE /organizations/{}/members/{}", organizationId, memberId);
+        return webClient.delete()
+            .uri(SERVICE_PATH + "/organizations/{orgId}/members/{userId}", organizationId, memberId)
+            .header("X-User-Id", userId)
+            .retrieve()
+            .bodyToMono(Void.class)
+            .doOnSuccess(v -> log.debug("Member removed from organization: {}", organizationId))
+            .doOnError(error -> log.error("Failed to remove member from organization: {}", organizationId, error));
+    }
 }

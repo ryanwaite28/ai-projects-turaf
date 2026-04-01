@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    active: docker
+  application:
+    name: bff-api
 
 server:
   port: 8080
