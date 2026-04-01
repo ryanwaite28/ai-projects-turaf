@@ -104,7 +104,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # Organization Service
   organization-service:
@@ -139,7 +139,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # Experiment Service
   experiment-service:
@@ -174,7 +174,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # Metrics Service
   metrics-service:
@@ -209,7 +209,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # BFF API Service
   bff-api:
@@ -240,7 +240,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # Redis for WebSocket scaling
   redis:
@@ -295,7 +295,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 120s
 
   # WebSocket Gateway
   ws-gateway:

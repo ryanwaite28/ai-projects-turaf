@@ -1,8 +1,19 @@
 # Angular Frontend Specification
 
-**Source**: PROJECT.md (Section 38)
+**Source**: PROJECT.md (Section 38)  
+**Updated**: 2026-04-01 - Frontend-BFF API Alignment
 
 This specification defines the Angular frontend application for the Turaf platform.
+
+> **Note**: The frontend services have been updated to align with the BFF API implementation. Key changes include:
+> - Authentication: Updated `LoginResponse` model, added token refresh and password reset support
+> - Experiments: Added `organizationId` parameters, aligned state transitions to `/start`, `/complete`, `/cancel`
+> - Problems/Hypotheses: Removed unsupported pagination params, return arrays instead of paginated responses
+> - Metrics: Replaced general listing with `getExperimentMetrics()`, removed advanced endpoints not yet in BFF
+> - Dashboard: Updated to use `/overview` endpoint, added `getExperimentFull()` and `getOrganizationSummary()`
+> - Reports: Replaced REST CRUD with stub (reports are Lambda-generated, stored in S3)
+> 
+> See `/docs/api/api-discrepancy-report.md` for full details.
 
 ---
 

@@ -67,11 +67,13 @@ Verify GitHub secrets are configured:
 
 ### Deployment Matrix
 
-| Environment | Branch | Trigger | Approval | AWS Account |
-|-------------|--------|---------|----------|-------------|
-| **DEV** | `develop` | Automatic | None | 801651112319 |
-| **QA** | `release/*` | Automatic | Optional | 965932217544 |
-| **PROD** | `main` | Manual | Required (2) | 811783768245 |
+| Environment | Branch | Trigger | Approval | AWS Account | GitHub Environment |
+|-------------|--------|---------|----------|-------------|-------------------|
+| **DEV** | `develop` or `main` | Automatic | None | 801651112319 | `dev` |
+| **QA** | `main` | Automatic (after DEV) | Optional | 965932217544 | `qa` |
+| **PROD** | `main` | Automatic (after QA) | **Required** | 811783768245 | `prod` |
+
+**Note**: Each service uses a consolidated workflow (`service-<name>.yml`) that deploys sequentially: DEV → QA → PROD
 
 ### Deployment Components
 
@@ -101,7 +103,7 @@ git push origin feature/my-feature
 # Deployment starts automatically
 ```
 
-**Workflow**: `.github/workflows/cd-dev.yml`
+**Workflow**: `.github/workflows/vdydv
 
 **Steps**:
 1. Build Docker images
@@ -193,7 +195,7 @@ git push origin release/v1.2.0
 # Deployment starts automatically
 ```
 
-**Workflow**: `.github/workflows/cd-qa.yml`
+**Workflow**: `.github/workflows/service-<name>.yml` (deploy-qa job)
 
 **Steps**:
 1. Build Docker images
@@ -291,7 +293,7 @@ git push origin main --tags
 
 #### 4. Monitor Deployment
 
-**Workflow**: `.github/workflows/cd-prod.yml`
+**Workflow**: `.github/workflows/service-<name>.yml` (deploy-prod job)
 
 **Blue-Green Deployment Steps**:
 1. Build and push images to ECR (811783768245)

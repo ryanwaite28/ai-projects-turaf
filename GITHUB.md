@@ -78,17 +78,17 @@ All CI/CD pipelines are implemented using GitHub Actions and stored in `.github/
 
 **Environment Configuration**:
 
-1. **dev-environment**
+1. **dev**
    - Protection rules: None (auto-deploy)
    - Secrets: DEV-specific configuration
    - Reviewers: Not required
 
-2. **qa-environment**
+2. **qa**
    - Protection rules: Wait timer (5 minutes)
    - Secrets: QA-specific configuration
    - Reviewers: Optional
 
-3. **prod-environment**
+3. **prod**
    - Protection rules: Required reviewers (2 approvals)
    - Secrets: PROD-specific configuration
    - Reviewers: Team leads and senior engineers

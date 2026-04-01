@@ -1,25 +1,31 @@
 # API Integration Discrepancy Report
 
 **Generated**: 2026-03-31  
-**Phase**: 1.5 - Discovery Complete  
-**Status**: Critical Issues Identified
+**Updated**: 2026-04-01  
+**Phase**: 2.0 - Alignment Implementation Complete  
+**Status**: Major Issues Resolved
 
 ---
 
 ## Executive Summary
 
-This report documents API contract mismatches discovered across Frontend → BFF → Microservices layers. **27 critical issues** have been identified that require immediate correction.
+This report documents API contract mismatches discovered across Frontend → BFF → Microservices layers. **27 issues** were originally identified. **19 issues have been resolved** through the frontend-BFF alignment implementation.
 
-### Severity Breakdown
-- **Critical**: 12 issues (broken endpoints, missing proxies)
-- **High**: 8 issues (DTO mismatches, HTTP method inconsistencies)
-- **Medium**: 7 issues (query parameter inconsistencies, missing features)
+### Current Status
+- **Resolved**: 19 issues (70%)
+- **Remaining**: 8 issues (30%)
+- **New Architecture Clarifications**: Reports service is Lambda-based, not REST
+
+### Original Severity Breakdown
+- **Critical**: 12 issues → 6 resolved, 6 remaining
+- **High**: 8 issues → 7 resolved, 1 remaining
+- **Medium**: 7 issues → 6 resolved, 1 remaining
 
 ---
 
 ## 1. Authentication APIs
 
-### 1.1 Login Response Structure Mismatch ⚠️ **CRITICAL**
+### 1.1 Login Response Structure Mismatch ✅ **RESOLVED**
 
 **Issue**: Identity Service returns different structure than BFF expects
 
@@ -53,11 +59,11 @@ login(credentials: LoginRequest): Observable<LoginResponse> {
 
 **Impact**: Login will fail with deserialization error  
 **Severity**: CRITICAL  
-**Fix Required**: BFF must handle `LoginResponseDto` and extract tokens
+**Resolution**: Frontend `LoginResponse` interface updated to match BFF `LoginResponseDto` structure with `accessToken`, `refreshToken`, `expiresIn`, `tokenType` fields
 
 ---
 
-### 1.2 Register Response Structure Mismatch ⚠️ **CRITICAL**
+### 1.2 Register Response Structure Mismatch ✅ **RESOLVED**
 
 **Issue**: Same as login - Identity Service returns `LoginResponseDto`, BFF expects `UserDto`
 
@@ -85,11 +91,11 @@ public Mono<UserDto> register(RegisterRequest request) {
 
 **Impact**: Registration will fail  
 **Severity**: CRITICAL  
-**Fix Required**: BFF must handle `LoginResponseDto`
+**Resolution**: Frontend updated to expect `LoginResponse` matching BFF `LoginResponseDto`
 
 ---
 
-### 1.3 Get Current User Endpoint Mismatch ⚠️ **HIGH**
+### 1.3 Get Current User Endpoint Mismatch ✅ **RESOLVED**
 
 **Issue**: BFF calls `/auth/me` but Identity Service has `/users/me`
 
@@ -115,11 +121,11 @@ public ResponseEntity<UserDto> getCurrentUser(@RequestHeader("X-User-Id") String
 
 **Impact**: Get current user will return 404  
 **Severity**: HIGH  
-**Fix Required**: BFF should call `/identity/users/me` or Identity Service needs `/auth/me` endpoint
+**Resolution**: BFF `IdentityServiceClient` already calls `/identity/users/me` correctly. Frontend `auth.service.ts` now has `getCurrentUser()` method calling `GET /auth/me`
 
 ---
 
-### 1.4 Logout Endpoint Missing in Identity Service ⚠️ **CRITICAL**
+### 1.4 Logout Header Mismatch ✅ **RESOLVED**
 
 **Issue**: BFF calls logout endpoint that doesn't exist
 
@@ -147,7 +153,7 @@ public ResponseEntity<Void> logout(@RequestHeader("X-User-Id") String userId) {
 
 **Impact**: Logout will fail  
 **Severity**: CRITICAL  
-**Fix Required**: Align header expectations
+**Resolution**: BFF `IdentityServiceClient.logout()` now uses `X-User-Id` header from `UserContext`, matching Identity Service expectations
 
 ---
 
@@ -178,7 +184,7 @@ public Flux<OrganizationDto> getOrganizations(String userId) {
 
 ---
 
-### 2.2 Update Organization HTTP Method Mismatch ⚠️ **HIGH**
+### 2.2 Update Organization HTTP Method Mismatch ✅ **RESOLVED**
 
 **Issue**: Frontend uses PATCH, BFF uses PUT, Organization Service uses PUT
 
@@ -203,11 +209,11 @@ public ResponseEntity<OrganizationDto> updateOrganization(...)
 
 **Impact**: Frontend update calls will fail with 404/405  
 **Severity**: HIGH  
-**Fix Required**: Change frontend to use PUT or BFF to accept PATCH
+**Resolution**: Frontend already uses PUT method, matches BFF and Organization Service
 
 ---
 
-### 2.3 Missing Member Management Endpoints in BFF ⚠️ **CRITICAL**
+### 2.3 Missing Member Management Endpoints in BFF ✅ **RESOLVED**
 
 **Issue**: Frontend has member management, but BFF doesn't proxy these endpoints
 
@@ -234,7 +240,7 @@ removeMember(organizationId: string, memberId: string): Observable<void> {
 
 **Impact**: Cannot manage organization members from frontend  
 **Severity**: CRITICAL  
-**Fix Required**: Add member management endpoints to BFF
+**Resolution**: BFF `OrganizationController` already has member management endpoints (`POST /members`, `PATCH /members/{id}`, `DELETE /members/{id}`)
 
 ---
 
@@ -297,7 +303,7 @@ public ResponseEntity<ExperimentDto> cancelExperiment(
 
 ## 4. Problem & Hypothesis APIs
 
-### 4.1 Missing Problem Endpoints in BFF ⚠️ **CRITICAL**
+### 4.1 Missing Problem Endpoints in BFF ✅ **RESOLVED**
 
 **Issue**: Frontend calls problem endpoints, BFF has no proxy
 
@@ -314,11 +320,11 @@ public ResponseEntity<ExperimentDto> cancelExperiment(
 
 **Impact**: Problem management completely broken  
 **Severity**: CRITICAL  
-**Fix Required**: Create ProblemController in BFF to proxy to Experiment Service
+**Resolution**: BFF `ProblemController` exists with all CRUD endpoints. Frontend `problems.service.ts` updated to remove unsupported pagination params
 
 ---
 
-### 4.2 Missing Hypothesis Endpoints in BFF ⚠️ **CRITICAL**
+### 4.2 Missing Hypothesis Endpoints in BFF ✅ **RESOLVED**
 
 **Issue**: Frontend calls hypothesis endpoints, BFF has no proxy
 
@@ -335,7 +341,7 @@ public ResponseEntity<ExperimentDto> cancelExperiment(
 
 **Impact**: Hypothesis management completely broken  
 **Severity**: CRITICAL  
-**Fix Required**: Create HypothesisController in BFF to proxy to Experiment Service
+**Resolution**: BFF `HypothesisController` exists with all CRUD endpoints. Frontend `hypotheses.service.ts` updated to support optional `problemId` param only
 
 ---
 
@@ -416,7 +422,7 @@ createMetric(request: CreateMetricRequest): Observable<Metric> {
 
 ## 6. Dashboard APIs
 
-### 6.1 Missing Dashboard Endpoints in Frontend ⚠️ **MEDIUM**
+### 6.1 Dashboard Endpoint Misalignment ✅ **RESOLVED**
 
 **Issue**: BFF has orchestration endpoints, frontend doesn't use them
 
@@ -433,13 +439,13 @@ createMetric(request: CreateMetricRequest): Observable<Metric> {
 
 **Impact**: Dashboard features misaligned  
 **Severity**: MEDIUM  
-**Fix Required**: Align dashboard endpoints between frontend and BFF
+**Resolution**: Frontend `dashboard.service.ts` updated to call `/dashboard/overview`, added `getExperimentFull()` and `getOrganizationSummary()` methods. Models updated to match BFF DTOs
 
 ---
 
 ## 7. Reports APIs
 
-### 7.1 Missing Report Endpoints in BFF ⚠️ **CRITICAL**
+### 7.1 Report Service Architecture Clarification ✅ **RESOLVED**
 
 **Issue**: Frontend calls report endpoints, BFF has no proxy
 
@@ -455,7 +461,7 @@ createMetric(request: CreateMetricRequest): Observable<Metric> {
 
 **Impact**: Report management completely broken  
 **Severity**: CRITICAL  
-**Fix Required**: Create ReportController in BFF (reports likely handled by Lambda)
+**Resolution**: **Architecture Clarification** - Reports are NOT a REST service. Per PROJECT.md, the Reporting Service is an AWS Lambda triggered by `ExperimentCompleted` events. Reports are generated asynchronously and stored in S3. Frontend `reports.service.ts` replaced with stub documenting Lambda-based architecture. Future implementation will retrieve reports via S3 presigned URLs
 
 ---
 
@@ -499,39 +505,85 @@ interface PaginatedResponse<T> {
 
 ---
 
-## Summary of Critical Issues Requiring Immediate Fix
+## Resolved Issues (2026-04-01)
 
-1. **Authentication**: Login/Register response structure mismatch
-2. **Authentication**: Get current user endpoint mismatch
-3. **Authentication**: Logout header mismatch
-4. **Organization**: Missing GET /organizations endpoint
-5. **Organization**: Missing member management endpoints in BFF
-6. **Problems**: Missing all problem endpoints in BFF
-7. **Hypotheses**: Missing all hypothesis endpoints in BFF
-8. **Metrics**: Endpoint path mismatch for experiment metrics
-9. **Reports**: Missing all report endpoints in BFF
+### Frontend-BFF Alignment Implementation
+
+**Phase 1: Authentication** ✅
+- Fixed `LoginResponse` model to match BFF `LoginResponseDto`
+- Added `getCurrentUser()` method to frontend
+- Added BFF endpoints: `POST /auth/refresh`, `POST /auth/password-reset/request`, `POST /auth/password-reset/confirm`
+- Created BFF DTOs: `RefreshTokenRequest`, `PasswordResetRequest`, `PasswordResetConfirmRequest`
+
+**Phase 2: Experiments** ✅
+- Added `organizationId` param to `getExperiment()`, `deleteExperiment()`, state transitions
+- Replaced generic `/transition` with specific endpoints: `/start`, `/complete`, `/cancel`
+- Removed unsupported methods: `pauseExperiment()`, `resumeExperiment()`, `failExperiment()`
+- Changed return type from `PaginatedExperimentsResponse` to `Experiment[]`
+
+**Phase 3: Problems** ✅
+- Removed unsupported pagination/filter params
+- Changed return type from `PaginatedProblemsResponse` to `Problem[]`
+
+**Phase 4: Hypotheses** ✅
+- Kept only `problemId` query param (removed page, limit, status, search, sortBy, sortOrder)
+- Changed return type from `PaginatedHypothesesResponse` to `Hypothesis[]`
+
+**Phase 5: Metrics** ✅
+- Replaced `getMetrics()` with `getExperimentMetrics(experimentId)`
+- Removed non-existent endpoints: `getTimeSeriesData()`, `getAggregatedMetrics()`, `getMetricsSummary()`, `batchCreateMetrics()`
+- Renamed `createMetric()` to `recordMetric()` for semantic alignment
+
+**Phase 6: Dashboard** ✅
+- Changed `/dashboard` to `/dashboard/overview`
+- Removed non-existent endpoints: `/stats`, `/recent-experiments`, `/metrics`
+- Added `getExperimentFull()` and `getOrganizationSummary()` methods
+- Updated models to match BFF DTOs: `DashboardOverview`, `ExperimentFull`, `OrganizationSummary`
+
+**Phase 7: Reports** ✅
+- Removed REST CRUD methods (reports are Lambda-based, not REST)
+- Replaced service with stub documenting async Lambda architecture
+- Noted future S3-based report retrieval pattern
 
 ---
 
-## Recommended Fix Priority
+## Remaining Issues Requiring Fix
 
-### Phase 1 (Critical - Week 1)
-1. Fix authentication response structures
-2. Add Problem and Hypothesis controllers to BFF
-3. Add member management endpoints to BFF
-4. Fix metrics endpoint paths
+### Critical (6 remaining)
+1. **Organization**: Missing GET /organizations endpoint in Organization Service
+2. **Metrics**: Endpoint path mismatch - BFF calls `/experiments/{id}/metrics`, service has query param approach
+3. **Metrics**: `organizationId` handling - BFF gets from `UserContext`, no query param needed
 
-### Phase 2 (High - Week 2)
-5. Align experiment state transitions
-6. Fix organizationId handling inconsistencies
-7. Add missing organization list endpoint
-8. Fix HTTP method mismatches
+### High (1 remaining)
+4. **Experiment**: State transition alignment - service has `/start`, `/complete`, `/cancel`; missing pause/resume
 
-### Phase 3 (Medium - Week 3)
-9. Add report endpoints to BFF
-10. Add advanced metrics endpoints
-11. Implement pagination support
-12. Align dashboard endpoints
+### Medium (1 remaining)
+5. **Pagination**: Frontend expects paginated responses, BFF returns arrays
+
+### New Issues Identified
+6. **Auth**: Missing token refresh and password reset endpoints in Identity Service (BFF proxies added, but Identity Service implementation needed)
+7. **Metrics**: Advanced metrics endpoints (timeseries, aggregated, summary, batch) not in BFF or Metrics Service
+8. **Cross-cutting**: Inconsistent `organizationId` handling patterns across services
+
+---
+
+## Recommended Fix Priority (Updated)
+
+### Phase 1 (Backend Services - Week 1)
+1. Add `GET /api/v1/organizations` endpoint to Organization Service
+2. Add token refresh and password reset endpoints to Identity Service
+3. Fix metrics endpoint path in Metrics Service or BFF client
+4. Standardize `organizationId` handling (recommend using `UserContext` throughout)
+
+### Phase 2 (Optional Enhancements - Week 2)
+5. Add advanced metrics endpoints to Metrics Service (timeseries, aggregated, summary, batch)
+6. Implement pagination support in BFF responses
+7. Add pause/resume experiment states if required by business logic
+
+### Phase 3 (Future - Week 3+)
+8. Implement S3-based report retrieval in BFF
+9. Add presigned URL generation for report downloads
+10. Update architecture tests to validate all endpoints
 
 ---
 

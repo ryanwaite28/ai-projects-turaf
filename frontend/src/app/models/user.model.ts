@@ -34,5 +34,50 @@ export interface LoginRequest {
  */
 export interface LoginResponse {
   user: User;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+/**
+ * Register request payload
+ */
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+/**
+ * Token refresh request
+ */
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+/**
+ * Token refresh response
+ */
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+/**
+ * Password reset request payload
+ */
+export interface PasswordResetRequest {
+  email: string;
+}
+
+/**
+ * Password reset confirmation payload
+ */
+export interface PasswordResetConfirmRequest {
   token: string;
+  newPassword: string;
 }

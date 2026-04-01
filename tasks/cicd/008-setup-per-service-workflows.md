@@ -214,7 +214,7 @@ jobs:
   deploy:
     name: Build and Deploy to QA
     runs-on: ubuntu-latest
-    environment: qa-environment  # Requires manual approval
+    environment: qa  # Requires manual approval
     
     steps:
       # Same steps as DEV, with QA-specific values
@@ -266,7 +266,7 @@ jobs:
     name: Build and Deploy to PROD
     runs-on: ubuntu-latest
     needs: security-scan
-    environment: prod-environment  # Requires manual approval
+    environment: prod  # Requires manual approval
     
     steps:
       # Same steps as DEV/QA, with PROD-specific values

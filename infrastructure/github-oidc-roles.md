@@ -111,6 +111,19 @@ Each role has the following permissions:
 - `logs:PutLogEvents` - Write log events
   - Resources: `/aws/ecs/*` log groups
 
+### S3 (Architecture Test Reports)
+- `s3:PutObject` - Upload test reports
+- `s3:PutObjectAcl` - Set object ACLs
+- `s3:GetObject` - Download reports
+- `s3:ListBucket` - List bucket contents
+  - Resources: `turaf-architecture-test-reports-*` buckets
+
+### CloudFront (Cache Invalidation)
+- `cloudfront:CreateInvalidation` - Invalidate cache
+- `cloudfront:GetInvalidation` - Check invalidation status
+- `cloudfront:ListInvalidations` - List invalidations
+  - Resources: All CloudFront distributions
+
 ---
 
 ## Usage in GitHub Actions

@@ -2,6 +2,9 @@ package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.LoginRequest;
 import com.turaf.bff.dto.LoginResponseDto;
+import com.turaf.bff.dto.PasswordResetConfirmRequest;
+import com.turaf.bff.dto.PasswordResetRequest;
+import com.turaf.bff.dto.RefreshTokenRequest;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
@@ -63,5 +66,38 @@ public class IdentityServiceClient {
             .bodyToMono(Void.class)
             .doOnSuccess(v -> log.debug("Logout successful"))
             .doOnError(error -> log.error("Failed to logout", error));
+    }
+    
+    public Mono<LoginResponseDto> refreshToken(RefreshTokenRequest request) {
+        log.debug("Calling Identity Service: POST /auth/refresh");
+        return webClient.post()
+            .uri(SERVICE_PATH + "/auth/refresh")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(LoginResponseDto.class)
+            .doOnSuccess(response -> log.debug("Token refresh successful"))
+            .doOnError(error -> log.error("Failed to refresh token", error));
+    }
+    
+    public Mono<Void> requestPasswordReset(PasswordResetRequest request) {
+        log.debug("Calling Identity Service: POST /auth/password-reset/request");
+        return webClient.post()
+            .uri(SERVICE_PATH + "/auth/password-reset/request")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(Void.class)
+            .doOnSuccess(v -> log.debug("Password reset request successful"))
+            .doOnError(error -> log.error("Failed to request password reset", error));
+    }
+    
+    public Mono<Void> confirmPasswordReset(PasswordResetConfirmRequest request) {
+        log.debug("Calling Identity Service: POST /auth/password-reset/confirm");
+        return webClient.post()
+            .uri(SERVICE_PATH + "/auth/password-reset/confirm")
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(Void.class)
+            .doOnSuccess(v -> log.debug("Password reset confirmation successful"))
+            .doOnError(error -> log.error("Failed to confirm password reset", error));
     }
 }
