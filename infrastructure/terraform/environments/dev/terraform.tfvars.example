@@ -38,55 +38,51 @@ documentdb_instance_class     = "db.t3.medium"     # Only used if enabled
 documentdb_instance_count     = 1
 documentdb_backup_retention_days = 1
 
-# ECS Fargate - Minimal Configuration
-ecs_services = {
-  identity = {
-    cpu    = 256  # 0.25 vCPU
-    memory = 512  # 512 MB
-    count  = 1
-  }
-  organization = {
-    cpu    = 256
-    memory = 512
-    count  = 1
-  }
-  experiment = {
-    cpu    = 256
-    memory = 512
-    count  = 1
-  }
-}
+# Storage
+enable_s3_versioning        = false
+enable_separate_s3_buckets  = false
+s3_log_retention_days       = 7
+s3_backup_retention_days    = 7
 
-# Use Fargate Spot for 70% cost savings
-fargate_capacity_provider = "FARGATE_SPOT"
+# Messaging
+enable_event_archive        = false
+enable_chat_queue           = false
+enable_notification_queue   = false
+enable_report_queue         = false
+enable_sns_topics           = false
+enable_queue_alarms         = false
+event_archive_retention_days = 7
+message_retention_seconds    = 345600
+
+# Compute - Shared Infrastructure Only (services managed via CI/CD)
+acm_certificate_arn           = ""  # Optional for dev
+use_fargate_spot              = true
+enable_container_insights     = false
+
+# Lambda
+lambda_artifacts_bucket       = ""
+log_retention_days            = 7
+from_email                    = ""
+enable_event_processor        = false
+enable_notification_processor = false
+enable_report_generator       = false
+lambda_use_vpc_mode           = false
+lambda_runtime                = "nodejs20.x"
+
+# Monitoring - All disabled for cost savings
+enable_alarms       = false
+enable_dashboard    = false
+enable_sns_alerts   = false
+enable_xray         = false
+enable_log_insights = false
+alarm_email         = ""
+cpu_threshold       = 80
+memory_threshold    = 80
+response_time_threshold = 2
 
 # Tags
 tags = {
   Project     = "turaf"
   Environment = "dev"
   ManagedBy   = "terraform"
-  CostCenter  = "demo"
-  Purpose     = "portfolio"
 }
-
-# Domain
-domain_name = "turafapp.com"
-
-# ACM Certificate ARN (from Task 005)
-# Update this with your actual certificate ARN
-acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
-
-# Estimated Monthly Cost: ~$55/month (with Free Tier) or ~$67/month (after Free Tier)
-# 
-# Cost Breakdown:
-# - RDS PostgreSQL: $0 (Free Tier) or $12
-# - ECS Fargate (3 services, Spot): $15
-# - ALB: $16
-# - VPC Endpoints (2): $14
-# - S3: $2
-# - ECR: $1
-# - Secrets Manager (5): $2
-# - KMS (1): $1
-# - Route 53: $0.50
-# - CloudFront: $1
-# - CloudWatch Logs: $2

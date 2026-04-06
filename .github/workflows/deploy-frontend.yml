@@ -1,0 +1,332 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+          - qa
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: us-east-1
+
+jobs:
+  build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.upload.outputs.artifact-name }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Build application
+        working-directory: frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Upload build artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: frontend/dist
+          retention-days: 7
+
+  deploy-infrastructure-dev:
+    name: Deploy Infrastructure - DEV
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'dev'
+    environment: dev
+    outputs:
+      s3-bucket: ${{ steps.terraform-output.outputs.s3_bucket }}
+      cloudfront-id: ${{ steps.terraform-output.outputs.cloudfront_id }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
+      
+      - name: Terraform Init
+        working-directory: frontend/terraform
+        run: terraform init -backend-config="bucket=turaf-terraform-state-dev"
+      
+      - name: Terraform Plan
+        working-directory: frontend/terraform
+        run: terraform plan -var="environment=dev" -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: frontend/terraform
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Get Terraform Outputs
+        id: terraform-output
+        working-directory: frontend/terraform
+        run: |
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "s3_bucket=${S3_BUCKET}" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=${CLOUDFRONT_ID}" >> $GITHUB_OUTPUT
+
+  deploy-frontend-dev:
+    name: Deploy Frontend - DEV
+    runs-on: ubuntu-latest
+    needs: [build, deploy-infrastructure-dev]
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'dev'
+    environment: dev
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: dist
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Sync to S3
+        run: |
+          aws s3 sync dist/ s3://${{ needs.deploy-infrastructure-dev.outputs.s3-bucket }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          
+          aws s3 cp dist/index.html s3://${{ needs.deploy-infrastructure-dev.outputs.s3-bucket }}/index.html \
+            --cache-control "public, max-age=0, must-revalidate"
+      
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure-dev.outputs.cloudfront-id }} \
+            --paths "/*"
+      
+      - name: Deployment Summary
+        run: |
+          echo "## Frontend DEV Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** ${{ needs.deploy-infrastructure-dev.outputs.s3-bucket }}" >> $GITHUB_STEP_SUMMARY
+          echo "**CloudFront Distribution:** ${{ needs.deploy-infrastructure-dev.outputs.cloudfront-id }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-infrastructure-qa:
+    name: Deploy Infrastructure - QA
+    runs-on: ubuntu-latest
+    needs: deploy-frontend-dev
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
+    environment: qa
+    outputs:
+      s3-bucket: ${{ steps.terraform-output.outputs.s3_bucket }}
+      cloudfront-id: ${{ steps.terraform-output.outputs.cloudfront_id }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_QA }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
+      
+      - name: Terraform Init
+        working-directory: frontend/terraform
+        run: terraform init -backend-config="bucket=turaf-terraform-state-qa"
+      
+      - name: Terraform Plan
+        working-directory: frontend/terraform
+        run: terraform plan -var="environment=qa" -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: frontend/terraform
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Get Terraform Outputs
+        id: terraform-output
+        working-directory: frontend/terraform
+        run: |
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "s3_bucket=${S3_BUCKET}" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=${CLOUDFRONT_ID}" >> $GITHUB_OUTPUT
+
+  deploy-frontend-qa:
+    name: Deploy Frontend - QA
+    runs-on: ubuntu-latest
+    needs: [build, deploy-infrastructure-qa]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
+    environment: qa
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: dist
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_QA }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Sync to S3
+        run: |
+          aws s3 sync dist/ s3://${{ needs.deploy-infrastructure-qa.outputs.s3-bucket }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          
+          aws s3 cp dist/index.html s3://${{ needs.deploy-infrastructure-qa.outputs.s3-bucket }}/index.html \
+            --cache-control "public, max-age=0, must-revalidate"
+      
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure-qa.outputs.cloudfront-id }} \
+            --paths "/*"
+      
+      - name: Deployment Summary
+        run: |
+          echo "## Frontend QA Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** ${{ needs.deploy-infrastructure-qa.outputs.s3-bucket }}" >> $GITHUB_STEP_SUMMARY
+          echo "**CloudFront Distribution:** ${{ needs.deploy-infrastructure-qa.outputs.cloudfront-id }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-infrastructure-prod:
+    name: Deploy Infrastructure - PROD
+    runs-on: ubuntu-latest
+    needs: deploy-frontend-qa
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: prod
+    outputs:
+      s3-bucket: ${{ steps.terraform-output.outputs.s3_bucket }}
+      cloudfront-id: ${{ steps.terraform-output.outputs.cloudfront_id }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
+      
+      - name: Terraform Init
+        working-directory: frontend/terraform
+        run: terraform init -backend-config="bucket=turaf-terraform-state-prod"
+      
+      - name: Terraform Plan
+        working-directory: frontend/terraform
+        run: terraform plan -var="environment=prod" -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: frontend/terraform
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Get Terraform Outputs
+        id: terraform-output
+        working-directory: frontend/terraform
+        run: |
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          CLOUDFRONT_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "s3_bucket=${S3_BUCKET}" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=${CLOUDFRONT_ID}" >> $GITHUB_OUTPUT
+
+  deploy-frontend-prod:
+    name: Deploy Frontend - PROD
+    runs-on: ubuntu-latest
+    needs: [build, deploy-infrastructure-prod]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: prod
+    
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: dist
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Sync to S3
+        run: |
+          aws s3 sync dist/ s3://${{ needs.deploy-infrastructure-prod.outputs.s3-bucket }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html"
+          
+          aws s3 cp dist/index.html s3://${{ needs.deploy-infrastructure-prod.outputs.s3-bucket }}/index.html \
+            --cache-control "public, max-age=0, must-revalidate"
+      
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ needs.deploy-infrastructure-prod.outputs.cloudfront-id }} \
+            --paths "/*"
+      
+      - name: Deployment Summary
+        run: |
+          echo "## Frontend PROD Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** ${{ needs.deploy-infrastructure-prod.outputs.s3-bucket }}" >> $GITHUB_STEP_SUMMARY
+          echo "**CloudFront Distribution:** ${{ needs.deploy-infrastructure-prod.outputs.cloudfront-id }}" >> $GITHUB_STEP_SUMMARY

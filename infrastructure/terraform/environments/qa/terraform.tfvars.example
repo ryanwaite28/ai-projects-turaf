@@ -38,66 +38,54 @@ documentdb_instance_class     = "db.t3.medium"
 documentdb_instance_count     = 1
 documentdb_backup_retention_days = 3
 
-# ECS Fargate - More resources for testing
-identity_service_cpu           = 512   # 0.5 vCPU
-identity_service_memory        = 1024  # 1 GB
-identity_service_desired_count = 2     # 2 tasks for redundancy
+# Storage
+enable_s3_versioning        = false
+enable_separate_s3_buckets  = false
+s3_log_retention_days       = 7
+s3_backup_retention_days    = 7
 
-organization_service_cpu           = 512
-organization_service_memory        = 1024
-organization_service_desired_count = 2
+# Messaging
+enable_event_archive        = false
+enable_chat_queue           = false
+enable_notification_queue   = false
+enable_report_queue         = false
+enable_sns_topics           = false
+enable_queue_alarms         = false
+event_archive_retention_days = 7
+message_retention_seconds    = 345600
 
-experiment_service_cpu           = 512
-experiment_service_memory        = 1024
-experiment_service_desired_count = 2
+# Compute - Shared Infrastructure Only (services managed via CI/CD)
+acm_certificate_arn           = ""  # Optional for QA
+use_fargate_spot              = true
+enable_container_insights     = false
 
-# Use Fargate Spot for cost savings
-use_fargate_spot          = true
-enable_container_insights = false  # Can enable for testing
-enable_autoscaling        = false  # Can enable for load testing
-
-# Optional Services - Still disabled
-enable_metrics_service      = false
-enable_reporting_service    = false
-enable_notification_service = false
-
-# Lambda - Still disabled
+# Lambda
+lambda_artifacts_bucket       = ""
+log_retention_days            = 14
+from_email                    = ""
 enable_event_processor        = false
 enable_notification_processor = false
 enable_report_generator       = false
+lambda_use_vpc_mode           = false
+lambda_runtime                = "nodejs20.x"
 
 # Monitoring - Can enable for testing
-enable_alarms       = false  # Can enable for testing
-enable_dashboard    = false  # Can enable for testing
+enable_alarms       = false
+enable_dashboard    = false
 enable_sns_alerts   = false
-enable_xray         = false  # Can enable for tracing tests
+enable_xray         = false
 enable_log_insights = false
-
-# Logging - Longer retention for testing
-log_retention_days = 14
+alarm_email         = ""
+cpu_threshold       = 80
+memory_threshold    = 80
+response_time_threshold = 2
 
 # Tags
 tags = {
   Project     = "turaf"
   Environment = "qa"
   ManagedBy   = "terraform"
-  CostCenter  = "testing"
-  Purpose     = "quality-assurance"
 }
-
-# Domain
-domain_name = "turafapp.com"
-
-# ACM Certificate ARN (from Task 005)
-# Update this with your actual certificate ARN
-acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
-
-# ECR Image URLs (from Task 011)
-# Update these with your actual ECR repository URLs
-identity_service_image     = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/identity-service"
-organization_service_image = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/organization-service"
-experiment_service_image   = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/experiment-service"
-image_tag                  = "qa-latest"
 
 # Estimated Monthly Cost: ~$70-90/month
 # 

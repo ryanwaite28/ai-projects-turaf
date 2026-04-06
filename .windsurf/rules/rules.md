@@ -8,23 +8,27 @@
 
 ## 1. Documentation Hierarchy & Single Source of Truth
 
-### 1.1 Authoritative Sources
+### 1.1 Authoritative Source
 
-**CRITICAL**: Always verify alignment with these authoritative documents before making changes:
+**CRITICAL**: PROJECT.md is the single authoritative source for all project documentation.
 
-- **PROJECT.md** - Ultimate system design authority. All changes MUST align with this document.
-- **AWS_ACCOUNTS.md** - Authoritative for AWS account IDs, ARNs, and organization structure.
-- **GITHUB.md** - Authoritative for repository structure, CI/CD workflows, and IAM role ARNs.
-- **DOCUMENTATION_INDEX.md** - Master navigation index for all documentation.
+All changes MUST align with PROJECT.md, which contains:
+- Complete system architecture and design
+- AWS account structure and multi-account strategy (§ 2)
+- GitHub repository configuration and CI/CD workflows (§ 3)
+- Local development setup and troubleshooting (§ 22a)
+- Deployment procedures and operational runbooks
+- Testing strategy and architecture decision records (§ 17)
+- All infrastructure and service specifications
 
 ### 1.2 Documentation Layers (Strict Hierarchy)
 
 ```
-PROJECT.md (What & Why - AUTHORITATIVE)
+PROJECT.md (Single Source of Truth - AUTHORITATIVE)
     ↓
-Specifications in specs/ (What to Build)
+Specifications in specs/ (Detailed Service Specs)
     ↓
-Tasks in tasks/ (How to Build)
+Tasks in tasks/ (Implementation Tracking)
     ↓
 Implementation Plans in .windsurf/plans/ (Execution Details)
     ↓
@@ -36,12 +40,11 @@ Code Implementation
 ### 1.3 Before Any Implementation
 
 **MANDATORY CHECKS**:
-- [ ] Read PROJECT.md for context
-- [ ] Check DOCUMENTATION_INDEX.md for existing related docs
+- [ ] Read PROJECT.md for authoritative context
 - [ ] Review relevant specs in specs/
 - [ ] Check existing tasks in tasks/
 - [ ] Look for completed plans in .windsurf/plans/completed/ for patterns
-- [ ] Verify no conflicts with authoritative sources
+- [ ] Verify no conflicts with PROJECT.md
 
 ---
 
@@ -49,7 +52,7 @@ Code Implementation
 
 ### 2.1 AWS Account IDs (NEVER HARDCODE INCORRECTLY)
 
-**Authoritative Source**: AWS_ACCOUNTS.md
+**Authoritative Source**: PROJECT.md § 2 (AWS Account Architecture)
 
 | Account | ID | Email | Purpose |
 |---------|------------|-------|---------|
@@ -59,11 +62,11 @@ Code Implementation
 | qa | 965932217544 | aws-qa@turafapp.com | QA/Staging |
 | prod | 811783768245 | aws-prod@turafapp.com | Production |
 
-**Rule**: Always reference AWS_ACCOUNTS.md when using account IDs. NEVER guess or use placeholder values.
+**Rule**: Always reference PROJECT.md § 2 when using account IDs. NEVER guess or use placeholder values.
 
 ### 2.2 IAM Roles & OIDC
 
-**Authoritative Source**: GITHUB.md
+**Authoritative Source**: PROJECT.md § 3 (CI/CD Integration)
 
 - **Role Name Pattern**: `GitHubActionsDeploymentRole` (consistent across all accounts)
 - **OIDC Provider**: `token.actions.githubusercontent.com`
@@ -98,7 +101,7 @@ Code Implementation
 
 ### 3.1 Branch Strategy
 
-**Authoritative Source**: GITHUB.md
+**Authoritative Source**: PROJECT.md § 3 (GitHub Repository)
 
 - **main** - Production-ready, deploys to PROD (811783768245)
 - **develop** - Development branch, deploys to DEV (801651112319)
@@ -590,12 +593,11 @@ mvn test
 ### 12.1 Context Gathering (Phase 1)
 
 **MANDATORY WORKFLOW**:
-1. Start with DOCUMENTATION_INDEX.md
-2. Read PROJECT.md for authoritative context
-3. Check relevant specs in specs/
-4. Review existing tasks in tasks/
-5. Look for patterns in .windsurf/plans/completed/
-6. Check ADRs for architectural decisions
+1. Read PROJECT.md for authoritative context (single source of truth)
+2. Check relevant specs in specs/
+3. Review existing tasks in tasks/
+4. Look for patterns in .windsurf/plans/completed/
+5. Check ADRs in PROJECT.md § 17 for architectural decisions
 
 **Rule**: ALWAYS gather context before implementation. Use code_search for efficiency.
 
@@ -628,9 +630,7 @@ mvn test
 - [ ] Related tasks marked complete
 - [ ] Cross-references added
 - [ ] Plan moved to completed/
-- [ ] ADR created (if architectural change)
-- [ ] Changelog created (if PROJECT.md modified)
-- [ ] DOCUMENTATION_INDEX.md updated (if major docs added)
+- [ ] ADR added to PROJECT.md § 17 (if architectural change)
 - [ ] All tests passing
 - [ ] Code coverage maintained/improved
 
@@ -750,14 +750,10 @@ With proper documentation and workflow adherence:
 
 | Purpose | Document |
 |---------|----------|
-| System Overview | PROJECT.md |
-| Find Anything | DOCUMENTATION_INDEX.md |
-| Architecture | specs/architecture.md |
-| Best Practices | BEST_PRACTICES.md |
-| AWS Accounts | AWS_ACCOUNTS.md |
-| GitHub/CI/CD | GITHUB.md |
-| Deployment | docs/operations/RUNBOOKS.md |
-| Troubleshooting | docs/troubleshooting/COMMON_ISSUES.md |
+| **Everything** | **PROJECT.md** (Single Source of Truth) |
+| Service Details | specs/[service]-service.md |
+| Implementation Tasks | tasks/ |
+| Completed Patterns | .windsurf/plans/completed/ |
 
 ### 16.2 Critical Commands
 
@@ -803,9 +799,5 @@ These rules are **MANDATORY** for all development work on the Turaf platform.
 **Maintained By**: Development Team  
 **Review Frequency**: Monthly  
 **Related Documents**: 
-- [PROJECT.md](../PROJECT.md)
-- [BEST_PRACTICES.md](../BEST_PRACTICES.md)
-- [GITHUB.md](../GITHUB.md)
-- [AWS_ACCOUNTS.md](../AWS_ACCOUNTS.md)
-- [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md)
-- [Project Workflow](workflows/project.md)
+- [PROJECT.md](../../PROJECT.md) - Single source of truth for all project documentation
+- [Project Workflow](../workflows/project.md)
