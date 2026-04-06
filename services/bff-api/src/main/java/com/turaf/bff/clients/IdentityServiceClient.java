@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 public class IdentityServiceClient {
     
     private final WebClient webClient;
-    private static final String SERVICE_PATH = "/identity";
+    private static final String SERVICE_PATH = "/api/v1";
     
     public IdentityServiceClient(@Qualifier("identityWebClient") WebClient webClient) {
         this.webClient = webClient;

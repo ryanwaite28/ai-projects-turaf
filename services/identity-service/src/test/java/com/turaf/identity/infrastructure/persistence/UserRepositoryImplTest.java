@@ -48,7 +48,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
 
         // When
         User saved = userRepository.save(user);
@@ -57,7 +57,7 @@ class UserRepositoryImplTest {
         assertNotNull(saved);
         assertEquals(userId, saved.getId());
         assertEquals(email, saved.getEmail());
-        assertEquals("Test User", saved.getName());
+        assertEquals("testuser", saved.getUsername());
     }
 
     @Test
@@ -66,7 +66,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         userRepository.save(user);
 
         // When
@@ -76,7 +76,7 @@ class UserRepositoryImplTest {
         assertTrue(found.isPresent());
         assertEquals(userId, found.get().getId());
         assertEquals(email, found.get().getEmail());
-        assertEquals("Test User", found.get().getName());
+        assertEquals("testuser", found.get().getUsername());
     }
 
     @Test
@@ -97,7 +97,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         userRepository.save(user);
 
         // When
@@ -127,7 +127,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         userRepository.save(user);
 
         // When
@@ -145,19 +145,21 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         userRepository.save(user);
 
         // When
-        user.updateProfile("Updated Name");
+        user.updateProfile("Updated", "Name");
         User updated = userRepository.save(user);
 
         // Then
-        assertEquals("Updated Name", updated.getName());
+        assertEquals("Updated", updated.getFirstName());
+        assertEquals("Name", updated.getLastName());
         
         Optional<User> found = userRepository.findById(userId);
         assertTrue(found.isPresent());
-        assertEquals("Updated Name", found.get().getName());
+        assertEquals("Updated", found.get().getFirstName());
+        assertEquals("Name", found.get().getLastName());
     }
 
     @Test
@@ -166,7 +168,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         userRepository.save(user);
 
         // When
@@ -182,15 +184,21 @@ class UserRepositoryImplTest {
         // Given
         User user1 = new User(
             UserId.generate(),
+            "org-1",
             new Email("user1@example.com"),
             Password.fromRaw("SecureP@ss123", mockEncoder),
-            "User 1"
+            "user1",
+            "User",
+            "One"
         );
         User user2 = new User(
             UserId.generate(),
+            "org-1",
             new Email("user2@example.com"),
             Password.fromRaw("SecureP@ss123", mockEncoder),
-            "User 2"
+            "user2",
+            "User",
+            "Two"
         );
         userRepository.save(user1);
         userRepository.save(user2);
@@ -208,15 +216,21 @@ class UserRepositoryImplTest {
         Email email = new Email("test@example.com");
         User user1 = new User(
             UserId.generate(),
+            "org-1",
             email,
             Password.fromRaw("SecureP@ss123", mockEncoder),
-            "User 1"
+            "user1",
+            "User",
+            "One"
         );
         User user2 = new User(
             UserId.generate(),
+            "org-1",
             email,
             Password.fromRaw("SecureP@ss123", mockEncoder),
-            "User 2"
+            "user2",
+            "User",
+            "Two"
         );
 
         // When
@@ -234,7 +248,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
 
         // When
         User saved = userRepository.save(user);
@@ -251,7 +265,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
 
         // When
         User saved = userRepository.save(user);
@@ -271,7 +285,7 @@ class UserRepositoryImplTest {
         UserId userId = UserId.generate();
         Email email = new Email("test@example.com");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-1", email, password, "testuser", "Test", "User");
         
         // User has domain events from creation
         assertEquals(1, user.getDomainEvents().size());

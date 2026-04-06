@@ -162,7 +162,7 @@ ai-projects-turaf/
 ├── services/               # Backend microservices (Spring Boot)
 ├── frontend/               # Angular web application
 ├── infrastructure/         # Terraform infrastructure as code
-├── libs/                   # Shared libraries and domain models
+├── libs/                   # Shared libraries and domain models (planned, not yet created)
 ├── .github/workflows/      # GitHub Actions CI/CD pipelines
 ├── docs/                   # Architecture documentation
 ├── specs/                  # Technical specifications
@@ -205,7 +205,7 @@ The system must support:
 
 ---
 
-# 3. Skills Demonstrated
+# 5. Skills Demonstrated
 
 This project demonstrates capabilities expected from **Senior / Staff / Principal Engineers**.
 
@@ -250,7 +250,7 @@ This project demonstrates capabilities expected from **Senior / Staff / Principa
 
 ---
 
-# 4. Product Concept
+# 5a. Product Concept
 
 ## Problem
 
@@ -507,7 +507,7 @@ ExperimentCompleted
 
 High-level architecture components:
 
-Frontend (React)
+Frontend (Angular)
 
 API Layer
 
@@ -746,7 +746,7 @@ services/
 
 infrastructure/
 
-libs/
+libs/                        (planned, not yet created)
 
 .github/workflows/
 
@@ -1398,9 +1398,9 @@ Core system flow:
 
 Client
 
--> API Gateway
+-> Public ALB
 
--> API Service
+-> BFF API Service
 
 -> Domain Logic
 
@@ -1418,7 +1418,7 @@ Client
 
 ### Frontend
 
-React based web application.
+Angular based web application.
 
 Responsibilities:
 
@@ -1822,13 +1822,13 @@ services/
   reporting-service/
   notification-service/
 
-libs/
+libs/                        # Planned: shared libraries (not yet created)
   domain-model/
   event-models/
   shared-utils/
 
 infrastructure/
-  cloudformation/
+  terraform/
   environments/
 
 .github/
@@ -2222,11 +2222,13 @@ These diagrams represent the intended architecture and should be kept synchroniz
 graph TD
 
 User --> Frontend
-Frontend --> APIGateway
+Frontend --> PublicALB
 
-APIGateway --> IdentityService
-APIGateway --> ExperimentService
-APIGateway --> MetricsService
+PublicALB --> BFF_API
+BFF_API --> InternalALB
+InternalALB --> IdentityService
+InternalALB --> ExperimentService
+InternalALB --> MetricsService
 
 ExperimentService --> Database
 MetricsService --> Database
@@ -2294,9 +2296,12 @@ graph TD
 User --> CloudFront
 CloudFront --> AngularApp
 
-AngularApp --> APIGateway
+AngularApp --> PublicALB
 
-APIGateway --> ECSCluster
+PublicALB --> BFF_API
+BFF_API --> InternalALB
+
+InternalALB --> ECSCluster
 
 subgraph ECSCluster
 
@@ -2407,8 +2412,7 @@ Compute
 
 Networking
 - Amazon VPC
-- Application Load Balancer
-- API Gateway
+- Application Load Balancers (Public + Internal)
 
 Storage
 - Amazon RDS (PostgreSQL)
@@ -2487,7 +2491,7 @@ The platform must support multiple deployment environments, each deployed to a s
 
 **Network Isolation**:
 - No VPC peering between environments
-- API Gateway endpoints per environment
+- ALB endpoints per environment
 - Separate CloudFront distributions
 - Environment-specific DNS records
 

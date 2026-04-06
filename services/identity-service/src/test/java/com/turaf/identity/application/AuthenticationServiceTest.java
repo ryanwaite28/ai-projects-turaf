@@ -33,15 +33,26 @@ class AuthenticationServiceTest {
     @Mock
     private EventPublisher eventPublisher;
 
-    @InjectMocks
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
     private AuthenticationService authenticationService;
 
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_PASSWORD = "SecureP@ss123";
-    private static final String TEST_NAME = "Test User";
+    private static final String TEST_USERNAME = "testuser";
+    private static final String TEST_FIRST_NAME = "Test";
+    private static final String TEST_LAST_NAME = "User";
+    private static final String TEST_ORG_ID = "org-123";
+
+    private static final long PASSWORD_RESET_EXPIRATION = 3600000L;
 
     @BeforeEach
     void setUp() {
+        authenticationService = new AuthenticationService(
+            userRepository, passwordEncoder, eventPublisher,
+            passwordResetTokenRepository, PASSWORD_RESET_EXPIRATION
+        );
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
     }
@@ -49,7 +60,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldRegisterNewUser() {
         // Given
-        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_NAME);
+        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -59,7 +70,9 @@ class AuthenticationServiceTest {
         // Then
         assertNotNull(result);
         assertEquals(TEST_EMAIL, result.getEmail());
-        assertEquals(TEST_NAME, result.getName());
+        assertEquals(TEST_USERNAME, result.getUsername());
+        assertEquals(TEST_FIRST_NAME, result.getFirstName());
+        assertEquals(TEST_LAST_NAME, result.getLastName());
         assertNotNull(result.getId());
         assertNotNull(result.getCreatedAt());
 
@@ -72,7 +85,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldThrowExceptionWhenRegisteringDuplicateEmail() {
         // Given
-        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_NAME);
+        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(true);
 
         // When & Then
@@ -89,7 +102,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldPublishUserCreatedEventOnRegistration() {
         // Given
-        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_NAME);
+        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -103,7 +116,7 @@ class AuthenticationServiceTest {
         UserCreated event = eventCaptor.getValue();
         assertNotNull(event);
         assertEquals(TEST_EMAIL, event.getEmail());
-        assertEquals(TEST_NAME, event.getName());
+        assertEquals(TEST_USERNAME, event.getUsername());
     }
 
     @Test
@@ -113,7 +126,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(TEST_PASSWORD, "hashed_password")).thenReturn(true);
@@ -125,7 +138,7 @@ class AuthenticationServiceTest {
         assertNotNull(result);
         assertEquals(userId.getValue(), result.getId());
         assertEquals(TEST_EMAIL, result.getEmail());
-        assertEquals(TEST_NAME, result.getName());
+        assertEquals(TEST_USERNAME, result.getUsername());
 
         verify(userRepository).findByEmail(any(Email.class));
     }
@@ -152,7 +165,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("WrongP@ss456", "hashed_password")).thenReturn(false);
@@ -172,7 +185,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         ChangePasswordRequest request = new ChangePasswordRequest(TEST_PASSWORD, "NewP@ssw0rd!");
 
@@ -197,7 +210,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         ChangePasswordRequest request = new ChangePasswordRequest("WrongP@ss456", "NewP@ssw0rd!");
 
@@ -239,7 +252,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         ChangePasswordRequest request = new ChangePasswordRequest(TEST_PASSWORD, "NewP@ssw0rd!");
 
@@ -266,7 +279,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -277,7 +290,7 @@ class AuthenticationServiceTest {
         assertNotNull(result);
         assertEquals(userId.getValue(), result.getId());
         assertEquals(TEST_EMAIL, result.getEmail());
-        assertEquals(TEST_NAME, result.getName());
+        assertEquals(TEST_USERNAME, result.getUsername());
 
         verify(userRepository).findById(userId);
     }
@@ -303,7 +316,7 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
         when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(user));
 
@@ -314,7 +327,7 @@ class AuthenticationServiceTest {
         assertNotNull(result);
         assertEquals(userId.getValue(), result.getId());
         assertEquals(TEST_EMAIL, result.getEmail());
-        assertEquals(TEST_NAME, result.getName());
+        assertEquals(TEST_USERNAME, result.getUsername());
 
         verify(userRepository).findByEmail(any(Email.class));
     }
@@ -338,19 +351,21 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
-        String newName = "Updated Name";
+        String newFirstName = "Updated";
+        String newLastName = "Name";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        UserDto result = authenticationService.updateProfile(userId, newName);
+        UserDto result = authenticationService.updateProfile(userId, newFirstName, newLastName);
 
         // Then
         assertNotNull(result);
-        assertEquals(newName, result.getName());
+        assertEquals(newFirstName, result.getFirstName());
+        assertEquals(newLastName, result.getLastName());
 
         verify(userRepository).findById(userId);
         verify(userRepository).save(any(User.class));
@@ -363,15 +378,16 @@ class AuthenticationServiceTest {
         UserId userId = UserId.generate();
         Email email = new Email(TEST_EMAIL);
         Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
-        User user = new User(userId, email, password, TEST_NAME);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
 
-        String newName = "Updated Name";
+        String newFirstName = "Updated";
+        String newLastName = "Name";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        authenticationService.updateProfile(userId, newName);
+        authenticationService.updateProfile(userId, newFirstName, newLastName);
 
         // Then
         ArgumentCaptor<UserProfileUpdated> eventCaptor = ArgumentCaptor.forClass(UserProfileUpdated.class);
@@ -380,7 +396,7 @@ class AuthenticationServiceTest {
         UserProfileUpdated event = eventCaptor.getValue();
         assertNotNull(event);
         assertEquals(userId.getValue(), event.getUserId());
-        assertEquals(newName, event.getName());
+        assertEquals("Updated Name", event.getName());
     }
 
     @Test
@@ -391,7 +407,7 @@ class AuthenticationServiceTest {
 
         // When & Then
         UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-            authenticationService.updateProfile(userId, "New Name");
+            authenticationService.updateProfile(userId, "New", "Name");
         });
 
         assertEquals("User not found", exception.getMessage());
@@ -402,7 +418,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldValidateEmailFormatDuringRegistration() {
         // Given
-        RegisterRequest request = new RegisterRequest("invalid-email", TEST_PASSWORD, TEST_NAME);
+        RegisterRequest request = new RegisterRequest("invalid-email", TEST_PASSWORD, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
@@ -416,7 +432,7 @@ class AuthenticationServiceTest {
     @Test
     void shouldValidatePasswordStrengthDuringRegistration() {
         // Given
-        RegisterRequest request = new RegisterRequest(TEST_EMAIL, "weak", TEST_NAME);
+        RegisterRequest request = new RegisterRequest(TEST_EMAIL, "weak", TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
 
         // When & Then
@@ -428,9 +444,82 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    void shouldRequestPasswordResetForExistingUser() {
+        // Given
+        UserId userId = UserId.generate();
+        Email email = new Email(TEST_EMAIL);
+        Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
+
+        PasswordResetRequest request = new PasswordResetRequest(TEST_EMAIL);
+        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(user));
+
+        // When
+        authenticationService.requestPasswordReset(request);
+
+        // Then
+        verify(passwordResetTokenRepository).deleteByUserId(userId);
+        verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
+    }
+
+    @Test
+    void shouldNotThrowWhenRequestingPasswordResetForNonExistentEmail() {
+        // Given
+        PasswordResetRequest request = new PasswordResetRequest("nonexistent@example.com");
+        when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.empty());
+
+        // When - should not throw (prevents email enumeration)
+        authenticationService.requestPasswordReset(request);
+
+        // Then
+        verify(passwordResetTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldConfirmPasswordReset() {
+        // Given
+        UserId userId = UserId.generate();
+        Email email = new Email(TEST_EMAIL);
+        Password password = Password.fromRaw(TEST_PASSWORD, passwordEncoder);
+        User user = new User(userId, TEST_ORG_ID, email, password, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME);
+
+        PasswordResetToken resetToken = PasswordResetToken.create(userId, PASSWORD_RESET_EXPIRATION);
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest(resetToken.getToken(), "NewP@ssw0rd!");
+
+        when(passwordResetTokenRepository.findByToken(resetToken.getToken())).thenReturn(Optional.of(resetToken));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewP@ssw0rd!")).thenReturn("new_hashed_password");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        authenticationService.confirmPasswordReset(request);
+
+        // Then
+        verify(passwordResetTokenRepository).findByToken(resetToken.getToken());
+        verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
+        verify(userRepository).save(any(User.class));
+        verify(eventPublisher).publish(any(UserPasswordChanged.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenConfirmingWithInvalidToken() {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("invalid-token", "NewP@ssw0rd!");
+        when(passwordResetTokenRepository.findByToken("invalid-token")).thenReturn(Optional.empty());
+
+        // When & Then
+        InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> {
+            authenticationService.confirmPasswordReset(request);
+        });
+
+        assertEquals("Invalid password reset token", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void shouldClearDomainEventsAfterPublishing() {
         // Given
-        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_NAME);
+        RegisterRequest request = new RegisterRequest(TEST_EMAIL, TEST_PASSWORD, TEST_USERNAME, TEST_FIRST_NAME, TEST_LAST_NAME, TEST_ORG_ID);
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
         
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);

@@ -65,9 +65,7 @@ X-Organization-Id: {organization-id}
 ```json
 {
   "title": "Low user engagement on dashboard",
-  "description": "Users spend less than 2 minutes on the dashboard",
-  "affectedUsers": "All users",
-  "context": "Dashboard was redesigned 3 months ago"
+  "description": "Users spend less than 2 minutes on the dashboard"
 }
 ```
 
@@ -78,10 +76,9 @@ X-Organization-Id: {organization-id}
   "organizationId": "uuid",
   "title": "Low user engagement on dashboard",
   "description": "Users spend less than 2 minutes on the dashboard",
-  "affectedUsers": "All users",
-  "context": "Dashboard was redesigned 3 months ago",
   "createdBy": "uuid",
-  "createdAt": "ISO-8601"
+  "createdAt": "ISO-8601",
+  "updatedAt": "ISO-8601"
 }
 ```
 

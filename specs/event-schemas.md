@@ -48,10 +48,9 @@ All events must follow this standardized envelope structure:
 ```json
 {
   "problemId": "uuid",
+  "organizationId": "uuid",
   "title": "string",
   "description": "string",
-  "affectedUsers": "string",
-  "context": "string",
   "createdBy": "uuid",
   "createdAt": "ISO-8601"
 }
@@ -59,10 +58,9 @@ All events must follow this standardized envelope structure:
 
 **Payload Fields**:
 - `problemId` (UUID): Unique problem identifier
+- `organizationId` (UUID): Organization/tenant identifier
 - `title` (String): Problem title (1-200 chars)
-- `description` (String): Detailed description (1-5000 chars)
-- `affectedUsers` (String): Description of affected users
-- `context` (String): Additional context
+- `description` (String): Detailed description
 - `createdBy` (UUID): User who created the problem
 - `createdAt` (ISO-8601): Creation timestamp
 
@@ -77,10 +75,9 @@ All events must follow this standardized envelope structure:
   "organizationId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
   "payload": {
     "problemId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "organizationId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
     "title": "Low user engagement on dashboard",
     "description": "Users spend less than 2 minutes on the dashboard",
-    "affectedUsers": "All users",
-    "context": "Dashboard was redesigned 3 months ago",
     "createdBy": "9f8e7d6c-5b4a-3210-fedc-ba0987654321",
     "createdAt": "2024-03-14T22:30:00.000Z"
   }

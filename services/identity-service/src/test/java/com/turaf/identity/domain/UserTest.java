@@ -29,14 +29,16 @@ class UserTest {
     @Test
     void shouldCreateUserWithValidData() {
         // When
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // Then
         assertNotNull(user);
         assertEquals(userId, user.getId());
         assertEquals(email, user.getEmail());
         assertEquals(password, user.getPassword());
-        assertEquals("John Doe", user.getName());
+        assertEquals("johndoe", user.getUsername());
+        assertEquals("John", user.getFirstName());
+        assertEquals("Doe", user.getLastName());
         assertNotNull(user.getCreatedAt());
         assertNotNull(user.getUpdatedAt());
     }
@@ -44,7 +46,7 @@ class UserTest {
     @Test
     void shouldPublishUserCreatedEvent() {
         // When
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // Then
         assertEquals(1, user.getDomainEvents().size());
@@ -53,14 +55,14 @@ class UserTest {
         UserCreated event = (UserCreated) user.getDomainEvents().get(0);
         assertEquals(userId.getValue(), event.getUserId());
         assertEquals(email.getValue(), event.getEmail());
-        assertEquals("John Doe", event.getName());
+        assertEquals("johndoe", event.getUsername());
     }
 
     @Test
     void shouldThrowExceptionForNullEmail() {
         // When & Then
         assertThrows(NullPointerException.class, () -> {
-            new User(userId, null, password, "John Doe");
+            new User(userId, "org-1", null, password, "johndoe", "John", "Doe");
         });
     }
 
@@ -68,50 +70,50 @@ class UserTest {
     void shouldThrowExceptionForNullPassword() {
         // When & Then
         assertThrows(NullPointerException.class, () -> {
-            new User(userId, email, null, "John Doe");
+            new User(userId, "org-1", email, null, "johndoe", "John", "Doe");
         });
     }
 
     @Test
-    void shouldThrowExceptionForNullName() {
+    void shouldThrowExceptionForNullUsername() {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            new User(userId, email, password, null);
+            new User(userId, "org-1", email, password, null, "John", "Doe");
         });
     }
 
     @Test
-    void shouldThrowExceptionForBlankName() {
+    void shouldThrowExceptionForBlankFirstName() {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            new User(userId, email, password, "   ");
+            new User(userId, "org-1", email, password, "johndoe", "   ", "Doe");
         });
     }
 
     @Test
-    void shouldThrowExceptionForNameExceeding100Characters() {
+    void shouldThrowExceptionForNameExceeding50Characters() {
         // Given
-        String longName = "a".repeat(101);
+        String longName = "a".repeat(51);
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            new User(userId, email, password, longName);
+            new User(userId, "org-1", email, password, "johndoe", longName, "Doe");
         });
     }
 
     @Test
-    void shouldTrimName() {
+    void shouldTrimUsername() {
         // When
-        User user = new User(userId, email, password, "  John Doe  ");
+        User user = new User(userId, "org-1", email, password, "  johndoe  ", "John", "Doe");
 
         // Then
-        assertEquals("John Doe", user.getName());
+        assertEquals("johndoe", user.getUsername());
     }
 
     @Test
     void shouldUpdatePassword() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         user.clearDomainEvents();
         
         Password newPassword = Password.fromRaw("NewP@ssw0rd!", mockEncoder);
@@ -128,7 +130,7 @@ class UserTest {
     @Test
     void shouldPublishPasswordChangedEvent() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         user.clearDomainEvents();
         
         Password newPassword = Password.fromRaw("NewP@ssw0rd!", mockEncoder);
@@ -145,7 +147,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenUpdatingWithNullPassword() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When & Then
         assertThrows(NullPointerException.class, () -> {
@@ -156,14 +158,15 @@ class UserTest {
     @Test
     void shouldUpdateProfile() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         user.clearDomainEvents();
 
         // When
-        user.updateProfile("Jane Smith");
+        user.updateProfile("Jane", "Smith");
 
         // Then
-        assertEquals("Jane Smith", user.getName());
+        assertEquals("Jane", user.getFirstName());
+        assertEquals("Smith", user.getLastName());
         assertEquals(1, user.getDomainEvents().size());
         assertTrue(user.getDomainEvents().get(0) instanceof UserProfileUpdated);
     }
@@ -171,11 +174,11 @@ class UserTest {
     @Test
     void shouldPublishProfileUpdatedEvent() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         user.clearDomainEvents();
 
         // When
-        user.updateProfile("Jane Smith");
+        user.updateProfile("Jane", "Smith");
 
         // Then
         UserProfileUpdated event = (UserProfileUpdated) user.getDomainEvents().get(0);
@@ -185,24 +188,24 @@ class UserTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingWithNullName() {
+    void shouldThrowExceptionWhenUpdatingWithNullFirstName() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            user.updateProfile(null);
+            user.updateProfile(null, "Smith");
         });
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingWithBlankName() {
+    void shouldThrowExceptionWhenUpdatingWithBlankLastName() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            user.updateProfile("   ");
+            user.updateProfile("Jane", "   ");
         });
     }
 
@@ -212,7 +215,7 @@ class UserTest {
         String rawPassword = "SecureP@ss123";
         when(mockEncoder.matches(rawPassword, "hashed_password")).thenReturn(true);
         
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When
         boolean result = user.verifyPassword(rawPassword);
@@ -227,7 +230,7 @@ class UserTest {
         String wrongPassword = "WrongP@ss456";
         when(mockEncoder.matches(wrongPassword, "hashed_password")).thenReturn(false);
         
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When
         boolean result = user.verifyPassword(wrongPassword);
@@ -239,7 +242,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenVerifyingNullPassword() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
 
         // When & Then
         assertThrows(NullPointerException.class, () -> {
@@ -250,7 +253,7 @@ class UserTest {
     @Test
     void shouldUpdateTimestampWhenPasswordChanged() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         Password newPassword = Password.fromRaw("NewP@ssw0rd!", mockEncoder);
         
         // When
@@ -264,10 +267,10 @@ class UserTest {
     @Test
     void shouldUpdateTimestampWhenProfileChanged() {
         // Given
-        User user = new User(userId, email, password, "John Doe");
+        User user = new User(userId, "org-1", email, password, "johndoe", "John", "Doe");
         
         // When
-        user.updateProfile("Jane Smith");
+        user.updateProfile("Jane", "Smith");
 
         // Then
         assertTrue(user.getUpdatedAt().isAfter(user.getCreatedAt()) || 

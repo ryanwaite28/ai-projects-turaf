@@ -54,6 +54,27 @@ output "alb_listener_https_arn" {
   value       = length(aws_lb_listener.https) > 0 ? aws_lb_listener.https[0].arn : null
 }
 
+# Internal ALB Outputs
+output "internal_alb_arn" {
+  description = "ARN of the Internal Application Load Balancer"
+  value       = aws_lb.internal.arn
+}
+
+output "internal_alb_dns_name" {
+  description = "DNS name of the Internal ALB (for BFF service configuration)"
+  value       = aws_lb.internal.dns_name
+}
+
+output "internal_alb_zone_id" {
+  description = "Zone ID of the Internal ALB"
+  value       = aws_lb.internal.zone_id
+}
+
+output "internal_alb_listener_http_arn" {
+  description = "ARN of the Internal ALB HTTP listener (for creating listener rules)"
+  value       = aws_lb_listener.internal_http.arn
+}
+
 # Networking Outputs (for CI/CD service deployments)
 output "vpc_id" {
   description = "VPC ID (for creating target groups)"

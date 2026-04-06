@@ -33,7 +33,12 @@ variable "ecs_security_group_id" {
 }
 
 variable "alb_security_group_id" {
-  description = "Security group ID for ALB"
+  description = "Security group ID for public ALB"
+  type        = string
+}
+
+variable "internal_alb_security_group_id" {
+  description = "Security group ID for internal ALB (service-to-service communication)"
   type        = string
 }
 

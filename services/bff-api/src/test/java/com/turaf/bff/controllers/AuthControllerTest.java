@@ -35,8 +35,9 @@ class AuthControllerTest {
         UserDto userDto = UserDto.builder()
             .id("user-123")
             .email("test@example.com")
-            .name("Test User")
-            .token("jwt-token")
+            .username("testuser")
+            .firstName("Test")
+            .lastName("User")
             .build();
         
         when(identityServiceClient.login(any(LoginRequest.class)))
@@ -51,22 +52,26 @@ class AuthControllerTest {
             .expectBody()
             .jsonPath("$.id").isEqualTo("user-123")
             .jsonPath("$.email").isEqualTo("test@example.com")
-            .jsonPath("$.token").isEqualTo("jwt-token");
+            .jsonPath("$.username").isEqualTo("testuser");
     }
     
     @Test
     void testRegister_Success() {
         RegisterRequest request = RegisterRequest.builder()
-            .name("New User")
             .email("new@example.com")
             .password("password123")
+            .username("newuser")
+            .firstName("New")
+            .lastName("User")
+            .organizationId("org-123")
             .build();
         
         UserDto userDto = UserDto.builder()
             .id("user-456")
             .email("new@example.com")
-            .name("New User")
-            .token("jwt-token")
+            .username("newuser")
+            .firstName("New")
+            .lastName("User")
             .build();
         
         when(identityServiceClient.register(any(RegisterRequest.class)))
@@ -88,7 +93,9 @@ class AuthControllerTest {
         UserDto userDto = UserDto.builder()
             .id("user-789")
             .email("current@example.com")
-            .name("Current User")
+            .username("currentuser")
+            .firstName("Current")
+            .lastName("User")
             .build();
         
         when(identityServiceClient.getCurrentUser(anyString()))

@@ -11,16 +11,16 @@ public class UserCreated implements DomainEvent {
     private final String userId;
     private final String organizationId;
     private final String email;
-    private final String name;
+    private final String username;
     private final Instant timestamp;
     private final String correlationId;
     
-    public UserCreated(String eventId, String userId, String organizationId, String email, String name) {
+    public UserCreated(String eventId, String userId, String organizationId, String email, String username) {
         this.eventId = Objects.requireNonNull(eventId, "Event ID cannot be null");
         this.userId = Objects.requireNonNull(userId, "User ID cannot be null");
         this.organizationId = Objects.requireNonNull(organizationId, "Organization ID cannot be null");
         this.email = Objects.requireNonNull(email, "Email cannot be null");
-        this.name = Objects.requireNonNull(name, "Name cannot be null");
+        this.username = Objects.requireNonNull(username, "Username cannot be null");
         this.timestamp = Instant.now();
         this.correlationId = eventId;
     }
@@ -58,7 +58,7 @@ public class UserCreated implements DomainEvent {
         return email;
     }
     
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 }

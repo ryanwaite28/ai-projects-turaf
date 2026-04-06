@@ -13,6 +13,7 @@ replay_pid*
 target/
 */**/*.class
 **/target/
+**/services/*/target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup

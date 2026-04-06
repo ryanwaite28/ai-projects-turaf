@@ -4,10 +4,9 @@
 export interface User {
   id: string;
   email: string;
+  username: string;
   firstName: string;
   lastName: string;
-  organizationId: string;
-  role: UserRole;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,8 +45,10 @@ export interface LoginResponse {
 export interface RegisterRequest {
   email: string;
   password: string;
+  username: string;
   firstName: string;
   lastName: string;
+  organizationId: string;
 }
 
 /**

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class ProblemServiceClient {
     
     private final WebClient webClient;
-    private static final String SERVICE_PATH = "/experiment";
+    private static final String SERVICE_PATH = "/api/v1";
     
     public ProblemServiceClient(@Qualifier("experimentWebClient") WebClient webClient) {
         this.webClient = webClient;

@@ -77,7 +77,7 @@ public class TokenService {
         String accessToken = tokenProvider.generateAccessToken(
             refreshToken.getUserId(),
             user.getEmail().getValue(),
-            "default-org"
+            user.getOrganizationId()
         );
 
         return new TokenResponse(

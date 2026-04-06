@@ -40,8 +40,8 @@ class AuthControllerTest {
     @Test
     void shouldRegisterNewUser() throws Exception {
         // Given
-        RegisterRequest request = new RegisterRequest("test@example.com", "SecureP@ss123", "Test User");
-        UserDto userDto = new UserDto("user-123", "test@example.com", "Test User", Instant.now(), Instant.now());
+        RegisterRequest request = new RegisterRequest("test@example.com", "SecureP@ss123", "testuser", "Test", "User", "org-123");
+        UserDto userDto = new UserDto("user-123", "test@example.com", "testuser", "Test", "User", Instant.now(), Instant.now());
         TokenResponse tokenResponse = new TokenResponse("access.token", "refresh.token", 900);
 
         when(authenticationService.register(any(RegisterRequest.class))).thenReturn(userDto);
@@ -54,7 +54,7 @@ class AuthControllerTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.user.id").value("user-123"))
             .andExpect(jsonPath("$.user.email").value("test@example.com"))
-            .andExpect(jsonPath("$.user.name").value("Test User"))
+            .andExpect(jsonPath("$.user.username").value("testuser"))
             .andExpect(jsonPath("$.accessToken").value("access.token"))
             .andExpect(jsonPath("$.refreshToken").value("refresh.token"))
             .andExpect(jsonPath("$.expiresIn").value(900));
@@ -66,7 +66,7 @@ class AuthControllerTest {
     @Test
     void shouldReturnConflictWhenRegisteringDuplicateEmail() throws Exception {
         // Given
-        RegisterRequest request = new RegisterRequest("test@example.com", "SecureP@ss123", "Test User");
+        RegisterRequest request = new RegisterRequest("test@example.com", "SecureP@ss123", "testuser", "Test", "User", "org-123");
         when(authenticationService.register(any(RegisterRequest.class)))
             .thenThrow(new UserAlreadyExistsException("User with email test@example.com already exists"));
 
@@ -85,7 +85,7 @@ class AuthControllerTest {
     @Test
     void shouldReturnBadRequestWhenRegisteringWithInvalidEmail() throws Exception {
         // Given
-        RegisterRequest request = new RegisterRequest("invalid-email", "SecureP@ss123", "Test User");
+        RegisterRequest request = new RegisterRequest("invalid-email", "SecureP@ss123", "testuser", "Test", "User", "org-123");
 
         // When & Then
         mockMvc.perform(post("/api/v1/auth/register")
@@ -100,7 +100,7 @@ class AuthControllerTest {
     @Test
     void shouldReturnBadRequestWhenRegisteringWithShortPassword() throws Exception {
         // Given
-        RegisterRequest request = new RegisterRequest("test@example.com", "short", "Test User");
+        RegisterRequest request = new RegisterRequest("test@example.com", "short", "testuser", "Test", "User", "org-123");
 
         // When & Then
         mockMvc.perform(post("/api/v1/auth/register")
@@ -116,10 +116,11 @@ class AuthControllerTest {
     void shouldLoginWithValidCredentials() throws Exception {
         // Given
         LoginRequest request = new LoginRequest("test@example.com", "SecureP@ss123");
-        UserDto userDto = new UserDto("user-123", "test@example.com", "Test User", Instant.now(), Instant.now());
+        UserDto userDto = new UserDto("user-123", "test@example.com", "testuser", "Test", "User", Instant.now(), Instant.now());
         TokenResponse tokenResponse = new TokenResponse("access.token", "refresh.token", 900);
 
         when(authenticationService.login(any(LoginRequest.class))).thenReturn(userDto);
+        when(authenticationService.getUserOrganizationId(any(UserId.class))).thenReturn("org-123");
         when(tokenService.generateTokens(any(UserId.class), anyString())).thenReturn(tokenResponse);
 
         // When & Then
@@ -265,5 +266,94 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(tokenService, never()).refreshAccessToken(any());
+    }
+
+    @Test
+    void shouldRequestPasswordReset() throws Exception {
+        // Given
+        PasswordResetRequest request = new PasswordResetRequest("test@example.com");
+        doNothing().when(authenticationService).requestPasswordReset(any(PasswordResetRequest.class));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+
+        verify(authenticationService).requestPasswordReset(any(PasswordResetRequest.class));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenRequestingPasswordResetWithInvalidEmail() throws Exception {
+        // Given
+        PasswordResetRequest request = new PasswordResetRequest("invalid-email");
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/request")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(authenticationService, never()).requestPasswordReset(any());
+    }
+
+    @Test
+    void shouldConfirmPasswordReset() throws Exception {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("valid-token", "NewP@ssw0rd!");
+        doNothing().when(authenticationService).confirmPasswordReset(any(PasswordResetConfirmRequest.class));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk());
+
+        verify(authenticationService).confirmPasswordReset(any(PasswordResetConfirmRequest.class));
+    }
+
+    @Test
+    void shouldReturnUnauthorizedWhenConfirmingWithInvalidToken() throws Exception {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("invalid-token", "NewP@ssw0rd!");
+        doThrow(new InvalidTokenException("Invalid password reset token"))
+            .when(authenticationService).confirmPasswordReset(any(PasswordResetConfirmRequest.class));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
+
+        verify(authenticationService).confirmPasswordReset(any(PasswordResetConfirmRequest.class));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenConfirmingWithBlankToken() throws Exception {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("", "NewP@ssw0rd!");
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(authenticationService, never()).confirmPasswordReset(any());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenConfirmingWithShortPassword() throws Exception {
+        // Given
+        PasswordResetConfirmRequest request = new PasswordResetConfirmRequest("valid-token", "short");
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/password-reset/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest());
+
+        verify(authenticationService, never()).confirmPasswordReset(any());
     }
 }

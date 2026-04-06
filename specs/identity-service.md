@@ -60,29 +60,44 @@ This specification defines the Identity Service, responsible for user authentica
 {
   "email": "user@example.com",
   "password": "SecurePassword123!",
-  "name": "John Doe"
+  "username": "johndoe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "organizationId": "org-uuid"
 }
 ```
 
 **Response** (201 Created):
 ```json
 {
-  "userId": "uuid",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "createdAt": "ISO-8601"
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe",
+    "createdAt": "ISO-8601",
+    "updatedAt": "ISO-8601"
+  },
+  "accessToken": "jwt-access-token",
+  "refreshToken": "jwt-refresh-token",
+  "expiresIn": 900,
+  "tokenType": "Bearer"
 }
 ```
 
 **Validation**:
 - Email must be valid format
 - Email must be unique
-- Password must meet security requirements (min 8 chars, uppercase, lowercase, number, special char)
-- Name required, 1-100 characters
+- Password must meet security requirements (min 8 chars)
+- Username required, max 50 characters, must be unique
+- First name required, max 50 characters
+- Last name required, max 50 characters
+- Organization ID required
 
 **Business Rules**:
 - Password is hashed using BCrypt before storage
-- User is not automatically assigned to any organization
+- User is assigned to the specified organization
 - Email verification may be required (future enhancement)
 
 ---
@@ -102,27 +117,32 @@ This specification defines the Identity Service, responsible for user authentica
 **Response** (200 OK):
 ```json
 {
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe",
+    "createdAt": "ISO-8601",
+    "updatedAt": "ISO-8601"
+  },
   "accessToken": "jwt-access-token",
   "refreshToken": "jwt-refresh-token",
-  "expiresIn": 3600,
-  "tokenType": "Bearer",
-  "user": {
-    "userId": "uuid",
-    "email": "user@example.com",
-    "name": "John Doe"
-  }
+  "expiresIn": 900,
+  "tokenType": "Bearer"
 }
 ```
 
 **Response** (401 Unauthorized):
 ```json
 {
-  "error": "Invalid credentials"
+  "code": "INVALID_CREDENTIALS",
+  "message": "Invalid email or password"
 }
 ```
 
 **Business Rules**:
-- Access token expires in 1 hour
+- Access token expires in 15 minutes
 - Refresh token expires in 7 days
 - Failed login attempts are logged
 - Account lockout after 5 failed attempts (future enhancement)
@@ -163,41 +183,39 @@ This specification defines the Identity Service, responsible for user authentica
 
 ---
 
-### GET /api/v1/auth/me
+### GET /api/v1/users/me
 
 **Purpose**: Get current authenticated user profile
 
 **Headers**:
 ```
-Authorization: Bearer {access-token}
+X-User-Id: {user-id}
 ```
 
 **Response** (200 OK):
 ```json
 {
-  "userId": "uuid",
+  "id": "uuid",
   "email": "user@example.com",
-  "name": "John Doe",
-  "organizations": [
-    {
-      "organizationId": "uuid",
-      "name": "Acme Corp",
-      "role": "ADMIN"
-    }
-  ]
+  "username": "johndoe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "createdAt": "ISO-8601",
+  "updatedAt": "ISO-8601"
 }
 ```
 
-**Response** (401 Unauthorized):
+**Response** (404 Not Found):
 ```json
 {
-  "error": "Unauthorized"
+  "code": "USER_NOT_FOUND",
+  "message": "User not found"
 }
 ```
 
 ---
 
-### PUT /api/v1/auth/password
+### PUT /api/v1/users/me/password
 
 **Purpose**: Change user password
 
@@ -259,6 +277,60 @@ Authorization: Bearer {access-token}
 
 ---
 
+### POST /api/v1/auth/password-reset/request
+
+**Purpose**: Request a password reset token (sent via email)
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response** (200 OK): Always returns success to prevent email enumeration.
+
+**Business Rules**:
+- If email exists, a reset token is generated and stored
+- Any existing reset tokens for the user are invalidated
+- Token expires after 1 hour (configurable)
+- In production, the token is sent via email
+
+---
+
+### POST /api/v1/auth/password-reset/confirm
+
+**Purpose**: Confirm password reset with token and new password
+
+**Request Body**:
+```json
+{
+  "token": "reset-token-uuid",
+  "newPassword": "NewSecurePassword123!"
+}
+```
+
+**Response** (200 OK): Password reset successful.
+
+**Response** (401 Unauthorized):
+```json
+{
+  "code": "INVALID_TOKEN",
+  "message": "Invalid password reset token"
+}
+```
+
+**Validation**:
+- Token must be valid and not expired
+- Token must not have been used already
+- New password must meet security requirements (min 8 chars)
+
+**Business Rules**:
+- Token is marked as used after successful reset
+- Password change event is published
+
+---
+
 ## Database Schema
 
 **Schema**: `identity_schema`  
@@ -282,46 +354,67 @@ spring:
 
 ```sql
 CREATE TABLE users (
-    id UUID PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
+    organization_id VARCHAR(36) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    password VARCHAR(255) NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
 ```
 
 ### user_roles
 
 ```sql
 CREATE TABLE user_roles (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_roles_user_role UNIQUE (user_id, role)
 );
 
 CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
 ```
 
-**Roles**: `USER`, `ADMIN` (system-level roles)
+**Roles**: `ADMIN`, `MEMBER`, `VIEWER`
 
 ### refresh_tokens
 
 ```sql
 CREATE TABLE refresh_tokens (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(500) UNIQUE NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+```
+
+### password_reset_tokens
+
+```sql
+CREATE TABLE password_reset_tokens (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
+CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
 ```
 
 ---
@@ -361,8 +454,8 @@ public PasswordEncoder passwordEncoder() {
 
 **Allowed Origins**:
 - DEV: `http://localhost:4200`
-- QA: `https://qa.turaf.com`
-- PROD: `https://app.turaf.com`
+- QA: `https://app.qa.turafapp.com`
+- PROD: `https://app.turafapp.com`
 
 **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS  
 **Allowed Headers**: Authorization, Content-Type  

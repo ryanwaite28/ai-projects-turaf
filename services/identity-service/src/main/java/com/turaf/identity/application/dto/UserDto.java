@@ -8,17 +8,21 @@ public class UserDto {
 
     private String id;
     private String email;
-    private String name;
+    private String username;
+    private String firstName;
+    private String lastName;
     private Instant createdAt;
     private Instant updatedAt;
 
     public UserDto() {
     }
 
-    public UserDto(String id, String email, String name, Instant createdAt, Instant updatedAt) {
+    public UserDto(String id, String email, String username, String firstName, String lastName, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.email = email;
-        this.name = name;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -27,7 +31,9 @@ public class UserDto {
         return new UserDto(
             user.getId().getValue(),
             user.getEmail().getValue(),
-            user.getName(),
+            user.getUsername(),
+            user.getFirstName(),
+            user.getLastName(),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );
@@ -49,12 +55,28 @@ public class UserDto {
         this.email = email;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public Instant getCreatedAt() {

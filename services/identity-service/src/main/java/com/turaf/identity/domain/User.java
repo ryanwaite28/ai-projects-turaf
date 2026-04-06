@@ -15,16 +15,20 @@ public class User extends AggregateRoot<UserId> implements TenantAware {
     private String organizationId;
     private Email email;
     private Password password;
-    private String name;
+    private String username;
+    private String firstName;
+    private String lastName;
     private Instant createdAt;
     private Instant updatedAt;
 
-    public User(UserId id, String organizationId, Email email, Password password, String name) {
+    public User(UserId id, String organizationId, Email email, Password password, String username, String firstName, String lastName) {
         super(id);
         this.organizationId = Objects.requireNonNull(organizationId, "Organization ID cannot be null");
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.password = Objects.requireNonNull(password, "Password cannot be null");
-        this.name = validateName(name);
+        this.username = validateUsername(username);
+        this.firstName = validateName(firstName, "First name");
+        this.lastName = validateName(lastName, "Last name");
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
         
@@ -33,7 +37,7 @@ public class User extends AggregateRoot<UserId> implements TenantAware {
             id.getValue(),
             organizationId,
             email.getValue(),
-            name
+            username
         ));
     }
 
@@ -50,15 +54,16 @@ public class User extends AggregateRoot<UserId> implements TenantAware {
         ));
     }
 
-    public void updateProfile(String newName) {
-        this.name = validateName(newName);
+    public void updateProfile(String newFirstName, String newLastName) {
+        this.firstName = validateName(newFirstName, "First name");
+        this.lastName = validateName(newLastName, "Last name");
         this.updatedAt = Instant.now();
         
         registerEvent(new UserProfileUpdated(
             UUID.randomUUID().toString(),
             getId().getValue(),
             organizationId,
-            name,
+            firstName + " " + lastName,
             updatedAt
         ));
     }
@@ -68,12 +73,22 @@ public class User extends AggregateRoot<UserId> implements TenantAware {
         return password.matches(rawPassword);
     }
 
-    private String validateName(String name) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Name cannot be null or blank");
+    private String validateUsername(String username) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username cannot be null or blank");
         }
-        if (name.length() > 100) {
-            throw new IllegalArgumentException("Name cannot exceed 100 characters");
+        if (username.length() > 50) {
+            throw new IllegalArgumentException("Username cannot exceed 50 characters");
+        }
+        return username.trim();
+    }
+
+    private String validateName(String name, String fieldName) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or blank");
+        }
+        if (name.length() > 50) {
+            throw new IllegalArgumentException(fieldName + " cannot exceed 50 characters");
         }
         return name.trim();
     }
@@ -86,8 +101,16 @@ public class User extends AggregateRoot<UserId> implements TenantAware {
         return password;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 
     public Instant getCreatedAt() {

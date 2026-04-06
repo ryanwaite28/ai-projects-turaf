@@ -191,6 +191,41 @@ resource "aws_security_group" "alb" {
   }
 }
 
+resource "aws_security_group" "internal_alb" {
+  name_prefix = "turaf-internal-alb-${var.environment}-"
+  description = "Security group for Internal Application Load Balancer (service-to-service)"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "Allow HTTP from VPC (ECS tasks)"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound"
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "turaf-internal-alb-sg-${var.environment}"
+      Environment = var.environment
+      Purpose     = "Internal ALB for BFF to microservices communication"
+    }
+  )
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_security_group" "ecs_tasks" {
   name_prefix = "turaf-ecs-tasks-${var.environment}-"
   description = "Security group for ECS tasks"
@@ -201,7 +236,15 @@ resource "aws_security_group" "ecs_tasks" {
     to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
-    description     = "Allow traffic from ALB on port 8080"
+    description     = "Allow traffic from public ALB on port 8080"
+  }
+
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.internal_alb.id]
+    description     = "Allow traffic from internal ALB on port 8080"
   }
 
   ingress {
@@ -209,7 +252,7 @@ resource "aws_security_group" "ecs_tasks" {
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
-    description = "Allow traffic from VPC on port 8080"
+    description = "Allow traffic from VPC on port 8080 (service-to-service)"
   }
 
   egress {

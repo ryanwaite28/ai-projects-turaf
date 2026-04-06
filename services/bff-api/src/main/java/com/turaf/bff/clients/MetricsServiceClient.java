@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class MetricsServiceClient {
     
     private final WebClient webClient;
-    private static final String SERVICE_PATH = "/metrics";
+    private static final String SERVICE_PATH = "/api/v1";
     
     public MetricsServiceClient(@Qualifier("metricsWebClient") WebClient webClient) {
         this.webClient = webClient;

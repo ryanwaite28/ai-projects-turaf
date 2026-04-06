@@ -44,7 +44,10 @@ class AuthControllerIntegrationTest {
         RegisterRequest request = new RegisterRequest(
             "newuser@example.com",
             "SecureP@ss123",
-            "New User"
+            "newuser",
+            "New",
+            "User",
+            "org-123"
         );
 
         // When
@@ -60,13 +63,13 @@ class AuthControllerIntegrationTest {
         assertNotNull(response.getBody().getAccessToken());
         assertNotNull(response.getBody().getRefreshToken());
         assertEquals("newuser@example.com", response.getBody().getUser().getEmail());
-        assertEquals("New User", response.getBody().getUser().getName());
+        assertEquals("newuser", response.getBody().getUser().getUsername());
         assertNotNull(response.getBody().getUser().getId());
 
         // Verify user saved in database
         Optional<User> savedUser = userRepository.findByEmail(new Email("newuser@example.com"));
         assertTrue(savedUser.isPresent());
-        assertEquals("New User", savedUser.get().getName());
+        assertEquals("newuser", savedUser.get().getUsername());
     }
 
     @Test
@@ -77,7 +80,10 @@ class AuthControllerIntegrationTest {
         RegisterRequest request = new RegisterRequest(
             "existing@example.com",
             "SecureP@ss123",
-            "Duplicate User"
+            "dupuser",
+            "Duplicate",
+            "User",
+            "org-123"
         );
 
         // When
@@ -100,7 +106,10 @@ class AuthControllerIntegrationTest {
         RegisterRequest request = new RegisterRequest(
             "invalid-email",
             "SecureP@ss123",
-            "Test User"
+            "testuser",
+            "Test",
+            "User",
+            "org-123"
         );
 
         // When
@@ -122,7 +131,10 @@ class AuthControllerIntegrationTest {
         RegisterRequest request = new RegisterRequest(
             "test@example.com",
             "weak",
-            "Test User"
+            "testuser",
+            "Test",
+            "User",
+            "org-123"
         );
 
         // When
@@ -287,7 +299,8 @@ class AuthControllerIntegrationTest {
         UserId userId = UserId.generate();
         Email emailObj = new Email(email);
         Password passwordObj = Password.fromRaw(password, passwordEncoder);
-        User user = new User(userId, emailObj, passwordObj, "Test User");
+        String username = email.replace("@", "_").replace(".", "_");
+        User user = new User(userId, "org-123", emailObj, passwordObj, username, "Test", "User");
         userRepository.save(user);
     }
 

@@ -143,11 +143,12 @@ module "compute" {
   public_subnet_ids  = module.networking.public_subnet_ids
 
   # Security
-  ecs_security_group_id  = module.security.ecs_tasks_security_group_id
-  alb_security_group_id  = module.security.alb_security_group_id
-  ecs_execution_role_arn = module.security.ecs_execution_role_arn
-  ecs_task_role_arn      = module.security.ecs_task_role_arn
-  acm_certificate_arn    = var.acm_certificate_arn
+  ecs_security_group_id         = module.security.ecs_tasks_security_group_id
+  alb_security_group_id         = module.security.alb_security_group_id
+  internal_alb_security_group_id = module.security.internal_alb_security_group_id
+  ecs_execution_role_arn        = module.security.ecs_execution_role_arn
+  ecs_task_role_arn             = module.security.ecs_task_role_arn
+  acm_certificate_arn           = var.acm_certificate_arn
 
   # Cost Optimization
   use_fargate_spot          = var.use_fargate_spot

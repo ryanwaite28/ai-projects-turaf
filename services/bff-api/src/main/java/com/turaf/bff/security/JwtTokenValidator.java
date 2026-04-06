@@ -44,13 +44,17 @@ public class JwtTokenValidator {
         String userId = claims.getSubject();
         String organizationId = claims.get("organizationId", String.class);
         String email = claims.get("email", String.class);
-        String name = claims.get("name", String.class);
+        String username = claims.get("username", String.class);
+        String firstName = claims.get("firstName", String.class);
+        String lastName = claims.get("lastName", String.class);
         
         return UserContext.builder()
             .userId(userId)
             .organizationId(organizationId)
             .email(email)
-            .name(name)
+            .username(username)
+            .firstName(firstName)
+            .lastName(lastName)
             .build();
     }
     

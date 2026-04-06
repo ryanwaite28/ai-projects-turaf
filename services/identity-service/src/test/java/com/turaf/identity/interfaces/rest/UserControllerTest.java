@@ -37,7 +37,7 @@ class UserControllerTest {
     void shouldGetCurrentUser() throws Exception {
         // Given
         String userId = "user-123";
-        UserDto userDto = new UserDto(userId, "test@example.com", "Test User", Instant.now(), Instant.now());
+        UserDto userDto = new UserDto(userId, "test@example.com", "testuser", "Test", "User", Instant.now(), Instant.now());
 
         when(authenticationService.getUserById(any(UserId.class))).thenReturn(userDto);
 
@@ -47,7 +47,7 @@ class UserControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(userId))
             .andExpect(jsonPath("$.email").value("test@example.com"))
-            .andExpect(jsonPath("$.name").value("Test User"));
+            .andExpect(jsonPath("$.username").value("testuser"));
 
         verify(authenticationService).getUserById(any(UserId.class));
     }
@@ -73,7 +73,7 @@ class UserControllerTest {
     void shouldGetUserById() throws Exception {
         // Given
         String userId = "user-123";
-        UserDto userDto = new UserDto(userId, "test@example.com", "Test User", Instant.now(), Instant.now());
+        UserDto userDto = new UserDto(userId, "test@example.com", "testuser", "Test", "User", Instant.now(), Instant.now());
 
         when(authenticationService.getUserById(any(UserId.class))).thenReturn(userDto);
 
@@ -82,7 +82,7 @@ class UserControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(userId))
             .andExpect(jsonPath("$.email").value("test@example.com"))
-            .andExpect(jsonPath("$.name").value("Test User"));
+            .andExpect(jsonPath("$.username").value("testuser"));
 
         verify(authenticationService).getUserById(any(UserId.class));
     }
@@ -163,59 +163,66 @@ class UserControllerTest {
     void shouldUpdateProfile() throws Exception {
         // Given
         String userId = "user-123";
-        String newName = "Updated Name";
-        UserDto updatedUser = new UserDto(userId, "test@example.com", newName, Instant.now(), Instant.now());
+        String newFirstName = "Updated";
+        String newLastName = "Name";
+        UserDto updatedUser = new UserDto(userId, "test@example.com", "testuser", newFirstName, newLastName, Instant.now(), Instant.now());
 
-        when(authenticationService.updateProfile(any(UserId.class), anyString())).thenReturn(updatedUser);
+        when(authenticationService.updateProfile(any(UserId.class), anyString(), anyString())).thenReturn(updatedUser);
 
         // When & Then
         mockMvc.perform(put("/api/v1/users/me/profile")
                 .header("X-User-Id", userId)
-                .param("name", newName))
+                .param("firstName", newFirstName)
+                .param("lastName", newLastName))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(userId))
-            .andExpect(jsonPath("$.name").value(newName));
+            .andExpect(jsonPath("$.firstName").value(newFirstName))
+            .andExpect(jsonPath("$.lastName").value(newLastName));
 
-        verify(authenticationService).updateProfile(any(UserId.class), eq(newName));
+        verify(authenticationService).updateProfile(any(UserId.class), eq(newFirstName), eq(newLastName));
     }
 
     @Test
     void shouldReturnNotFoundWhenUpdateProfileForNonExistentUser() throws Exception {
         // Given
         String userId = "non-existent-user";
-        String newName = "Updated Name";
+        String newFirstName = "Updated";
+        String newLastName = "Name";
 
-        when(authenticationService.updateProfile(any(UserId.class), anyString()))
+        when(authenticationService.updateProfile(any(UserId.class), anyString(), anyString()))
             .thenThrow(new UserNotFoundException("User not found"));
 
         // When & Then
         mockMvc.perform(put("/api/v1/users/me/profile")
                 .header("X-User-Id", userId)
-                .param("name", newName))
+                .param("firstName", newFirstName)
+                .param("lastName", newLastName))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"))
             .andExpect(jsonPath("$.message").value("User not found"));
 
-        verify(authenticationService).updateProfile(any(UserId.class), eq(newName));
+        verify(authenticationService).updateProfile(any(UserId.class), eq(newFirstName), eq(newLastName));
     }
 
     @Test
     void shouldReturnBadRequestWhenUpdateProfileWithInvalidName() throws Exception {
         // Given
         String userId = "user-123";
-        String invalidName = "";
+        String invalidFirstName = "";
+        String lastName = "Doe";
 
-        when(authenticationService.updateProfile(any(UserId.class), anyString()))
-            .thenThrow(new IllegalArgumentException("Name cannot be blank"));
+        when(authenticationService.updateProfile(any(UserId.class), anyString(), anyString()))
+            .thenThrow(new IllegalArgumentException("First name cannot be null or blank"));
 
         // When & Then
         mockMvc.perform(put("/api/v1/users/me/profile")
                 .header("X-User-Id", userId)
-                .param("name", invalidName))
+                .param("firstName", invalidFirstName)
+                .param("lastName", lastName))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
-            .andExpect(jsonPath("$.message").value("Name cannot be blank"));
+            .andExpect(jsonPath("$.message").value("First name cannot be null or blank"));
 
-        verify(authenticationService).updateProfile(any(UserId.class), eq(invalidName));
+        verify(authenticationService).updateProfile(any(UserId.class), eq(invalidFirstName), eq(lastName));
     }
 }

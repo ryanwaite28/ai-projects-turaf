@@ -59,7 +59,7 @@ public class EventMapper {
                 UserCreated e = (UserCreated) event;
                 eventData.put("userId", e.getUserId());
                 eventData.put("email", e.getEmail());
-                eventData.put("name", e.getName());
+                eventData.put("username", e.getUsername());
             } else if (event instanceof UserPasswordChanged) {
                 UserPasswordChanged e = (UserPasswordChanged) event;
                 eventData.put("userId", e.getUserId());
