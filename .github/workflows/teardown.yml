@@ -262,6 +262,21 @@ jobs:
             -target='module.networking.aws_route.private_nat_gateway' \
             2>/dev/null || echo "NAT resources not found or already deleted"
 
+      - name: 'Release orphaned Elastic IPs ($3.60/month each)'
+        run: |
+          echo "Releasing Elastic IPs tagged for ${{ inputs.environment }}..."
+          EIPS=$(aws ec2 describe-addresses --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*${{ inputs.environment }}*" \
+            --query 'Addresses[].AllocationId' --output text 2>/dev/null || echo "")
+          if [[ -z "$EIPS" ]]; then
+            echo "No orphaned Elastic IPs found"
+          else
+            for eip in $EIPS; do
+              aws ec2 release-address --allocation-id "$eip" --region ${{ env.AWS_REGION }} 2>/dev/null || true
+              echo "  Released EIP: $eip"
+            done
+          fi
+
       - name: 'Terraform Destroy: Interface VPC Endpoints (~$7.20/month each)'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
         run: |
