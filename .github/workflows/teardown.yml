@@ -159,8 +159,25 @@ jobs:
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────────────────────────────────
-  # Phase 2: Destroy shared infrastructure via Terraform
-  #   (VPC, ALBs, ECS cluster, RDS, SQS, EventBridge, Lambda, etc.)
+  # Phase 2: Destroy ONLY cost-incurring shared infrastructure
+  #
+  # DELETED (costs money):
+  #   - module.compute   : ALBs (~$32/month), ECS cluster kept (free)
+  #   - module.database   : RDS, Redis, DocumentDB, Secrets Manager
+  #   - module.storage    : S3 buckets
+  #   - module.monitoring : CloudWatch dashboards ($3/month each)
+  #   - Networking: NAT Gateways, Elastic IPs, Interface VPC Endpoints
+  #   - Security:  KMS keys ($1/month each)
+  #
+  # KEPT (free when idle):
+  #   - IAM roles, policies, OIDC providers
+  #   - Security groups
+  #   - VPC, subnets, route tables, Internet Gateway, Gateway Endpoints
+  #   - ECS cluster (free without running tasks)
+  #   - SQS queues, SNS topics, EventBridge (free when idle)
+  #   - Lambda functions (free when not invoked)
+  #   - CloudWatch alarms (first 10 free)
+  #   - ACM certificates (free)
   # ─────────────────────────────────────────────────────────────────────
   destroy-infrastructure:
     name: 'Destroy Infrastructure (${{ inputs.environment }})'
@@ -182,6 +199,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: terraform init
 
       - name: Disable RDS deletion protection
         run: |
@@ -206,14 +227,66 @@ jobs:
             fi
           done
 
-      - name: Terraform Init
+      # ── Destroy database module (RDS, Redis, DocumentDB, Secrets Manager) ──
+      - name: 'Terraform Destroy: database'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform init
+        run: terraform destroy -auto-approve -target=module.database
+        timeout-minutes: 30
 
-      - name: Terraform Destroy
+      # ── Destroy compute module (ALBs — ECS cluster itself is free) ──
+      - name: 'Terraform Destroy: compute (ALBs)'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform destroy -auto-approve
-        timeout-minutes: 45
+        run: terraform destroy -auto-approve -target=module.compute
+        timeout-minutes: 15
+
+      # ── Destroy storage module (S3 buckets) ──
+      - name: 'Terraform Destroy: storage'
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: terraform destroy -auto-approve -target=module.storage
+        timeout-minutes: 10
+
+      # ── Destroy monitoring module (CloudWatch dashboards cost $3/month) ──
+      - name: 'Terraform Destroy: monitoring'
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: terraform destroy -auto-approve -target=module.monitoring
+        timeout-minutes: 10
+
+      # ── Networking: destroy only NAT Gateways, EIPs, Interface Endpoints (costly) ──
+      # Keeps: VPC, subnets, route tables, IGW, S3 gateway endpoint (all free)
+      - name: 'Terraform Destroy: NAT Gateways & Elastic IPs'
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: |
+          terraform destroy -auto-approve \
+            -target='module.networking.aws_nat_gateway.main' \
+            -target='module.networking.aws_eip.nat' \
+            -target='module.networking.aws_route.private_nat_gateway' \
+            2>/dev/null || echo "NAT resources not found or already deleted"
+
+      - name: 'Terraform Destroy: Interface VPC Endpoints (~$7.20/month each)'
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: |
+          terraform destroy -auto-approve \
+            -target='module.networking.aws_vpc_endpoint.ecr_api' \
+            -target='module.networking.aws_vpc_endpoint.ecr_dkr' \
+            -target='module.networking.aws_vpc_endpoint.logs' \
+            -target='module.networking.aws_vpc_endpoint.secretsmanager' \
+            -target='module.networking.aws_vpc_endpoint.ecs' \
+            -target='module.networking.aws_vpc_endpoint.ecs_telemetry' \
+            2>/dev/null || echo "VPC endpoints not found or already deleted"
+
+      # ── Security: destroy only KMS keys ($1/month each) ──
+      # Keeps: IAM roles, policies, security groups (all free)
+      - name: 'Terraform Destroy: KMS keys'
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: |
+          terraform destroy -auto-approve \
+            -target='module.security.aws_kms_key.main' \
+            -target='module.security.aws_kms_alias.main' \
+            -target='module.security.aws_kms_key.rds' \
+            -target='module.security.aws_kms_alias.rds' \
+            -target='module.security.aws_kms_key.s3' \
+            -target='module.security.aws_kms_alias.s3' \
+            2>/dev/null || echo "KMS keys not found or already deleted"
 
       - name: Infrastructure teardown summary
         if: always()
@@ -222,6 +295,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deleted (costs money):" >> $GITHUB_STEP_SUMMARY
+          echo "- Database: RDS, Redis, DocumentDB, Secrets Manager" >> $GITHUB_STEP_SUMMARY
+          echo "- Compute: ALBs (ECS cluster kept — free)" >> $GITHUB_STEP_SUMMARY
+          echo "- Storage: S3 buckets" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitoring: CloudWatch dashboards" >> $GITHUB_STEP_SUMMARY
+          echo "- Networking: NAT Gateways, Elastic IPs, Interface VPC Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- Security: KMS keys" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Preserved (free):" >> $GITHUB_STEP_SUMMARY
+          echo "- IAM roles, policies, security groups" >> $GITHUB_STEP_SUMMARY
+          echo "- VPC, subnets, route tables, IGW, S3 gateway endpoint" >> $GITHUB_STEP_SUMMARY
+          echo "- ECS cluster, SQS queues, SNS topics, EventBridge, Lambda" >> $GITHUB_STEP_SUMMARY
+          echo "- CloudWatch alarms, ACM certificates" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────────────────────────────────
   # Phase 3: Cleanup remaining resources not in Terraform state
@@ -293,46 +380,6 @@ jobs:
             echo "  Deleted secret: $secret"
           done
 
-      - name: Schedule KMS key deletion
-        run: |
-          echo "Scheduling deletion of customer-managed KMS keys..."
-          KMS_KEYS=$(aws kms list-keys --region ${{ env.AWS_REGION }} --query 'Keys[].KeyId' --output text 2>/dev/null || echo "")
-          for key_id in $KMS_KEYS; do
-            KEY_META=$(aws kms describe-key --key-id "$key_id" --region ${{ env.AWS_REGION }} --output json 2>/dev/null || echo "{}")
-            KEY_MANAGER=$(echo "$KEY_META" | jq -r '.KeyMetadata.KeyManager // "AWS"')
-            KEY_STATE=$(echo "$KEY_META" | jq -r '.KeyMetadata.KeyState // "Disabled"')
-            if [[ "$KEY_MANAGER" == "CUSTOMER" && "$KEY_STATE" == "Enabled" ]]; then
-              TAGS=$(aws kms list-resource-tags --key-id "$key_id" --region ${{ env.AWS_REGION }} \
-                --query "Tags[?TagKey=='Environment' && TagValue=='${{ inputs.environment }}']" --output text 2>/dev/null || echo "")
-              if [[ -n "$TAGS" ]]; then
-                aws kms schedule-key-deletion --key-id "$key_id" --pending-window-in-days 7 --region ${{ env.AWS_REGION }} 2>/dev/null || true
-                echo "  Scheduled deletion: $key_id"
-              fi
-            fi
-          done
-
-      - name: Release Elastic IPs
-        run: |
-          echo "Releasing Elastic IPs..."
-          EIPS=$(aws ec2 describe-addresses --region ${{ env.AWS_REGION }} \
-            --filters "Name=tag:Name,Values=*turaf*${{ inputs.environment }}*" \
-            --query 'Addresses[].AllocationId' --output text 2>/dev/null || echo "")
-          for eip in $EIPS; do
-            aws ec2 release-address --allocation-id "$eip" --region ${{ env.AWS_REGION }} 2>/dev/null || true
-            echo "  Released EIP: $eip"
-          done
-
-      - name: Delete ACM certificates
-        run: |
-          echo "Deleting ACM certificates..."
-          CERTS=$(aws acm list-certificates --region ${{ env.AWS_REGION }} \
-            --query "CertificateSummaryList[?contains(DomainName,'turafapp.com')].CertificateArn" \
-            --output text 2>/dev/null || echo "")
-          for cert in $CERTS; do
-            aws acm delete-certificate --certificate-arn "$cert" --region ${{ env.AWS_REGION }} 2>/dev/null || true
-            echo "  Deleted cert: $cert"
-          done
-
       - name: Cleanup summary
         if: always()
         run: |
@@ -340,6 +387,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Skipped (free):" >> $GITHUB_STEP_SUMMARY
+          echo "- ACM certificates, IAM roles/policies, KMS (handled in Phase 2)" >> $GITHUB_STEP_SUMMARY
+          echo "- Elastic IPs, VPC endpoints (handled in Phase 2)" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────────────────────────────────
   # Phase 4 (optional): Destroy bootstrap resources
@@ -359,12 +410,19 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Delete ECR repositories
+      - name: Delete ECR images (repos are free, images cost for storage)
         run: |
-          echo "Deleting ECR repositories..."
+          echo "Deleting ECR images (keeping repositories — they are free)..."
           for repo in turaf-identity-service turaf-organization-service turaf-experiment-service turaf-metrics-service turaf-communications-service turaf-bff-api turaf-ws-gateway; do
-            aws ecr delete-repository --repository-name "$repo" --force --region ${{ env.AWS_REGION }} 2>/dev/null || true
-            echo "  Deleted ECR repo: $repo"
+            IMAGES=$(aws ecr list-images --repository-name "$repo" --region ${{ env.AWS_REGION }} \
+              --query 'imageIds[*]' --output json 2>/dev/null || echo "[]")
+            if [[ "$IMAGES" != "[]" && -n "$IMAGES" ]]; then
+              aws ecr batch-delete-image --repository-name "$repo" --image-ids "$IMAGES" \
+                --region ${{ env.AWS_REGION }} 2>/dev/null || true
+              echo "  Deleted images from: $repo"
+            else
+              echo "  No images in: $repo"
+            fi
           done
 
       - name: Empty and delete Terraform state bucket
@@ -394,7 +452,7 @@ jobs:
           echo "## Bootstrap Teardown" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **ECR Repos**: Deleted" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Images**: Deleted (repos kept — free)" >> $GITHUB_STEP_SUMMARY
           echo "- **TF State Bucket**: Deleted" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
 
@@ -415,29 +473,19 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Check for remaining ECS clusters
-        run: |
-          CLUSTERS=$(aws ecs list-clusters --region ${{ env.AWS_REGION }} \
-            --query "clusterArns[?contains(@,'turaf')]" --output text 2>/dev/null || echo "")
-          if [[ -n "$CLUSTERS" ]]; then
-            echo "::warning::Remaining ECS clusters: $CLUSTERS"
-          else
-            echo "✅ No ECS clusters found"
-          fi
-
-      - name: Check for remaining RDS instances
+      - name: Check for remaining RDS instances (costs money)
         run: |
           RDS=$(aws rds describe-db-instances --region ${{ env.AWS_REGION }} \
             --query "DBInstances[?contains(DBInstanceIdentifier,'turaf')].{Id:DBInstanceIdentifier,Status:DBInstanceStatus}" \
             --output table 2>/dev/null || echo "")
-          if [[ -n "$RDS" && "$RDS" != *"turaf"* ]]; then
+          if [[ -z "$RDS" || "$RDS" != *"turaf"* ]]; then
             echo "✅ No RDS instances found"
           else
             echo "::warning::Remaining RDS instances (may still be deleting):"
             echo "$RDS"
           fi
 
-      - name: Check for remaining ALBs
+      - name: Check for remaining ALBs (costs money)
         run: |
           for name in "turaf-alb-${{ inputs.environment }}" "turaf-internal-alb-${{ inputs.environment }}"; do
             ALB=$(aws elbv2 describe-load-balancers --names "$name" --region ${{ env.AWS_REGION }} \
@@ -448,49 +496,84 @@ jobs:
           done
           echo "✅ ALB check complete"
 
-      - name: Check for remaining Lambda functions
+      - name: Check for remaining NAT Gateways (costs money)
         run: |
-          LAMBDAS=$(aws lambda list-functions --region ${{ env.AWS_REGION }} \
-            --query "Functions[?contains(FunctionName,'${{ inputs.environment }}')].FunctionName" \
-            --output text 2>/dev/null || echo "")
-          if [[ -n "$LAMBDAS" ]]; then
-            echo "::warning::Remaining Lambda functions: $LAMBDAS"
-          else
-            echo "✅ No Lambda functions found"
-          fi
-
-      - name: Check for remaining VPCs
-        run: |
-          VPCS=$(aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} \
+          VPC_ID=$(aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} \
             --filters "Name=tag:Name,Values=*turaf*" \
-            --query 'Vpcs[].VpcId' --output text 2>/dev/null || echo "")
-          if [[ -n "$VPCS" ]]; then
-            echo "::warning::Remaining VPCs: $VPCS"
-          else
-            echo "✅ No turaf VPCs found"
+            --query 'Vpcs[0].VpcId' --output text 2>/dev/null || echo "None")
+          if [[ "$VPC_ID" != "None" && -n "$VPC_ID" ]]; then
+            NATS=$(aws ec2 describe-nat-gateways --region ${{ env.AWS_REGION }} \
+              --filter "Name=vpc-id,Values=${VPC_ID}" "Name=state,Values=available,pending" \
+              --query 'NatGateways[].NatGatewayId' --output text 2>/dev/null || echo "")
+            if [[ -n "$NATS" ]]; then
+              echo "::warning::Remaining NAT Gateways: $NATS"
+            else
+              echo "✅ No NAT Gateways found"
+            fi
           fi
 
-      - name: Check for remaining S3 buckets
+      - name: Check for remaining Interface VPC Endpoints (costs money)
         run: |
-          BUCKETS=$(aws s3api list-buckets \
-            --query "Buckets[?contains(Name,'turaf')].Name" --output text 2>/dev/null || echo "")
-          if [[ -n "$BUCKETS" ]]; then
-            echo "::warning::Remaining S3 buckets: $BUCKETS"
+          VPC_ID=$(aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*" \
+            --query 'Vpcs[0].VpcId' --output text 2>/dev/null || echo "None")
+          if [[ "$VPC_ID" != "None" && -n "$VPC_ID" ]]; then
+            ENDPOINTS=$(aws ec2 describe-vpc-endpoints --region ${{ env.AWS_REGION }} \
+              --filters "Name=vpc-id,Values=${VPC_ID}" "Name=vpc-endpoint-type,Values=Interface" \
+              --query 'VpcEndpoints[].VpcEndpointId' --output text 2>/dev/null || echo "")
+            if [[ -n "$ENDPOINTS" ]]; then
+              echo "::warning::Remaining Interface VPC Endpoints: $ENDPOINTS"
+            else
+              echo "✅ No Interface VPC Endpoints found"
+            fi
+          fi
+
+      - name: Check for remaining Elastic IPs (costs money)
+        run: |
+          EIPS=$(aws ec2 describe-addresses --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*" \
+            --query 'Addresses[].{Id:AllocationId,IP:PublicIp}' --output table 2>/dev/null || echo "")
+          if [[ -n "$EIPS" && "$EIPS" == *"turaf"* ]]; then
+            echo "::warning::Remaining Elastic IPs:"
+            echo "$EIPS"
           else
-            echo "✅ No turaf S3 buckets found"
+            echo "✅ No turaf Elastic IPs found"
+          fi
+
+      - name: Confirm free resources preserved
+        run: |
+          echo "--- Verifying free resources are intact ---"
+
+          # IAM roles (should still exist)
+          for role in "turaf-ecs-execution-role-${{ inputs.environment }}" "turaf-ecs-task-role-${{ inputs.environment }}"; do
+            if aws iam get-role --role-name "$role" &>/dev/null; then
+              echo "✅ IAM role preserved: $role"
+            else
+              echo "::notice::IAM role not found: $role"
+            fi
+          done
+
+          # VPC (should still exist)
+          VPC_ID=$(aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*" \
+            --query 'Vpcs[0].VpcId' --output text 2>/dev/null || echo "None")
+          if [[ "$VPC_ID" != "None" && -n "$VPC_ID" ]]; then
+            echo "✅ VPC preserved: $VPC_ID"
+          else
+            echo "::notice::VPC not found (may not have existed)"
           fi
 
       - name: Verification summary
         if: always()
         run: |
-          echo "## 🔍 Teardown Verification" >> $GITHUB_STEP_SUMMARY
+          echo "## Teardown Verification" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Bootstrap Destroyed**: ${{ inputs.destroy_bootstrap }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered By**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check the step outputs above for any remaining resources." >> $GITHUB_STEP_SUMMARY
+          echo "Check the step outputs above for any remaining **paid** resources." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "> **Note**: KMS keys are scheduled for deletion in 7 days (AWS minimum)." >> $GITHUB_STEP_SUMMARY
           echo "> RDS instances may take several minutes to fully terminate." >> $GITHUB_STEP_SUMMARY
+          echo "> KMS keys have a minimum 7-day deletion window." >> $GITHUB_STEP_SUMMARY
