@@ -328,13 +328,13 @@ terraform apply -target=module.github_oidc
 
 After OIDC setup, configure GitHub environment secrets:
 
-**DEV Environment** (`dev-environment`):
+**DEV Environment** (`dev`):
 - `AWS_ACCOUNT_ID`: `801651112319`
 
-**QA Environment** (`qa-environment`):
+**QA Environment** (`qa`):
 - `AWS_ACCOUNT_ID`: `965932217544`
 
-**PROD Environment** (`prod-environment`):
+**PROD Environment** (`prod`):
 - `AWS_ACCOUNT_ID`: `811783768245`
 
 ## References

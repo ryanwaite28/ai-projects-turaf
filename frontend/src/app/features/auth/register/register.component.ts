@@ -40,12 +40,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
     private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8), this.passwordStrengthValidator]],
       confirmPassword: ['', [Validators.required]],
-      organizationName: ['']
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      organizationId: ['', [Validators.required]]
     }, {
       validators: this.passwordMatchValidator
     });
@@ -71,6 +72,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
+            // Store tokens and navigate to dashboard
+            localStorage.setItem('accessToken', response.accessToken);
+            localStorage.setItem('refreshToken', response.refreshToken);
             // Dispatch login success action with response
             this.store.dispatch(login({ 
               email: userData.email, 

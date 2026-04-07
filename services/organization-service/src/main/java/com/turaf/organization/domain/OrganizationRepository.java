@@ -25,4 +25,12 @@ public interface OrganizationRepository extends Repository<Organization, Organiz
      * @return true if exists, false otherwise
      */
     boolean existsBySlug(String slug);
+    
+    /**
+     * Find all organizations where the user is a member.
+     *
+     * @param userId The user ID
+     * @return List of organizations
+     */
+    java.util.List<Organization> findByUserId(UserId userId);
 }

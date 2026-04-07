@@ -14,9 +14,17 @@ public class RegisterRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name cannot exceed 100 characters")
-    private String name;
+    @NotBlank(message = "Username is required")
+    @Size(max = 50, message = "Username cannot exceed 50 characters")
+    private String username;
+
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name cannot exceed 50 characters")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name cannot exceed 50 characters")
+    private String lastName;
 
     @NotBlank(message = "Organization ID is required")
     private String organizationId;
@@ -24,10 +32,12 @@ public class RegisterRequest {
     public RegisterRequest() {
     }
 
-    public RegisterRequest(String email, String password, String name, String organizationId) {
+    public RegisterRequest(String email, String password, String username, String firstName, String lastName, String organizationId) {
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.organizationId = organizationId;
     }
 
@@ -47,12 +57,28 @@ public class RegisterRequest {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getOrganizationId() {

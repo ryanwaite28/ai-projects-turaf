@@ -133,7 +133,6 @@ module "messaging" {
   tags = var.tags
 }
 
-# Compute Module
 module "compute" {
   source = "../../modules/compute"
 
@@ -146,47 +145,16 @@ module "compute" {
   public_subnet_ids  = module.networking.public_subnet_ids
 
   # Security
-  ecs_security_group_id = module.security.ecs_security_group_id
-  alb_security_group_id = module.security.alb_security_group_id
-  ecs_execution_role_arn = module.security.ecs_execution_role_arn
-  ecs_task_role_arn     = module.security.ecs_task_role_arn
-  acm_certificate_arn   = var.acm_certificate_arn
-
-  # Database
-  db_secrets_arn = module.database.rds_master_secret_arn
-
-  # ECR Images
-  identity_service_image     = var.identity_service_image
-  organization_service_image = var.organization_service_image
-  experiment_service_image   = var.experiment_service_image
-  image_tag                  = var.image_tag
+  ecs_security_group_id         = module.security.ecs_tasks_security_group_id
+  alb_security_group_id         = module.security.alb_security_group_id
+  internal_alb_security_group_id = module.security.internal_alb_security_group_id
+  ecs_execution_role_arn        = module.security.ecs_execution_role_arn
+  ecs_task_role_arn             = module.security.ecs_task_role_arn
+  acm_certificate_arn           = var.acm_certificate_arn
 
   # Cost Optimization
   use_fargate_spot          = var.use_fargate_spot
   enable_container_insights = var.enable_container_insights
-  enable_autoscaling        = var.enable_autoscaling
-
-  # Service Configuration
-  identity_service_cpu           = var.identity_service_cpu
-  identity_service_memory        = var.identity_service_memory
-  identity_service_desired_count = var.identity_service_desired_count
-
-  organization_service_cpu           = var.organization_service_cpu
-  organization_service_memory        = var.organization_service_memory
-  organization_service_desired_count = var.organization_service_desired_count
-
-  experiment_service_cpu           = var.experiment_service_cpu
-  experiment_service_memory        = var.experiment_service_memory
-  experiment_service_desired_count = var.experiment_service_desired_count
-
-  # Optional Services
-  enable_metrics_service      = var.enable_metrics_service
-  enable_reporting_service    = var.enable_reporting_service
-  enable_notification_service = var.enable_notification_service
-
-  # Logging
-  log_retention_days    = var.log_retention_days
-  enable_execute_command = var.enable_execute_command
 
   tags = var.tags
 }
@@ -199,7 +167,7 @@ module "lambda" {
   region      = var.aws_region
 
   # IAM
-  lambda_execution_role_arn = module.security.lambda_execution_role_arn
+  lambda_execution_role_arn = module.security.ecs_execution_role_arn
 
   # EventBridge
   event_bus_name = module.messaging.event_bus_name
@@ -225,7 +193,7 @@ module "lambda" {
   # VPC Configuration (if enabled)
   vpc_id                    = module.networking.vpc_id
   private_subnet_ids        = module.networking.private_subnet_ids
-  lambda_security_group_id  = module.security.lambda_security_group_id
+  lambda_security_group_id  = module.security.ecs_tasks_security_group_id
 
   # Runtime
   lambda_runtime     = var.lambda_runtime

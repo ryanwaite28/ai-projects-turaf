@@ -32,7 +32,10 @@ class AuthenticationFlowIntegrationTest {
         RegisterRequest registerRequest = new RegisterRequest(
             "flowtest@example.com",
             "FlowTestP@ss123",
-            "Flow Test User"
+            "flowtest",
+            "Flow",
+            "TestUser",
+            "org-123"
         );
 
         ResponseEntity<LoginResponseDto> registerResponse = restTemplate.postForEntity(
@@ -64,7 +67,7 @@ class AuthenticationFlowIntegrationTest {
         assertEquals(HttpStatus.OK, meResponse.getStatusCode());
         assertNotNull(meResponse.getBody());
         assertEquals("flowtest@example.com", meResponse.getBody().getEmail());
-        assertEquals("Flow Test User", meResponse.getBody().getName());
+        assertEquals("flowtest", meResponse.getBody().getUsername());
 
         // 3. Refresh access token
         RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
@@ -145,7 +148,10 @@ class AuthenticationFlowIntegrationTest {
         RegisterRequest user1Request = new RegisterRequest(
             "user1@example.com",
             "User1P@ss123",
-            "User One"
+            "userone",
+            "User",
+            "One",
+            "org-123"
         );
         ResponseEntity<LoginResponseDto> user1Response = restTemplate.postForEntity(
             "/api/v1/auth/register",
@@ -160,7 +166,10 @@ class AuthenticationFlowIntegrationTest {
         RegisterRequest user2Request = new RegisterRequest(
             "user2@example.com",
             "User2P@ss123",
-            "User Two"
+            "usertwo",
+            "User",
+            "Two",
+            "org-123"
         );
         ResponseEntity<LoginResponseDto> user2Response = restTemplate.postForEntity(
             "/api/v1/auth/register",
@@ -223,7 +232,10 @@ class AuthenticationFlowIntegrationTest {
         RegisterRequest registerRequest = new RegisterRequest(
             "passchange@example.com",
             "OriginalP@ss123",
-            "Pass Change User"
+            "passchange",
+            "Pass",
+            "ChangeUser",
+            "org-123"
         );
         ResponseEntity<LoginResponseDto> registerResponse = restTemplate.postForEntity(
             "/api/v1/auth/register",
@@ -279,7 +291,10 @@ class AuthenticationFlowIntegrationTest {
         RegisterRequest registerRequest = new RegisterRequest(
             "profileupdate@example.com",
             "ProfileP@ss123",
-            "Original Name"
+            "profileupdate",
+            "Original",
+            "Name",
+            "org-123"
         );
         ResponseEntity<LoginResponseDto> registerResponse = restTemplate.postForEntity(
             "/api/v1/auth/register",
@@ -288,7 +303,7 @@ class AuthenticationFlowIntegrationTest {
         );
 
         String userId = registerResponse.getBody().getUser().getId();
-        assertEquals("Original Name", registerResponse.getBody().getUser().getName());
+        assertEquals("Original", registerResponse.getBody().getUser().getFirstName());
 
         // 2. Update profile
         HttpHeaders headers = new HttpHeaders();
@@ -296,14 +311,14 @@ class AuthenticationFlowIntegrationTest {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<UserDto> updateResponse = restTemplate.exchange(
-            "/api/v1/users/me/profile?name=Updated Name",
+            "/api/v1/users/me/profile?firstName=Updated&lastName=Name",
             HttpMethod.PUT,
             entity,
             UserDto.class
         );
 
         assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
-        assertEquals("Updated Name", updateResponse.getBody().getName());
+        assertEquals("Updated", updateResponse.getBody().getFirstName());
 
         // 3. Verify profile was updated
         ResponseEntity<UserDto> getResponse = restTemplate.exchange(
@@ -314,6 +329,6 @@ class AuthenticationFlowIntegrationTest {
         );
 
         assertEquals(HttpStatus.OK, getResponse.getStatusCode());
-        assertEquals("Updated Name", getResponse.getBody().getName());
+        assertEquals("Updated", getResponse.getBody().getFirstName());
     }
 }

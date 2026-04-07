@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class MetricsServiceClient {
     
     private final WebClient webClient;
-    private static final String SERVICE_PATH = "/metrics";
+    private static final String SERVICE_PATH = "/api/v1";
     
     public MetricsServiceClient(@Qualifier("metricsWebClient") WebClient webClient) {
         this.webClient = webClient;
@@ -34,9 +34,12 @@ public class MetricsServiceClient {
     }
     
     public Flux<MetricDto> getExperimentMetrics(String experimentId, String userId, String organizationId) {
-        log.debug("Calling Metrics Service: GET /experiments/{}/metrics", experimentId);
+        log.debug("Calling Metrics Service: GET /metrics?experimentId={}", experimentId);
         return webClient.get()
-            .uri(SERVICE_PATH + "/experiments/{id}/metrics", experimentId)
+            .uri(uriBuilder -> uriBuilder
+                .path(SERVICE_PATH + "/metrics")
+                .queryParam("experimentId", experimentId)
+                .build())
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()

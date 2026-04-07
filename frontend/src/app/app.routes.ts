@@ -47,6 +47,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'organizations',
+    loadChildren: () => import('./features/organizations/organizations.module').then(m => m.OrganizationsModule),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'communications',
+    loadChildren: () => import('./features/communications/communications.module').then(m => m.CommunicationsModule),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }

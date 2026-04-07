@@ -8,19 +8,21 @@ This workflow is designed for use with Windsurf (or similar AI IDEs) to efficien
 
 **Before starting any work, read these documents**:
 
-1. **[Windsurf Rules](../rules.md)** - MANDATORY rules for consistency and quality
+1. **[PROJECT.md](../../PROJECT.md)** - Single source of truth for all project documentation
+   - Complete system architecture and design
+   - AWS account structure and multi-account strategy
+   - GitHub repository configuration and CI/CD workflows
+   - Local development setup and troubleshooting
+   - Deployment procedures and operational runbooks
+   - Testing strategy and architecture decision records
+   - All infrastructure and service specifications
+
+2. **[Windsurf Rules](../rules/rules.md)** - MANDATORY rules for consistency and quality
    - Documentation hierarchy and single source of truth
    - AWS account standards and infrastructure rules
    - Architecture and design standards
    - Testing, CI/CD, and deployment standards
    - Security and code quality requirements
-
-2. **[BEST_PRACTICES.md](../../BEST_PRACTICES.md)** - Efficient AI workflow patterns
-   - 60% faster context gathering techniques
-   - Documentation hierarchy and navigation
-   - Plan lifecycle management
-   - Prompt templates and examples
-   - Common workflows with step-by-step guidance
 
 ---
 
@@ -28,11 +30,13 @@ This workflow is designed for use with Windsurf (or similar AI IDEs) to efficien
 
 ### Documentation Guidelines
 
-- **Plan Documents**: Create in `.windsurf/plans/active/` for implementation plans only. General documentation goes in `docs/` folder.
-- **Minimize Duplication**: Reuse and update existing docs unless scope is vastly different (e.g., infrastructure planning, costs, CI/CD design).
-- **Changelog**: Track PROJECT.md changes in `changelog/` directory with date-prefixed filenames.
-- **Single Source of Truth**: Ensure consistency across all docs. Check `BEST_PRACTICES.md` for authoritative sources (AWS accounts, IAM roles, etc.).
-- **Alignment Check**: Verify all changes align with PROJECT.md. If conflict exists, pause and ask how to proceed.
+- **Single Source of Truth**: PROJECT.md is the authoritative source for all project documentation
+- **Plan Documents**: Create in `.windsurf/plans/active/` for implementation plans only
+- **Minimize Duplication**: Update PROJECT.md rather than creating new documentation files
+- **Specs and Tasks**: Detailed service specs go in `specs/`, implementation tasks in `tasks/`
+- **Alignment Check**: Verify all changes align with PROJECT.md. If conflict exists, pause and ask how to proceed
+- **AWS Accounts**: Always reference PROJECT.md § 2 for account IDs and ARNs
+- **IAM Roles**: Always reference PROJECT.md § 3 for GitHub Actions OIDC roles
 
 ### Plan Lifecycle Management
 

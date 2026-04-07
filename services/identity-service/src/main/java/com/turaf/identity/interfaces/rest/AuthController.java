@@ -29,7 +29,7 @@ public class AuthController {
         UserDto user = authenticationService.register(request);
         TokenResponse tokens = tokenService.generateTokens(
             UserId.of(user.getId()),
-            "default-org"
+            request.getOrganizationId()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -39,9 +39,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequest request) {
         UserDto user = authenticationService.login(request);
+        String organizationId = authenticationService.getUserOrganizationId(UserId.of(user.getId()));
         TokenResponse tokens = tokenService.generateTokens(
             UserId.of(user.getId()),
-            "default-org"
+            organizationId
         );
 
         return ResponseEntity.ok(new LoginResponseDto(user, tokens));
@@ -57,5 +58,17 @@ public class AuthController {
     public ResponseEntity<Void> logout(@RequestHeader("X-User-Id") String userId) {
         tokenService.revokeRefreshToken(UserId.of(userId));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        authenticationService.requestPasswordReset(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        authenticationService.confirmPasswordReset(request);
+        return ResponseEntity.ok().build();
     }
 }

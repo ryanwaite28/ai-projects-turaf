@@ -1,0 +1,340 @@
+name: Deploy Notification Lambda
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'services/notification-service/**'
+      - '.github/workflows/deploy-notification-lambda.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+env:
+  AWS_REGION: us-east-1
+  SERVICE_NAME: notification-service
+  LAMBDA_FUNCTION_NAME_PREFIX: notification-processor
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './services/${{ env.SERVICE_NAME }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+  deploy-dev:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    if: |
+      always() &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      (github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'dev')
+    environment: dev
+    
+    env:
+      ENVIRONMENT: dev
+      AWS_ACCOUNT_ID: 801651112319
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -t package/
+      
+      - name: Package Lambda function
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          # Copy source code to package directory
+          cp -r handlers package/
+          cp -r services package/
+          cp -r clients package/
+          cp -r models package/
+          cp -r templates package/
+          cp config.py package/
+          cp notification_handler.py package/
+          
+          # Create deployment package
+          cd package
+          zip -r ../function.zip .
+          cd ..
+          
+          # Add handler at root level
+          zip -g function.zip notification_handler.py
+      
+      - name: Upload to S3
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          BUCKET_NAME="turaf-lambda-artifacts-${{ env.ENVIRONMENT }}"
+          VERSION="${{ github.sha }}"
+          S3_KEY="${{ env.SERVICE_NAME }}/${VERSION}/function.zip"
+          
+          # Create bucket if it doesn't exist
+          aws s3 mb s3://${BUCKET_NAME} --region ${{ env.AWS_REGION }} || true
+          
+          # Upload function package
+          aws s3 cp function.zip s3://${BUCKET_NAME}/${S3_KEY}
+          
+          # Also upload as 'latest' for easy reference
+          aws s3 cp function.zip s3://${BUCKET_NAME}/${{ env.SERVICE_NAME }}/latest/function.zip
+          
+          echo "S3_KEY=${S3_KEY}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+      
+      - name: Update Lambda function
+        run: |
+          FUNCTION_NAME="${{ env.LAMBDA_FUNCTION_NAME_PREFIX }}-${{ env.ENVIRONMENT }}"
+          
+          # Check if function exists
+          if aws lambda get-function --function-name ${FUNCTION_NAME} 2>/dev/null; then
+            echo "Updating existing Lambda function: ${FUNCTION_NAME}"
+            aws lambda update-function-code \
+              --function-name ${FUNCTION_NAME} \
+              --s3-bucket ${{ env.BUCKET_NAME }} \
+              --s3-key ${{ env.S3_KEY }} \
+              --publish
+          else
+            echo "Lambda function ${FUNCTION_NAME} does not exist yet."
+            echo "It will be created when infrastructure is deployed with enable_notification_processor=true"
+            echo "Skipping Lambda update for now."
+          fi
+      
+      - name: Wait for function update
+        run: |
+          FUNCTION_NAME="${{ env.LAMBDA_FUNCTION_NAME_PREFIX }}-${{ env.ENVIRONMENT }}"
+          
+          if aws lambda get-function --function-name ${FUNCTION_NAME} 2>/dev/null; then
+            aws lambda wait function-updated \
+              --function-name ${FUNCTION_NAME} || true
+          fi
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## DEV Lambda Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Location**: s3://${{ env.BUCKET_NAME }}/${{ env.S3_KEY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
+    environment: qa
+    
+    env:
+      ENVIRONMENT: qa
+      AWS_ACCOUNT_ID: 965932217544
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -t package/
+      
+      - name: Package Lambda function
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          cp -r handlers package/
+          cp -r services package/
+          cp -r clients package/
+          cp -r models package/
+          cp -r templates package/
+          cp config.py package/
+          cp notification_handler.py package/
+          cd package
+          zip -r ../function.zip .
+          cd ..
+          zip -g function.zip notification_handler.py
+      
+      - name: Upload to S3
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          BUCKET_NAME="turaf-lambda-artifacts-${{ env.ENVIRONMENT }}"
+          VERSION="${{ github.sha }}"
+          S3_KEY="${{ env.SERVICE_NAME }}/${VERSION}/function.zip"
+          aws s3 mb s3://${BUCKET_NAME} --region ${{ env.AWS_REGION }} || true
+          aws s3 cp function.zip s3://${BUCKET_NAME}/${S3_KEY}
+          aws s3 cp function.zip s3://${BUCKET_NAME}}/${{ env.SERVICE_NAME }}/latest/function.zip
+          echo "S3_KEY=${S3_KEY}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+      
+      - name: Update Lambda function
+        run: |
+          FUNCTION_NAME="${{ env.LAMBDA_FUNCTION_NAME_PREFIX }}-${{ env.ENVIRONMENT }}"
+          if aws lambda get-function --function-name ${FUNCTION_NAME} 2>/dev/null; then
+            aws lambda update-function-code \
+              --function-name ${FUNCTION_NAME} \
+              --s3-bucket ${{ env.BUCKET_NAME }} \
+              --s3-key ${{ env.S3_KEY }} \
+              --publish
+            aws lambda wait function-updated --function-name ${FUNCTION_NAME} || true
+          else
+            echo "Lambda function ${FUNCTION_NAME} not yet created by infrastructure."
+          fi
+      
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests for ${{ env.SERVICE_NAME }}..."
+          # Integration tests will be added when service is fully deployed
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## QA Lambda Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: deploy-qa
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: prod
+    
+    env:
+      ENVIRONMENT: prod
+      AWS_ACCOUNT_ID: 811783768245
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -t package/
+      
+      - name: Package Lambda function
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          cp -r handlers package/
+          cp -r services package/
+          cp -r clients package/
+          cp -r models package/
+          cp -r templates package/
+          cp config.py package/
+          cp notification_handler.py package/
+          cd package
+          zip -r ../function.zip .
+          cd ..
+          zip -g function.zip notification_handler.py
+      
+      - name: Upload to S3
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        run: |
+          BUCKET_NAME="turaf-lambda-artifacts-${{ env.ENVIRONMENT }}"
+          VERSION="${{ github.sha }}"
+          S3_KEY="${{ env.SERVICE_NAME }}/${VERSION}/function.zip"
+          aws s3 mb s3://${BUCKET_NAME} --region ${{ env.AWS_REGION }} || true
+          aws s3 cp function.zip s3://${BUCKET_NAME}/${S3_KEY}
+          aws s3 cp function.zip s3://${BUCKET_NAME}}/${{ env.SERVICE_NAME }}/latest/function.zip
+          echo "S3_KEY=${S3_KEY}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+      
+      - name: Update Lambda function
+        run: |
+          FUNCTION_NAME="${{ env.LAMBDA_FUNCTION_NAME_PREFIX }}-${{ env.ENVIRONMENT }}"
+          if aws lambda get-function --function-name ${FUNCTION_NAME} 2>/dev/null; then
+            aws lambda update-function-code \
+              --function-name ${FUNCTION_NAME} \
+              --s3-bucket ${{ env.BUCKET_NAME }} \
+              --s3-key ${{ env.S3_KEY }} \
+              --publish
+            aws lambda wait function-updated --function-name ${FUNCTION_NAME} || true
+          else
+            echo "Lambda function ${FUNCTION_NAME} not yet created by infrastructure."
+          fi
+      
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests for ${{ env.SERVICE_NAME }}..."
+          # Smoke tests will be added
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## PROD Lambda Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

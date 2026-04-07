@@ -96,6 +96,19 @@ public class OrganizationService {
     }
     
     /**
+     * Get all organizations for a user.
+     *
+     * @param userId The user ID
+     * @return List of organization DTOs
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<OrganizationDto> getOrganizationsByUser(UserId userId) {
+        return organizationRepository.findByUserId(userId).stream()
+            .map(OrganizationDto::fromDomain)
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
+    /**
      * Update an organization.
      *
      * @param id The organization ID

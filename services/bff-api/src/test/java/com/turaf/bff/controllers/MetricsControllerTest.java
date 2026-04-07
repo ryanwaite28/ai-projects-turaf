@@ -36,7 +36,9 @@ class MetricsControllerTest {
             .userId("user-123")
             .organizationId("org-123")
             .email("test@example.com")
-            .name("Test User")
+            .username("testuser")
+            .firstName("Test")
+            .lastName("User")
             .build();
     }
     

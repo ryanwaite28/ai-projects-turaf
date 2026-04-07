@@ -14,7 +14,9 @@ public class UserContext {
     private String userId;
     private String organizationId;
     private String email;
-    private String name;
+    private String username;
+    private String firstName;
+    private String lastName;
     
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));

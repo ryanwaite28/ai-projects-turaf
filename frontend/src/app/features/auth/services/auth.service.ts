@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { LoginRequest, LoginResponse } from '../../../models/user.model';
+import { LoginRequest, LoginResponse, RegisterRequest, RefreshTokenRequest, RefreshTokenResponse, PasswordResetRequest, PasswordResetConfirmRequest, User } from '../../../models/user.model';
 import { environment } from '../../../../environments/environment';
 
 /**
@@ -49,10 +49,20 @@ export class AuthService {
   /**
    * Refreshes the JWT token.
    * 
-   * @returns Observable<{ token: string }> New token
+   * @param refreshToken The refresh token
+   * @returns Observable<RefreshTokenResponse> New tokens
    */
-  refreshToken(): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/refresh`, {});
+  refreshToken(refreshToken: string): Observable<RefreshTokenResponse> {
+    return this.http.post<RefreshTokenResponse>(`${this.apiUrl}/refresh`, { refreshToken });
+  }
+  
+  /**
+   * Gets the current authenticated user.
+   * 
+   * @returns Observable<User> Current user data
+   */
+  getCurrentUser(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/me`);
   }
   
   /**
@@ -67,35 +77,20 @@ export class AuthService {
   /**
    * Requests a password reset email.
    * 
-   * @param email User's email address
+   * @param request Password reset request with email
    * @returns Observable<void> Request confirmation
    */
-  requestPasswordReset(email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/password-reset/request`, { email });
+  requestPasswordReset(request: PasswordResetRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/password-reset/request`, request);
   }
   
   /**
    * Resets password with token.
    * 
-   * @param token Reset token from email
-   * @param newPassword New password
+   * @param request Password reset confirmation with token and new password
    * @returns Observable<void> Reset confirmation
    */
-  resetPassword(token: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/password-reset/confirm`, {
-      token,
-      newPassword
-    });
+  resetPassword(request: PasswordResetConfirmRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/password-reset/confirm`, request);
   }
-}
-
-/**
- * User registration request interface
- */
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  organizationName?: string;
 }

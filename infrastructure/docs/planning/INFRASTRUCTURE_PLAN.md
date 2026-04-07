@@ -1388,15 +1388,15 @@ chmod +x verify-setup.sh
 1. **Create Environments** (via GitHub UI or API):
    ```bash
    # Using GitHub CLI
-   gh api repos/ryanwaite28/ai-projects-turaf/environments/dev-environment -X PUT
-   gh api repos/ryanwaite28/ai-projects-turaf/environments/qa-environment -X PUT
-   gh api repos/ryanwaite28/ai-projects-turaf/environments/prod-environment -X PUT
+   gh api repos/ryanwaite28/ai-projects-turaf/environments/dev -X PUT
+   gh api repos/ryanwaite28/ai-projects-turaf/environments/qa -X PUT
+   gh api repos/ryanwaite28/ai-projects-turaf/environments/prod -X PUT
    ```
 
 2. **Configure Environment Protection Rules**:
-   - **dev-environment**: No protection (auto-deploy)
-   - **qa-environment**: 5-minute wait timer
-   - **prod-environment**: Required reviewers (2 approvals), deployment branches: `main` only
+   - **dev**: No protection (auto-deploy)
+   - **qa**: 5-minute wait timer
+   - **prod**: Required reviewers (2 approvals), deployment branches: `main` only
 
 ### 4.2 Configure GitHub Secrets
 
@@ -1422,19 +1422,19 @@ gh secret set ECR_REGISTRY_PROD --body "811783768245.dkr.ecr.us-east-1.amazonaws
 
 ```bash
 # DEV Environment
-gh secret set AWS_ROLE_ARN --env dev-environment --body "arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole"
-gh secret set DATABASE_URL --env dev-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
-gh secret set JWT_SECRET --env dev-environment --body "<GENERATE_RANDOM_SECRET>"
+gh secret set AWS_ROLE_ARN --env dev --body "arn:aws:iam::801651112319:role/GitHubActionsDeploymentRole"
+gh secret set DATABASE_URL --env dev --body "<TO_BE_SET_AFTER_TERRAFORM>"
+gh secret set JWT_SECRET --env dev --body "<GENERATE_RANDOM_SECRET>"
 
 # QA Environment
-gh secret set AWS_ROLE_ARN --env qa-environment --body "arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole"
-gh secret set DATABASE_URL --env qa-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
-gh secret set JWT_SECRET --env qa-environment --body "<GENERATE_RANDOM_SECRET>"
+gh secret set AWS_ROLE_ARN --env qa --body "arn:aws:iam::965932217544:role/GitHubActionsDeploymentRole"
+gh secret set DATABASE_URL --env qa --body "<TO_BE_SET_AFTER_TERRAFORM>"
+gh secret set JWT_SECRET --env qa --body "<GENERATE_RANDOM_SECRET>"
 
 # PROD Environment
-gh secret set AWS_ROLE_ARN --env prod-environment --body "arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole"
-gh secret set DATABASE_URL --env prod-environment --body "<TO_BE_SET_AFTER_TERRAFORM>"
-gh secret set JWT_SECRET --env prod-environment --body "<GENERATE_RANDOM_SECRET>"
+gh secret set AWS_ROLE_ARN --env prod --body "arn:aws:iam::811783768245:role/GitHubActionsDeploymentRole"
+gh secret set DATABASE_URL --env prod --body "<TO_BE_SET_AFTER_TERRAFORM>"
+gh secret set JWT_SECRET --env prod --body "<GENERATE_RANDOM_SECRET>"
 ```
 
 ### 4.3 Configure Branch Protection Rules

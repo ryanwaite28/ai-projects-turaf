@@ -126,3 +126,52 @@ resource "aws_lb_listener" "https" {
     }
   )
 }
+
+# Internal Application Load Balancer for Service-to-Service Communication
+resource "aws_lb" "internal" {
+  name               = "turaf-internal-alb-${var.environment}"
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [var.internal_alb_security_group_id]
+  subnets            = var.private_subnet_ids
+
+  enable_deletion_protection = var.environment == "prod" ? true : false
+  enable_http2              = true
+  idle_timeout              = 60
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "turaf-internal-alb-${var.environment}"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+      Purpose     = "Internal ALB for BFF to microservices communication"
+    }
+  )
+}
+
+# Internal ALB HTTP Listener (Port 80)
+resource "aws_lb_listener" "internal_http" {
+  load_balancer_arn = aws_lb.internal.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "No service configured"
+      status_code  = "404"
+    }
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "turaf-internal-alb-http-listener-${var.environment}"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  )
+}

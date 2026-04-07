@@ -20,8 +20,14 @@ public class UserJpaEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "username", nullable = false, length = 50, unique = true)
+    private String username;
+
+    @Column(name = "first_name", nullable = false, length = 50)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 50)
+    private String lastName;
 
     @Column(name = "organization_id", nullable = false, length = 36)
     private String organizationId;
@@ -35,11 +41,13 @@ public class UserJpaEntity {
     protected UserJpaEntity() {
     }
 
-    public UserJpaEntity(String id, String email, String password, String name, String organizationId, Instant createdAt, Instant updatedAt) {
+    public UserJpaEntity(String id, String email, String password, String username, String firstName, String lastName, String organizationId, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.organizationId = organizationId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -51,7 +59,9 @@ public class UserJpaEntity {
             this.organizationId,
             new Email(email),
             Password.fromHashed(password, encoder),
-            name
+            username,
+            firstName,
+            lastName
         );
         user.clearDomainEvents();
         return user;
@@ -62,7 +72,9 @@ public class UserJpaEntity {
             user.getId().getValue(),
             user.getEmail().getValue(),
             user.getPassword().getHashedValue(),
-            user.getName(),
+            user.getUsername(),
+            user.getFirstName(),
+            user.getLastName(),
             user.getOrganizationId(),
             user.getCreatedAt(),
             user.getUpdatedAt()
@@ -93,12 +105,28 @@ public class UserJpaEntity {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getOrganizationId() {

@@ -108,7 +108,7 @@ export class OrganizationService {
    * Updates an organization
    */
   updateOrganization(id: string, request: UpdateOrganizationRequest): Observable<Organization> {
-    return this.http.patch<Organization>(`${this.apiUrl}/${id}`, request);
+    return this.http.put<Organization>(`${this.apiUrl}/${id}`, request);
   }
   
   /**

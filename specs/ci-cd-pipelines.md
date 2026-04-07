@@ -55,49 +55,81 @@ This specification defines the complete CI/CD pipeline architecture using GitHub
 **Purpose**: Deploy/update shared infrastructure  
 **Scope**: VPC, ECS cluster, ALB, databases, messaging
 
-### 3. Service Deployment (service-<name>-<env>.yml)
+### 3. Service Deployment (service-<name>.yml)
 **Triggers**: Changes to service code, manual  
-**Purpose**: Build image, deploy service-specific infrastructure  
-**Scope**: Single service to single environment
+**Purpose**: Build image, deploy service-specific infrastructure across environments  
+**Scope**: Single service to DEV/QA/PROD environments (sequential deployment)
 
 ---
 
 ## Service Deployment Workflow Pattern
 
-Each service follows this pattern for deployment:
+Each service uses a **consolidated workflow** that handles all environments (DEV, QA, PROD) in a single file:
 
 ```yaml
-name: Deploy Identity Service to DEV
+name: Deploy Identity Service
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
     paths:
       - 'services/identity-service/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options: [dev, qa, prod]
 
 env:
   AWS_REGION: us-east-1
   SERVICE_NAME: identity-service
-  ENVIRONMENT: dev
-  AWS_ACCOUNT_ID: 801651112319
+  ECR_REPOSITORY: turaf-identity-service
 
 jobs:
-  build-and-push:
+  security-scan:
+    name: Security Scanning
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsDeploymentRole
+    if: github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    # Trivy vulnerability scanning
+  
+  deploy-dev:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    if: |
+      always() && 
+      !contains(needs.*.result, 'failure') &&
+      (github.ref == 'refs/heads/develop' || 
+       github.ref == 'refs/heads/main' || 
+       github.event.inputs.environment == 'dev')
+    env:
+      ENVIRONMENT: dev
+      AWS_ACCOUNT_ID: 801651112319
+    # Build, push, deploy to DEV
+  
+  deploy-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
+    environment: qa
+    env:
+      ENVIRONMENT: qa
+      AWS_ACCOUNT_ID: 965932217544
+    # Build, push, deploy to QA
+  
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: deploy-qa
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: prod  # Requires manual approval
+    env:
+      ENVIRONMENT: prod
+      AWS_ACCOUNT_ID: 811783768245
+    # Build, push, deploy to PROD with additional monitoring
           aws-region: ${{ env.AWS_REGION }}
       
       - name: Login to Amazon ECR

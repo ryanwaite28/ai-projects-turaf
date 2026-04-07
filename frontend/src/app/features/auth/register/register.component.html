@@ -56,15 +56,32 @@
           </mat-error>
         </mat-form-field>
         
-        <!-- Organization Name Field (Optional) -->
+        <!-- Username Field -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Organization Name (Optional)</mat-label>
+          <mat-label>Username</mat-label>
           <input 
             matInput 
-            formControlName="organizationName"
-            placeholder="Acme Corp"
-            autocomplete="organization">
+            formControlName="username"
+            placeholder="johndoe"
+            autocomplete="username">
+          <mat-icon matPrefix>account_circle</mat-icon>
+          <mat-error *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">
+            {{ getErrorMessage('username') }}
+          </mat-error>
+        </mat-form-field>
+        
+        <!-- Organization ID Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Organization ID</mat-label>
+          <input 
+            matInput 
+            formControlName="organizationId"
+            placeholder="org-123"
+            autocomplete="off">
           <mat-icon matPrefix>business</mat-icon>
+          <mat-error *ngIf="registerForm.get('organizationId')?.invalid && registerForm.get('organizationId')?.touched">
+            {{ getErrorMessage('organizationId') }}
+          </mat-error>
         </mat-form-field>
         
         <!-- Password Field -->

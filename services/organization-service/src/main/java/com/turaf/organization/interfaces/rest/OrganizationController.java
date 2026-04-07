@@ -39,6 +39,20 @@ public class OrganizationController {
         this.authorizationService = authorizationService;
     }
     
+    @GetMapping
+    @Operation(summary = "Get user's organizations", description = "Retrieves all organizations the user is a member of")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Organizations retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public ResponseEntity<java.util.List<OrganizationDto>> getUserOrganizations(
+            @Parameter(hidden = true) @AuthenticationPrincipal UserPrincipal principal) {
+        
+        UserId userId = UserId.of(principal.getUserId());
+        java.util.List<OrganizationDto> organizations = organizationService.getOrganizationsByUser(userId);
+        return ResponseEntity.ok(organizations);
+    }
+    
     @PostMapping
     @Operation(summary = "Create a new organization", description = "Creates a new organization with the authenticated user as the creator")
     @ApiResponses(value = {

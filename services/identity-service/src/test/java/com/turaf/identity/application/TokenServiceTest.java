@@ -59,7 +59,7 @@ class TokenServiceTest {
         PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
         when(mockEncoder.encode(anyString())).thenReturn("hashed");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, organizationId, email, password, "testuser", "Test", "User");
 
         String accessToken = "access.token.here";
         String refreshToken = "refresh-token-uuid";
@@ -95,7 +95,7 @@ class TokenServiceTest {
         PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
         when(mockEncoder.encode(anyString())).thenReturn("hashed");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, organizationId, email, password, "testuser", "Test", "User");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(tokenProvider.generateAccessToken(any(), any(), any())).thenReturn("access.token");
@@ -152,14 +152,14 @@ class TokenServiceTest {
         PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
         when(mockEncoder.encode(anyString())).thenReturn("hashed");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-123", email, password, "testuser", "Test", "User");
 
         String newAccessToken = "new.access.token";
         RefreshTokenRequest request = new RefreshTokenRequest(refreshTokenValue);
 
         when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.of(refreshToken));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(tokenProvider.generateAccessToken(userId, email.getValue(), "default-org"))
+        when(tokenProvider.generateAccessToken(userId, email.getValue(), "org-123"))
             .thenReturn(newAccessToken);
         when(tokenProvider.getAccessTokenExpiration()).thenReturn(ACCESS_TOKEN_EXPIRATION);
 
@@ -174,7 +174,7 @@ class TokenServiceTest {
 
         verify(refreshTokenRepository).findByToken(refreshTokenValue);
         verify(userRepository).findById(userId);
-        verify(tokenProvider).generateAccessToken(userId, email.getValue(), "default-org");
+        verify(tokenProvider).generateAccessToken(userId, email.getValue(), "org-123");
     }
 
     @Test
@@ -297,7 +297,7 @@ class TokenServiceTest {
         PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
         when(mockEncoder.encode(anyString())).thenReturn("hashed");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, "org-123", email, password, "testuser", "Test", "User");
 
         RefreshTokenRequest request = new RefreshTokenRequest(refreshTokenValue);
 
@@ -323,7 +323,7 @@ class TokenServiceTest {
         PasswordEncoder mockEncoder = mock(PasswordEncoder.class);
         when(mockEncoder.encode(anyString())).thenReturn("hashed");
         Password password = Password.fromRaw("SecureP@ss123", mockEncoder);
-        User user = new User(userId, email, password, "Test User");
+        User user = new User(userId, organizationId, email, password, "testuser", "Test", "User");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(tokenProvider.generateAccessToken(any(), any(), any())).thenReturn("access.token");

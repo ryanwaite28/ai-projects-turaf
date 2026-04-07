@@ -143,11 +143,12 @@ module "compute" {
   public_subnet_ids  = module.networking.public_subnet_ids
 
   # Security
-  ecs_security_group_id  = module.security.ecs_tasks_security_group_id
-  alb_security_group_id  = module.security.alb_security_group_id
-  ecs_execution_role_arn = module.security.ecs_execution_role_arn
-  ecs_task_role_arn      = module.security.ecs_task_role_arn
-  acm_certificate_arn    = var.acm_certificate_arn
+  ecs_security_group_id         = module.security.ecs_tasks_security_group_id
+  alb_security_group_id         = module.security.alb_security_group_id
+  internal_alb_security_group_id = module.security.internal_alb_security_group_id
+  ecs_execution_role_arn        = module.security.ecs_execution_role_arn
+  ecs_task_role_arn             = module.security.ecs_task_role_arn
+  acm_certificate_arn           = var.acm_certificate_arn
 
   # Cost Optimization
   use_fargate_spot          = var.use_fargate_spot
@@ -199,32 +200,31 @@ module "lambda" {
   tags = var.tags
 }
 
-# Monitoring Module - TEMPORARILY DISABLED (fixing dashboard syntax)
-# module "monitoring" {
-#   source = "../../modules/monitoring"
-#
-#   environment = var.environment
-#   region      = var.aws_region
-#
-#   # Resource Identifiers
-#   cluster_name    = module.compute.cluster_name
-#   alb_arn_suffix  = module.compute.alb_arn_suffix
-#   rds_instance_id = module.database.rds_instance_id
-#
-#   # Cost Optimization - All disabled for demo
-#   enable_alarms       = var.enable_alarms
-#   enable_dashboard    = var.enable_dashboard
-#   enable_sns_alerts   = var.enable_sns_alerts
-#   enable_xray         = var.enable_xray
-#   enable_log_insights = var.enable_log_insights
-#
-#   # Alert Configuration (if enabled)
-#   alarm_email = var.alarm_email
-#
-#   # Alarm Thresholds
-#   cpu_threshold           = var.cpu_threshold
-#   memory_threshold        = var.memory_threshold
-#   response_time_threshold = var.response_time_threshold
-#
-#   tags = var.tags
-# }
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  environment = var.environment
+  region      = var.aws_region
+
+  # Resource Identifiers
+  cluster_name    = module.compute.cluster_name
+  alb_arn_suffix  = module.compute.alb_arn_suffix
+  rds_instance_id = module.database.rds_instance_id
+
+  # Cost Optimization - All disabled for demo
+  enable_alarms       = var.enable_alarms
+  enable_dashboard    = var.enable_dashboard
+  enable_sns_alerts   = var.enable_sns_alerts
+  enable_xray         = var.enable_xray
+  enable_log_insights = var.enable_log_insights
+
+  # Alert Configuration (if enabled)
+  alarm_email = var.alarm_email
+
+  # Alarm Thresholds
+  cpu_threshold           = var.cpu_threshold
+  memory_threshold        = var.memory_threshold
+  response_time_threshold = var.response_time_threshold
+
+  tags = var.tags
+}

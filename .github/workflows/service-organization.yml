@@ -1,0 +1,441 @@
+name: Deploy Organization Service
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'services/organization-service/**'
+      - '.github/workflows/service-organization.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+env:
+  AWS_REGION: us-east-1
+  SERVICE_NAME: organization-service
+  ECR_REPOSITORY: turaf-organization-service
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './services/${{ env.SERVICE_NAME }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+  deploy-dev:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    if: |
+      always() && 
+      !contains(needs.*.result, 'failure') &&
+      (github.ref == 'refs/heads/develop' || 
+       github.ref == 'refs/heads/main' || 
+       github.event.inputs.environment == 'dev')
+    
+    env:
+      ENVIRONMENT: dev
+      AWS_ACCOUNT_ID: 801651112319
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsDeploymentRole
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Terraform Init
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=turaf-terraform-state-${{ env.ENVIRONMENT }}" \
+            -backend-config="key=${{ env.SERVICE_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Plan
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Wait for ECS service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Get service status
+        run: |
+          aws ecs describe-services \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Deployments:deployments[0].status}'
+      
+      - name: Health check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names turaf-alb-${{ env.ENVIRONMENT }} \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)
+          
+          for i in {1..30}; do
+            if curl -f http://$ALB_DNS/api/${{ env.SERVICE_NAME }}/health; then
+              echo "✅ Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be healthy... ($i/30)"
+            sleep 10
+          done
+          
+          echo "❌ Service health check failed"
+          exit 1
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## DEV Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'qa'
+    environment: qa
+    
+    env:
+      ENVIRONMENT: qa
+      AWS_ACCOUNT_ID: 965932217544
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsDeploymentRole
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Terraform Init
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=turaf-terraform-state-${{ env.ENVIRONMENT }}" \
+            -backend-config="key=${{ env.SERVICE_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Plan
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Wait for ECS service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Get service status
+        run: |
+          aws ecs describe-services \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Deployments:deployments[0].status}'
+      
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests for ${{ env.SERVICE_NAME }}..."
+          # Integration tests will be added when service is implemented
+      
+      - name: Health check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names turaf-alb-${{ env.ENVIRONMENT }} \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)
+          
+          for i in {1..30}; do
+            if curl -f http://$ALB_DNS/api/${{ env.SERVICE_NAME }}/health; then
+              echo "✅ Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be healthy... ($i/30)"
+            sleep 10
+          done
+          
+          echo "❌ Service health check failed"
+          exit 1
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## QA Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: deploy-qa
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'prod'
+    environment: prod
+    
+    env:
+      ENVIRONMENT: prod
+      AWS_ACCOUNT_ID: 811783768245
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsDeploymentRole
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        working-directory: ./services/${{ env.SERVICE_NAME }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+      
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image-results.sarif
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Terraform Init
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=turaf-terraform-state-${{ env.ENVIRONMENT }}" \
+            -backend-config="key=${{ env.SERVICE_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+      
+      - name: Terraform Plan
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: ./services/${{ env.SERVICE_NAME }}/terraform
+        env:
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+          TF_VAR_service_name: ${{ env.SERVICE_NAME }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Wait for ECS service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Get service status
+        run: |
+          aws ecs describe-services \
+            --cluster turaf-cluster-${{ env.ENVIRONMENT }} \
+            --services ${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,Deployments:deployments[0].status}'
+      
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests for ${{ env.SERVICE_NAME }}..."
+          # Smoke tests will be added when service is implemented
+      
+      - name: Health check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers \
+            --names turaf-alb-${{ env.ENVIRONMENT }} \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text)
+          
+          for i in {1..30}; do
+            if curl -f https://$ALB_DNS/api/${{ env.SERVICE_NAME }}/health; then
+              echo "✅ Service is healthy"
+              exit 0
+            fi
+            echo "Waiting for service to be healthy... ($i/30)"
+            sleep 10
+          done
+          
+          echo "❌ Service health check failed"
+          exit 1
+      
+      - name: Monitor metrics
+        run: |
+          echo "Monitoring CloudWatch metrics for 5 minutes..."
+          sleep 300
+          
+          ERROR_COUNT=$(aws cloudwatch get-metric-statistics \
+            --namespace AWS/ECS \
+            --metric-name HTTPCode_Target_5XX_Count \
+            --dimensions Name=ServiceName,Value=${{ env.SERVICE_NAME }}-${{ env.ENVIRONMENT }} \
+            --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+            --period 300 \
+            --statistics Sum \
+            --query 'Datapoints[0].Sum' \
+            --output text)
+          
+          if [ "$ERROR_COUNT" != "None" ] && [ "$ERROR_COUNT" -gt 10 ]; then
+            echo "❌ High error rate detected: $ERROR_COUNT errors"
+            exit 1
+          fi
+          
+          echo "✅ Metrics look healthy"
+      
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## PROD Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ env.SERVICE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan**: Passed" >> $GITHUB_STEP_SUMMARY

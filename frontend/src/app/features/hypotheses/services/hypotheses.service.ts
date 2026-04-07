@@ -4,9 +4,7 @@ import { Observable } from 'rxjs';
 import { 
   Hypothesis, 
   CreateHypothesisRequest, 
-  UpdateHypothesisRequest,
-  HypothesisQueryParams,
-  PaginatedHypothesesResponse
+  UpdateHypothesisRequest
 } from '../../../models/hypothesis.model';
 import { environment } from '../../../../environments/environment';
 
@@ -25,36 +23,27 @@ export class HypothesesService {
   constructor(private http: HttpClient) {}
   
   /**
-   * Fetches paginated list of hypotheses
+   * Fetches list of hypotheses
    * 
-   * @param params Query parameters for filtering and pagination
-   * @returns Observable<PaginatedHypothesesResponse> Paginated hypotheses
+   * @param problemId Optional problem ID to filter by
+   * @returns Observable<Hypothesis[]> List of hypotheses
    */
-  getHypotheses(params?: HypothesisQueryParams): Observable<PaginatedHypothesesResponse> {
+  getHypotheses(problemId?: string): Observable<Hypothesis[]> {
     let httpParams = new HttpParams();
-    
-    if (params) {
-      if (params.page) httpParams = httpParams.set('page', params.page.toString());
-      if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
-      if (params.problemId) httpParams = httpParams.set('problemId', params.problemId);
-      if (params.status) httpParams = httpParams.set('status', params.status);
-      if (params.search) httpParams = httpParams.set('search', params.search);
-      if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
-      if (params.sortOrder) httpParams = httpParams.set('sortOrder', params.sortOrder);
+    if (problemId) {
+      httpParams = httpParams.set('problemId', problemId);
     }
-    
-    return this.http.get<PaginatedHypothesesResponse>(this.apiUrl, { params: httpParams });
+    return this.http.get<Hypothesis[]>(this.apiUrl, { params: httpParams });
   }
   
   /**
    * Fetches hypotheses for a specific problem
    * 
    * @param problemId Problem ID
-   * @param params Additional query parameters
-   * @returns Observable<PaginatedHypothesesResponse> Paginated hypotheses
+   * @returns Observable<Hypothesis[]> List of hypotheses
    */
-  getHypothesesByProblem(problemId: string, params?: HypothesisQueryParams): Observable<PaginatedHypothesesResponse> {
-    return this.getHypotheses({ ...params, problemId });
+  getHypothesesByProblem(problemId: string): Observable<Hypothesis[]> {
+    return this.getHypotheses(problemId);
   }
   
   /**

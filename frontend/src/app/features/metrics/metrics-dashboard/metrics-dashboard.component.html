@@ -48,7 +48,7 @@
           <mat-icon>show_chart</mat-icon>
         </div>
         <div class="summary-info">
-          <div class="summary-value">{{ summary.metricsByType[type as any] || 0 }}</div>
+          <div class="summary-value">{{ getMetricCountByType(summary, type) }}</div>
           <div class="summary-label">{{ type }}</div>
         </div>
       </mat-card-content>

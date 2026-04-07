@@ -45,7 +45,9 @@ class DashboardControllerTest {
             .userId("user-123")
             .organizationId("org-123")
             .email("test@example.com")
-            .name("Test User")
+            .username("testuser")
+            .firstName("Test")
+            .lastName("User")
             .build();
     }
     
@@ -54,7 +56,9 @@ class DashboardControllerTest {
         UserDto user = UserDto.builder()
             .id("user-123")
             .email("test@example.com")
-            .name("Test User")
+            .username("testuser")
+            .firstName("Test")
+            .lastName("User")
             .build();
         
         OrganizationDto org = OrganizationDto.builder()

@@ -41,8 +41,9 @@ public class UserController {
     @PutMapping("/me/profile")
     public ResponseEntity<UserDto> updateProfile(
             @RequestHeader("X-User-Id") String userId,
-            @RequestParam String name) {
-        UserDto user = authenticationService.updateProfile(UserId.of(userId), name);
+            @RequestParam String firstName,
+            @RequestParam String lastName) {
+        UserDto user = authenticationService.updateProfile(UserId.of(userId), firstName, lastName);
         return ResponseEntity.ok(user);
     }
 }

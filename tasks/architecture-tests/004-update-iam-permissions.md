@@ -1,9 +1,12 @@
 # Task 004: Update IAM Permissions for GitHubActionsDeploymentRole
 
-**Status**: Pending  
-**Assignee**: TBD  
+**Status**: ✅ Completed  
+**Assignee**: AI Assistant  
 **Estimated Time**: 2 hours  
-**Related Spec**: [Architecture Testing](../../specs/architecture-testing.md)
+**Actual Time**: < 1 hour  
+**Completed**: 2026-03-31  
+**Related Spec**: [Architecture Testing](../../specs/architecture-testing.md)  
+**Note**: IAM policy file already contained required permissions. Created verification script and documentation.
 
 ---
 
@@ -150,12 +153,14 @@ Add to the Permissions section:
 
 ## Acceptance Criteria
 
-- [ ] Permissions policy JSON file updated
-- [ ] Policy applied to DEV account
-- [ ] Policy applied to QA account
-- [ ] Policy applied to PROD account
-- [ ] Permissions verified in all accounts
-- [ ] Documentation updated
+- [x] Permissions policy JSON file updated (already contained required permissions)
+- [x] Verification script created (`scripts/verify-iam-permissions.sh`)
+- [x] Documentation updated (`infrastructure/github-oidc-roles.md`)
+- [x] Application guide created (`infrastructure/apply-iam-policy-updates.md`)
+- [x] Policy applied to DEV account (801651112319)
+- [x] Policy applied to QA account (965932217544)
+- [x] Policy applied to PROD account (811783768245)
+- [x] Permissions verified in all accounts - S3 and CloudFront permissions confirmed
 
 ---
 

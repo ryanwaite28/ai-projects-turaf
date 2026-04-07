@@ -65,8 +65,8 @@ X-Organization-Id: {organization-id}
   "experimentId": "uuid",
   "name": "conversion_rate",
   "value": 0.25,
-  "unit": "percentage",
-  "metadata": {
+  "type": "GAUGE",
+  "tags": {
     "variant": "A",
     "source": "web"
   }
@@ -81,9 +81,9 @@ X-Organization-Id: {organization-id}
   "organizationId": "uuid",
   "name": "conversion_rate",
   "value": 0.25,
-  "unit": "percentage",
-  "recordedAt": "ISO-8601",
-  "metadata": {
+  "type": "GAUGE",
+  "timestamp": "ISO-8601",
+  "tags": {
     "variant": "A",
     "source": "web"
   }
@@ -95,7 +95,8 @@ X-Organization-Id: {organization-id}
 - Experiment must be in RUNNING status
 - name: 1-100 characters, required
 - value: numeric, required
-- unit: optional, max 50 characters
+- type: COUNTER, GAUGE, or HISTOGRAM (required)
+- tags: optional key-value pairs
 
 **Business Rules**:
 - Publishes MetricRecorded event

@@ -1,13 +1,15 @@
 # Architecture Testing Specification
 
 **Source**: PROJECT.md (Section 23b)  
-**Last Updated**: March 29, 2026  
+**Last Updated**: March 31, 2026  
 **Status**: Current  
 **Related Documents**: 
 - [Testing Strategy](testing-strategy.md)
 - [BFF API](bff-api.md)
 - [Architecture](architecture.md)
 - [PROJECT.md](../PROJECT.md)
+- [API Fixes Implementation Summary](../docs/api/api-fixes-implementation-summary.md)
+- [API Alignment Review](../docs/assessments/architecture-tests-api-alignment-2026-03-31.md)
 
 This specification defines the architecture testing strategy for the Turaf platform using the Karate framework to validate complete system integration from entry points through all event-driven processes.
 
@@ -151,17 +153,20 @@ Feature: User Authentication
     * url baseUrl
     * def testUser = { email: 'test@example.com', password: 'Test123!' }
 
-  Scenario: Successful login returns JWT token
+  Scenario: Successful login returns LoginResponseDto with tokens
     Given path '/api/v1/auth/login'
     And request testUser
     When method POST
     Then status 200
-    And match response.token != null
+    And match response.accessToken != null
+    And match response.refreshToken != null
     And match response.user.email == testUser.email
+    And match response.tokenType == 'Bearer'
+    And match response.expiresIn > 0
     
     # Verify token works for protected endpoint
     Given path '/api/v1/auth/me'
-    And header Authorization = 'Bearer ' + response.token
+    And header Authorization = 'Bearer ' + response.accessToken
     When method GET
     Then status 200
     And match response.email == testUser.email
@@ -176,7 +181,28 @@ Feature: User Authentication
 - List user's organizations → verify newly created org appears
 - Update organization → verify changes persisted
 - Add member to organization → EventBridge event published
+- Update member role → verify role changed
 - Remove member → verify access revoked
+
+**Organization Listing**:
+```gherkin
+Scenario: List user's organizations
+  # Login
+  Given path '/api/v1/auth/login'
+  And request { email: 'test@example.com', password: 'Test123!' }
+  When method POST
+  Then status 200
+  * def token = response.accessToken
+  
+  # List organizations
+  Given path '/api/v1/organizations'
+  And header Authorization = 'Bearer ' + token
+  When method GET
+  Then status 200
+  And match response != null
+  And match response[*].id != null
+  And match response[*].name != null
+```
 
 **Event-Driven Validation**:
 ```gherkin
@@ -190,17 +216,32 @@ Scenario: Adding member triggers notification event
   
   # Add member
   Given path '/api/v1/organizations', orgId, 'members'
-  And request { email: 'newmember@example.com', role: 'MEMBER' }
+  And request { userId: 'user-123', role: 'MEMBER' }
   When method POST
   Then status 201
+  * def memberId = response.id
   
   # Wait for EventBridge processing
   * def helper = Java.type('com.turaf.architecture.helpers.EventHelper')
   * helper.waitForEventProcessing('MemberAdded', 10)
   
-  # Verify notification sent (check SQS or notification service)
-  * def notification = helper.getNotification(orgId, 'MemberAdded')
-  * match notification.recipientEmail == 'newmember@example.com'
+  # Update member role
+  Given path '/api/v1/organizations', orgId, 'members', memberId
+  And request { role: 'ADMIN' }
+  When method PATCH
+  Then status 200
+  And match response.role == 'ADMIN'
+  
+  # Remove member
+  Given path '/api/v1/organizations', orgId, 'members', memberId
+  When method DELETE
+  Then status 200
+  
+  # Verify member removed
+  Given path '/api/v1/organizations', orgId, 'members'
+  When method GET
+  Then status 200
+  And match response[?(@.id == memberId)] == []
 ```
 
 ### 3. Experiment Lifecycle Tests (Event-Driven)
@@ -287,6 +328,25 @@ Feature: Complete Experiment Lifecycle
     # Optionally verify S3 object exists
     * def s3Exists = awsHelper.verifyS3Object('turaf-reports-dev', response.s3Key)
     * match s3Exists == true
+
+  Scenario: Cancel running experiment
+    # Start experiment
+    Given path '/api/v1/experiments', experimentId, 'start'
+    When method POST
+    Then status 200
+    And match response.status == 'RUNNING'
+    
+    # Cancel experiment
+    Given path '/api/v1/experiments', experimentId, 'cancel'
+    When method POST
+    Then status 200
+    And match response.status == 'CANCELLED'
+    
+    # Verify experiment is cancelled
+    Given path '/api/v1/experiments', experimentId
+    When method GET
+    Then status 200
+    And match response.status == 'CANCELLED'
 ```
 
 ### 4. WebSocket Real-Time Communication Tests
@@ -356,7 +416,59 @@ Feature: Real-Time Messaging
     * ws.close()
 ```
 
-### 5. Cross-Service Orchestration Tests
+### 5. Report Management Tests
+
+**File**: `features/reports/report-management.feature`
+
+**Scenarios**:
+- List reports with filters (type, status)
+- Create report for experiment
+- Get report details
+- Download report as PDF
+- Delete report
+
+**Report Management Example**:
+```gherkin
+Feature: Report Management
+
+  Background:
+    * url baseUrl
+    * def token = <auth token>
+
+  Scenario: List and filter reports
+    Given path '/api/v1/reports'
+    And param type = 'EXPERIMENT'
+    And param status = 'COMPLETED'
+    And header Authorization = 'Bearer ' + token
+    When method GET
+    Then status 200
+    And match response[*].type == 'EXPERIMENT'
+    And match response[*].status == 'COMPLETED'
+
+  Scenario: Create and download report
+    # Create report
+    Given path '/api/v1/reports'
+    And request { type: 'EXPERIMENT', format: 'PDF', experimentId: '#(experimentId)' }
+    And header Authorization = 'Bearer ' + token
+    When method POST
+    Then status 201
+    * def reportId = response.id
+    
+    # Wait for report generation
+    * def waitHelper = Java.type('com.turaf.architecture.helpers.WaitHelper')
+    * def reportReady = waitHelper.waitForFieldValue('/api/v1/reports/' + reportId, '$.status', 'COMPLETED', 30)
+    * match reportReady == true
+    
+    # Download report
+    Given path '/api/v1/reports', reportId, 'download'
+    And header Authorization = 'Bearer ' + token
+    When method GET
+    Then status 200
+    And match responseHeaders['Content-Type'][0] == 'application/pdf'
+    And match responseHeaders['Content-Disposition'][0] contains 'attachment'
+```
+
+### 6. Cross-Service Orchestration Tests
 
 **File**: `features/orchestration/dashboard-overview.feature`
 

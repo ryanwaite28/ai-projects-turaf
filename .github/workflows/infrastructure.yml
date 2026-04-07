@@ -23,48 +23,48 @@ permissions:
   contents: read
 
 jobs:
-  # terraform-plan:
-  #   name: Plan Infrastructure Changes
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       environment: [dev, qa, prod]
+  bootstrap-dev:
+    name: Bootstrap DEV (S3, DynamoDB, ECR)
+    runs-on: ubuntu-latest
+    environment: dev
     
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{ matrix.environment == 'dev' && secrets.AWS_ROLE_DEV || (matrix.environment == 'qa' && secrets.AWS_ROLE_QA || secrets.AWS_ROLE_PROD) }}
-  #         aws-region: us-east-1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
       
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v3
-  #       with:
-  #         terraform_version: 1.6.0
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
       
-  #     - name: Terraform Init
-  #       working-directory: infrastructure/terraform/environments/${{ matrix.environment }}
-  #       run: terraform init
+      - name: Terraform Init (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform init -backend=false
       
-  #     - name: Terraform Validate
-  #       working-directory: infrastructure/terraform/environments/${{ matrix.environment }}
-  #       run: terraform validate
+      - name: Terraform Apply (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform apply -auto-approve -var="environment=dev"
       
-  #     - name: Terraform Plan
-  #       working-directory: infrastructure/terraform/environments/${{ matrix.environment }}
-  #       run: terraform plan -out=tfplan
-      
-  #     - name: Upload plan artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: tfplan-${{ matrix.environment }}
-  #         path: infrastructure/terraform/environments/${{ matrix.environment }}/tfplan
-  #         retention-days: 7
+      - name: Bootstrap Summary
+        working-directory: infrastructure/terraform/bootstrap
+        run: |
+          echo "## DEV Bootstrap Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** $(terraform output -raw s3_bucket_name)" >> $GITHUB_STEP_SUMMARY
+          echo "**DynamoDB Table:** $(terraform output -raw dynamodb_table_name)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ECR Repositories Created:" >> $GITHUB_STEP_SUMMARY
+          terraform output -json ecr_repositories | jq -r 'to_entries[] | "- **\(.key)**: \(.value)"' >> $GITHUB_STEP_SUMMARY
 
   terraform-apply-dev:
+    needs: bootstrap-dev
     name: Deploy to DEV
     runs-on: ubuntu-latest
     # needs: terraform-plan
@@ -78,19 +78,13 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_DEV }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-      
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-dev
-          path: infrastructure/terraform/environments/dev
       
       - name: Terraform Init
         working-directory: infrastructure/terraform/environments/dev
@@ -115,8 +109,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           terraform output -json | jq -r 'to_entries[] | "- **\(.key)**: \(.value.value)"' >> $GITHUB_STEP_SUMMARY
 
-  terraform-apply-qa:
-    name: Deploy to QA
+  bootstrap-qa:
+    name: Bootstrap QA (S3, DynamoDB, ECR)
     runs-on: ubuntu-latest
     needs: terraform-apply-dev
     if: github.ref == 'refs/heads/main'
@@ -129,19 +123,55 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_QA }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
+          terraform_wrapper: false
       
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
+      - name: Terraform Init (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform init -backend=false
+      
+      - name: Terraform Apply (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform apply -auto-approve -var="environment=qa"
+      
+      - name: Bootstrap Summary
+        working-directory: infrastructure/terraform/bootstrap
+        run: |
+          echo "## QA Bootstrap Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** $(terraform output -raw s3_bucket_name)" >> $GITHUB_STEP_SUMMARY
+          echo "**DynamoDB Table:** $(terraform output -raw dynamodb_table_name)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ECR Repositories Created:" >> $GITHUB_STEP_SUMMARY
+          terraform output -json ecr_repositories | jq -r 'to_entries[] | "- **\(.key)**: \(.value)"' >> $GITHUB_STEP_SUMMARY
+
+  terraform-apply-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    needs: bootstrap-qa
+    if: github.ref == 'refs/heads/main'
+    environment: qa
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: tfplan-qa
-          path: infrastructure/terraform/environments/qa
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
       
       - name: Terraform Init
         working-directory: infrastructure/terraform/environments/qa
@@ -166,8 +196,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           terraform output -json | jq -r 'to_entries[] | "- **\(.key)**: \(.value.value)"' >> $GITHUB_STEP_SUMMARY
 
-  terraform-apply-prod:
-    name: Deploy to PROD
+  bootstrap-prod:
+    name: Bootstrap PROD (S3, DynamoDB, ECR)
     runs-on: ubuntu-latest
     needs: terraform-apply-qa
     if: github.ref == 'refs/heads/main'
@@ -180,19 +210,55 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_PROD }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
+          terraform_wrapper: false
       
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
+      - name: Terraform Init (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform init -backend=false
+      
+      - name: Terraform Apply (Bootstrap)
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform apply -auto-approve -var="environment=prod"
+      
+      - name: Bootstrap Summary
+        working-directory: infrastructure/terraform/bootstrap
+        run: |
+          echo "## PROD Bootstrap Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** $(terraform output -raw s3_bucket_name)" >> $GITHUB_STEP_SUMMARY
+          echo "**DynamoDB Table:** $(terraform output -raw dynamodb_table_name)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ECR Repositories Created:" >> $GITHUB_STEP_SUMMARY
+          terraform output -json ecr_repositories | jq -r 'to_entries[] | "- **\(.key)**: \(.value)"' >> $GITHUB_STEP_SUMMARY
+
+  terraform-apply-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: bootstrap-prod
+    if: github.ref == 'refs/heads/main'
+    environment: prod
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: tfplan-prod
-          path: infrastructure/terraform/environments/prod
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
       
       - name: Terraform Init
         working-directory: infrastructure/terraform/environments/prod

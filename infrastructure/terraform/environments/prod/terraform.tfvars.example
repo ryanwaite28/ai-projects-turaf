@@ -39,52 +39,36 @@ documentdb_instance_class     = "db.t3.medium"
 documentdb_instance_count     = 3                  # 3 instances for HA
 documentdb_backup_retention_days = 7
 
-# ECS Fargate - Production workloads
-identity_service_cpu           = 1024  # 1 vCPU
-identity_service_memory        = 2048  # 2 GB
-identity_service_desired_count = 3     # 3 tasks for HA
-identity_service_min_capacity  = 2     # Min 2 tasks
-identity_service_max_capacity  = 10    # Max 10 tasks
+# Storage - Production settings
+enable_s3_versioning        = true
+enable_separate_s3_buckets  = true
+s3_log_retention_days       = 30
+s3_backup_retention_days    = 30
 
-organization_service_cpu           = 1024
-organization_service_memory        = 2048
-organization_service_desired_count = 3
-organization_service_min_capacity  = 2
-organization_service_max_capacity  = 10
+# Messaging - Enable all features
+enable_event_archive        = true
+enable_chat_queue           = true
+enable_notification_queue   = true
+enable_report_queue         = true
+enable_sns_topics           = true
+enable_queue_alarms         = true
+event_archive_retention_days = 30
+message_retention_seconds    = 1209600
 
-experiment_service_cpu           = 2048  # 2 vCPU (more intensive)
-experiment_service_memory        = 4096  # 4 GB
-experiment_service_desired_count = 3
-experiment_service_min_capacity  = 2
-experiment_service_max_capacity  = 10
-
-# Use standard Fargate (not Spot) for production reliability
-use_fargate_spot          = false
-enable_container_insights = true   # Enable for monitoring
-enable_autoscaling        = true   # Enable auto-scaling
-
-# Optional Services - Enable all for production
-enable_metrics_service      = true
-enable_reporting_service    = true
-enable_notification_service = true
+# Compute - Shared Infrastructure Only (services managed via CI/CD)
+acm_certificate_arn           = ""  # Update with actual certificate ARN
+use_fargate_spot              = false  # Use standard Fargate for production
+enable_container_insights     = true
 
 # Lambda - Enable all functions
+lambda_artifacts_bucket       = "turaf-lambda-artifacts-prod"
+log_retention_days            = 30
+from_email                    = "noreply@turafapp.com"
 enable_event_processor        = true
 enable_notification_processor = true
 enable_report_generator       = true
-lambda_use_vpc_mode          = true  # VPC mode for database access
-
-# Storage - Production settings
-enable_s3_versioning     = true   # Enable versioning
-enable_separate_s3_buckets = true # Separate buckets for security
-
-# Messaging - Enable all features
-enable_event_archive      = true
-enable_chat_queue         = true
-enable_notification_queue = true
-enable_report_queue       = true
-enable_sns_topics         = true
-enable_queue_alarms       = true
+lambda_use_vpc_mode           = true
+lambda_runtime                = "nodejs20.x"
 
 # Monitoring - Full monitoring enabled
 enable_alarms       = true
@@ -92,46 +76,17 @@ enable_dashboard    = true
 enable_sns_alerts   = true
 enable_xray         = true
 enable_log_insights = true
-
-# Alert Configuration
-alarm_email = "alerts@turafapp.com"  # Update with your email
-
-# Alarm Thresholds (stricter for production)
-cpu_threshold           = 70  # Alert at 70% CPU
-memory_threshold        = 70  # Alert at 70% memory
-response_time_threshold = 1   # Alert at 1 second response time
-
-# Logging - Longer retention for production
-log_retention_days    = 30
-enable_execute_command = true  # Enable for debugging
+alarm_email         = "alerts@turafapp.com"
+cpu_threshold       = 70
+memory_threshold    = 70
+response_time_threshold = 1
 
 # Tags
 tags = {
   Project     = "turaf"
   Environment = "prod"
   ManagedBy   = "terraform"
-  Compliance  = "required"
-  CostCenter  = "production"
-  Criticality = "high"
 }
-
-# Domain
-domain_name = "turafapp.com"
-
-# ACM Certificate ARN (from Task 005)
-# Update this with your actual certificate ARN
-acm_certificate_arn = "arn:aws:acm:us-east-1:801651112319:certificate/YOUR-CERT-ID"
-
-# ECR Image URLs (from Task 011)
-# Update these with your actual ECR repository URLs
-identity_service_image     = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/identity-service"
-organization_service_image = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/organization-service"
-experiment_service_image   = "801651112319.dkr.ecr.us-east-1.amazonaws.com/turaf/experiment-service"
-image_tag                  = "v1.0.0"  # Use specific version tags in production
-
-# Lambda Artifacts
-lambda_artifacts_bucket = "turaf-lambda-artifacts-prod"
-from_email             = "noreply@turafapp.com"
 
 # Estimated Monthly Cost: ~$350-450/month
 # 

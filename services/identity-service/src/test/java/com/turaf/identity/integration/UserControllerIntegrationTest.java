@@ -183,7 +183,8 @@ class UserControllerIntegrationTest {
         // Given
         LoginResponseDto loginResponse = loginTestUser("updateprofile@example.com", "UpdateP@ss123");
         String userId = loginResponse.getUser().getId();
-        String newName = "Updated Name";
+        String newFirstName = "Updated";
+        String newLastName = "Name";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-User-Id", userId);
@@ -192,7 +193,7 @@ class UserControllerIntegrationTest {
 
         // When
         ResponseEntity<UserDto> response = restTemplate.exchange(
-            "/api/v1/users/me/profile?name=" + newName,
+            "/api/v1/users/me/profile?firstName=" + newFirstName + "&lastName=" + newLastName,
             HttpMethod.PUT,
             entity,
             UserDto.class
@@ -201,7 +202,8 @@ class UserControllerIntegrationTest {
         // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(newName, response.getBody().getName());
+        assertEquals(newFirstName, response.getBody().getFirstName());
+        assertEquals(newLastName, response.getBody().getLastName());
         assertEquals(userId, response.getBody().getId());
     }
 
@@ -218,7 +220,7 @@ class UserControllerIntegrationTest {
 
         // When
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-            "/api/v1/users/me/profile?name=",
+            "/api/v1/users/me/profile?firstName=&lastName=",
             HttpMethod.PUT,
             entity,
             ErrorResponse.class
@@ -235,7 +237,8 @@ class UserControllerIntegrationTest {
         UserId userId = UserId.generate();
         Email emailObj = new Email(email);
         Password passwordObj = Password.fromRaw(password, passwordEncoder);
-        User user = new User(userId, emailObj, passwordObj, "Test User");
+        String username = email.replace("@", "_").replace(".", "_");
+        User user = new User(userId, "org-123", emailObj, passwordObj, username, "Test", "User");
         userRepository.save(user);
     }
 

@@ -7,6 +7,8 @@ import com.turaf.organization.domain.UserId;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -44,6 +46,9 @@ public class OrganizationJpaEntity {
     
     @Column(name = "max_experiments", nullable = false)
     private int maxExperiments = 100;
+    
+    @OneToMany(mappedBy = "organizationId", fetch = FetchType.LAZY)
+    private List<OrganizationMemberJpaEntity> members = new ArrayList<>();
     
     protected OrganizationJpaEntity() {
         // Required by JPA

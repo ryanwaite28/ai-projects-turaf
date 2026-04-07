@@ -4,9 +4,7 @@ import { Observable } from 'rxjs';
 import { 
   Problem, 
   CreateProblemRequest, 
-  UpdateProblemRequest,
-  ProblemQueryParams,
-  PaginatedProblemsResponse
+  UpdateProblemRequest
 } from '../../../models/problem.model';
 import { environment } from '../../../../environments/environment';
 
@@ -25,24 +23,12 @@ export class ProblemsService {
   constructor(private http: HttpClient) {}
   
   /**
-   * Fetches paginated list of problems
+   * Fetches list of problems
    * 
-   * @param params Query parameters for filtering and pagination
-   * @returns Observable<PaginatedProblemsResponse> Paginated problems
+   * @returns Observable<Problem[]> List of problems
    */
-  getProblems(params?: ProblemQueryParams): Observable<PaginatedProblemsResponse> {
-    let httpParams = new HttpParams();
-    
-    if (params) {
-      if (params.page) httpParams = httpParams.set('page', params.page.toString());
-      if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
-      if (params.status) httpParams = httpParams.set('status', params.status);
-      if (params.search) httpParams = httpParams.set('search', params.search);
-      if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
-      if (params.sortOrder) httpParams = httpParams.set('sortOrder', params.sortOrder);
-    }
-    
-    return this.http.get<PaginatedProblemsResponse>(this.apiUrl, { params: httpParams });
+  getProblems(): Observable<Problem[]> {
+    return this.http.get<Problem[]>(this.apiUrl);
   }
   
   /**

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { DashboardData, DashboardStats, RecentExperiment, DashboardMetrics } from '../../../models/dashboard.model';
+import { DashboardOverview, ExperimentFull, OrganizationSummary } from '../../../models/dashboard.model';
 import { environment } from '../../../../environments/environment';
 
 /**
@@ -19,44 +19,34 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
   
   /**
-   * Fetches complete dashboard data
+   * Fetches dashboard overview with user, organizations, and active experiments
    * 
-   * @returns Observable<DashboardData> Complete dashboard data
+   * @returns Observable<DashboardOverview> Dashboard overview data
    */
-  getDashboardData(): Observable<DashboardData> {
-    return this.http.get<DashboardData>(this.apiUrl);
+  getDashboardOverview(): Observable<DashboardOverview> {
+    return this.http.get<DashboardOverview>(`${this.apiUrl}/overview`);
   }
   
   /**
-   * Fetches dashboard statistics
+   * Fetches full experiment details including metrics
    * 
-   * @returns Observable<DashboardStats> Dashboard statistics
+   * @param id Experiment ID
+   * @param organizationId Organization ID
+   * @returns Observable<ExperimentFull> Full experiment details
    */
-  getDashboardStats(): Observable<DashboardStats> {
-    return this.http.get<DashboardStats>(`${this.apiUrl}/stats`);
-  }
-  
-  /**
-   * Fetches recent experiments
-   * 
-   * @param limit Number of experiments to fetch (default: 5)
-   * @returns Observable<RecentExperiment[]> Recent experiments
-   */
-  getRecentExperiments(limit: number = 5): Observable<RecentExperiment[]> {
-    return this.http.get<RecentExperiment[]>(`${this.apiUrl}/recent-experiments`, {
-      params: { limit: limit.toString() }
+  getExperimentFull(id: string, organizationId: string): Observable<ExperimentFull> {
+    return this.http.get<ExperimentFull>(`${this.apiUrl}/experiments/${id}/full`, {
+      params: { organizationId }
     });
   }
   
   /**
-   * Fetches dashboard metrics for charts
+   * Fetches organization summary with members and experiments
    * 
-   * @param days Number of days to fetch (default: 30)
-   * @returns Observable<DashboardMetrics> Dashboard metrics
+   * @param id Organization ID
+   * @returns Observable<OrganizationSummary> Organization summary
    */
-  getDashboardMetrics(days: number = 30): Observable<DashboardMetrics> {
-    return this.http.get<DashboardMetrics>(`${this.apiUrl}/metrics`, {
-      params: { days: days.toString() }
-    });
+  getOrganizationSummary(id: string): Observable<OrganizationSummary> {
+    return this.http.get<OrganizationSummary>(`${this.apiUrl}/organizations/${id}/summary`);
   }
 }
