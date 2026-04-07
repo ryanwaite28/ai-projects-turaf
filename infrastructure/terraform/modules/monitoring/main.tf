@@ -237,7 +237,7 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_body = jsonencode({
     widgets = flatten([
       # ECS Widgets
-      var.cluster_name != "" ? [
+      [for w in [
         {
           type = "metric"
           properties = {
@@ -269,9 +269,9 @@ resource "aws_cloudwatch_dashboard" "main" {
             title  = "ECS CPU Utilization"
           }
         }
-      ] : [],
+      ] : w if var.cluster_name != ""],
       # ALB Widgets
-      var.alb_arn_suffix != "" ? [
+      [for w in [
         {
           type = "metric"
           properties = {
@@ -299,9 +299,9 @@ resource "aws_cloudwatch_dashboard" "main" {
             title  = "ALB Response Time"
           }
         }
-      ] : [],
+      ] : w if var.alb_arn_suffix != ""],
       # RDS Widgets
-      var.rds_instance_id != "" ? [
+      [for w in [
         {
           type = "metric"
           properties = {
@@ -315,7 +315,7 @@ resource "aws_cloudwatch_dashboard" "main" {
             title  = "RDS Metrics"
           }
         }
-      ] : []
+      ] : w if var.rds_instance_id != ""]
     ])
   })
 }
