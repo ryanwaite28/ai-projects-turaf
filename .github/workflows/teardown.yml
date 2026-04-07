@@ -1,0 +1,496 @@
+name: Teardown Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to tear down'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      destroy_bootstrap:
+        description: 'Also destroy bootstrap resources (ECR repos, TF state bucket)'
+        required: true
+        type: boolean
+        default: false
+      confirmation:
+        description: 'Type DESTROY to confirm teardown'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TERRAFORM_VERSION: '1.6.0'
+  REPO_OWNER: ryanwaite28
+
+  # Service list (order matters — dependents first)
+  SERVICES: >-
+    bff-api
+    identity-service
+    organization-service
+    experiment-service
+    metrics-service
+    communications-service
+    ws-gateway
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────
+  # Gate: verify caller is the repo owner and confirmation text matches
+  # ─────────────────────────────────────────────────────────────────────
+  authorize:
+    name: Authorize Teardown
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify repository owner
+        run: |
+          if [[ "${{ github.actor }}" != "${{ env.REPO_OWNER }}" ]]; then
+            echo "::error::Teardown can only be triggered by the repository owner (${{ env.REPO_OWNER }}). Actor: ${{ github.actor }}"
+            exit 1
+          fi
+          echo "✅ Actor ${{ github.actor }} is the repository owner"
+
+      - name: Verify confirmation text
+        run: |
+          if [[ "${{ inputs.confirmation }}" != "DESTROY" ]]; then
+            echo "::error::Confirmation text must be exactly 'DESTROY'. Got: '${{ inputs.confirmation }}'"
+            exit 1
+          fi
+          echo "✅ Confirmation text matches"
+
+      - name: Log teardown intent
+        run: |
+          echo "## ⚠️ Teardown Authorized" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Destroy Bootstrap**: ${{ inputs.destroy_bootstrap }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phase 1: Destroy all service-specific Terraform (ECS services, TGs, listener rules)
+  # ─────────────────────────────────────────────────────────────────────
+  destroy-services:
+    name: 'Destroy Services (${{ inputs.environment }})'
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        service:
+          - bff-api
+          - identity-service
+          - organization-service
+          - experiment-service
+          - metrics-service
+          - communications-service
+          - ws-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Check if service Terraform state exists
+        id: check-state
+        run: |
+          if aws s3 ls "s3://turaf-terraform-state-${{ inputs.environment }}/${{ matrix.service }}/terraform.tfstate" 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No Terraform state found for ${{ matrix.service }} — skipping"
+          fi
+
+      - name: Terraform Init
+        if: steps.check-state.outputs.exists == 'true'
+        working-directory: ./services/${{ matrix.service }}/terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=turaf-terraform-state-${{ inputs.environment }}" \
+            -backend-config="key=${{ matrix.service }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform Destroy
+        if: steps.check-state.outputs.exists == 'true'
+        working-directory: ./services/${{ matrix.service }}/terraform
+        env:
+          TF_VAR_environment: ${{ inputs.environment }}
+          TF_VAR_service_name: ${{ matrix.service }}
+          TF_VAR_image_tag: 'teardown'
+          TF_VAR_aws_region: ${{ env.AWS_REGION }}
+        run: terraform destroy -auto-approve
+
+      - name: Force-delete ECS service if Terraform failed
+        if: failure()
+        run: |
+          CLUSTER="turaf-cluster-${{ inputs.environment }}"
+          SVC="${{ matrix.service }}-${{ inputs.environment }}"
+          echo "Attempting force-delete of ECS service ${SVC}..."
+          aws ecs update-service --cluster "$CLUSTER" --service "$SVC" --desired-count 0 --region ${{ env.AWS_REGION }} 2>/dev/null || true
+          aws ecs delete-service --cluster "$CLUSTER" --service "$SVC" --force --region ${{ env.AWS_REGION }} 2>/dev/null || true
+
+      - name: Service teardown summary
+        if: always()
+        run: |
+          echo "## Service Teardown: ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **State Found**: ${{ steps.check-state.outputs.exists }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phase 2: Destroy shared infrastructure via Terraform
+  #   (VPC, ALBs, ECS cluster, RDS, SQS, EventBridge, Lambda, etc.)
+  # ─────────────────────────────────────────────────────────────────────
+  destroy-infrastructure:
+    name: 'Destroy Infrastructure (${{ inputs.environment }})'
+    needs: destroy-services
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Disable RDS deletion protection
+        run: |
+          aws rds modify-db-instance \
+            --db-instance-identifier "turaf-db-${{ inputs.environment }}" \
+            --no-deletion-protection \
+            --apply-immediately \
+            --region ${{ env.AWS_REGION }} 2>/dev/null || echo "RDS instance not found or already unprotected"
+          sleep 5
+
+      - name: Disable ALB deletion protection
+        run: |
+          for ALB_NAME in "turaf-alb-${{ inputs.environment }}" "turaf-internal-alb-${{ inputs.environment }}"; do
+            ALB_ARN=$(aws elbv2 describe-load-balancers --names "$ALB_NAME" --region ${{ env.AWS_REGION }} \
+              --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo "None")
+            if [[ "$ALB_ARN" != "None" && -n "$ALB_ARN" ]]; then
+              aws elbv2 modify-load-balancer-attributes \
+                --load-balancer-arn "$ALB_ARN" \
+                --attributes Key=deletion_protection.enabled,Value=false \
+                --region ${{ env.AWS_REGION }}
+              echo "Disabled deletion protection on $ALB_NAME"
+            fi
+          done
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
+        run: terraform destroy -auto-approve
+        timeout-minutes: 45
+
+      - name: Infrastructure teardown summary
+        if: always()
+        run: |
+          echo "## Infrastructure Teardown" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phase 3: Cleanup remaining resources not in Terraform state
+  #   (orphaned log groups, leftover task defs, CloudWatch resources)
+  # ─────────────────────────────────────────────────────────────────────
+  cleanup-remaining:
+    name: 'Cleanup Remaining Resources (${{ inputs.environment }})'
+    needs: destroy-infrastructure
+    if: always()
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deregister orphaned ECS task definitions
+        run: |
+          echo "Deregistering orphaned task definitions..."
+          for svc in bff-api identity-service organization-service experiment-service metrics-service communications-service ws-gateway; do
+            FAMILY="${svc}-${{ inputs.environment }}"
+            TASK_DEFS=$(aws ecs list-task-definitions --family-prefix "$FAMILY" --region ${{ env.AWS_REGION }} \
+              --query 'taskDefinitionArns[]' --output text 2>/dev/null || echo "")
+            for td in $TASK_DEFS; do
+              aws ecs deregister-task-definition --task-definition "$td" --region ${{ env.AWS_REGION }} 2>/dev/null || true
+              echo "  Deregistered: $td"
+            done
+          done
+
+      - name: Delete orphaned CloudWatch log groups
+        run: |
+          echo "Deleting orphaned CloudWatch log groups..."
+          LOG_GROUPS=$(aws logs describe-log-groups --region ${{ env.AWS_REGION }} \
+            --query "logGroups[?contains(logGroupName,'turaf') || contains(logGroupName,'-${{ inputs.environment }}')].logGroupName" \
+            --output text 2>/dev/null || echo "")
+          for lg in $LOG_GROUPS; do
+            aws logs delete-log-group --log-group-name "$lg" --region ${{ env.AWS_REGION }} 2>/dev/null || true
+            echo "  Deleted log group: $lg"
+          done
+
+      - name: Delete orphaned CloudWatch alarms
+        run: |
+          echo "Deleting orphaned CloudWatch alarms..."
+          ALARMS=$(aws cloudwatch describe-alarms --region ${{ env.AWS_REGION }} \
+            --query "MetricAlarms[?contains(AlarmName,'turaf') || contains(AlarmName,'-${{ inputs.environment }}')].AlarmName" \
+            --output text 2>/dev/null || echo "")
+          if [[ -n "$ALARMS" ]]; then
+            aws cloudwatch delete-alarms --alarm-names $ALARMS --region ${{ env.AWS_REGION }} 2>/dev/null || true
+          fi
+
+      - name: Delete orphaned CloudWatch dashboards
+        run: |
+          aws cloudwatch delete-dashboards \
+            --dashboard-names "turaf-${{ inputs.environment }}" \
+            --region ${{ env.AWS_REGION }} 2>/dev/null || true
+
+      - name: Delete Secrets Manager secrets (force, no recovery)
+        run: |
+          echo "Force-deleting remaining Secrets Manager secrets..."
+          SECRETS=$(aws secretsmanager list-secrets --region ${{ env.AWS_REGION }} \
+            --query "SecretList[?contains(Name,'turaf/${{ inputs.environment }}')].Name" \
+            --output text 2>/dev/null || echo "")
+          for secret in $SECRETS; do
+            aws secretsmanager delete-secret --secret-id "$secret" \
+              --force-delete-without-recovery --region ${{ env.AWS_REGION }} 2>/dev/null || true
+            echo "  Deleted secret: $secret"
+          done
+
+      - name: Schedule KMS key deletion
+        run: |
+          echo "Scheduling deletion of customer-managed KMS keys..."
+          KMS_KEYS=$(aws kms list-keys --region ${{ env.AWS_REGION }} --query 'Keys[].KeyId' --output text 2>/dev/null || echo "")
+          for key_id in $KMS_KEYS; do
+            KEY_META=$(aws kms describe-key --key-id "$key_id" --region ${{ env.AWS_REGION }} --output json 2>/dev/null || echo "{}")
+            KEY_MANAGER=$(echo "$KEY_META" | jq -r '.KeyMetadata.KeyManager // "AWS"')
+            KEY_STATE=$(echo "$KEY_META" | jq -r '.KeyMetadata.KeyState // "Disabled"')
+            if [[ "$KEY_MANAGER" == "CUSTOMER" && "$KEY_STATE" == "Enabled" ]]; then
+              TAGS=$(aws kms list-resource-tags --key-id "$key_id" --region ${{ env.AWS_REGION }} \
+                --query "Tags[?TagKey=='Environment' && TagValue=='${{ inputs.environment }}']" --output text 2>/dev/null || echo "")
+              if [[ -n "$TAGS" ]]; then
+                aws kms schedule-key-deletion --key-id "$key_id" --pending-window-in-days 7 --region ${{ env.AWS_REGION }} 2>/dev/null || true
+                echo "  Scheduled deletion: $key_id"
+              fi
+            fi
+          done
+
+      - name: Release Elastic IPs
+        run: |
+          echo "Releasing Elastic IPs..."
+          EIPS=$(aws ec2 describe-addresses --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*${{ inputs.environment }}*" \
+            --query 'Addresses[].AllocationId' --output text 2>/dev/null || echo "")
+          for eip in $EIPS; do
+            aws ec2 release-address --allocation-id "$eip" --region ${{ env.AWS_REGION }} 2>/dev/null || true
+            echo "  Released EIP: $eip"
+          done
+
+      - name: Delete ACM certificates
+        run: |
+          echo "Deleting ACM certificates..."
+          CERTS=$(aws acm list-certificates --region ${{ env.AWS_REGION }} \
+            --query "CertificateSummaryList[?contains(DomainName,'turafapp.com')].CertificateArn" \
+            --output text 2>/dev/null || echo "")
+          for cert in $CERTS; do
+            aws acm delete-certificate --certificate-arn "$cert" --region ${{ env.AWS_REGION }} 2>/dev/null || true
+            echo "  Deleted cert: $cert"
+          done
+
+      - name: Cleanup summary
+        if: always()
+        run: |
+          echo "## Cleanup Remaining Resources" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phase 4 (optional): Destroy bootstrap resources
+  #   (ECR repos, Terraform state S3 bucket, DynamoDB lock table)
+  # ─────────────────────────────────────────────────────────────────────
+  destroy-bootstrap:
+    name: 'Destroy Bootstrap (${{ inputs.environment }})'
+    needs: cleanup-remaining
+    if: inputs.destroy_bootstrap == true
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete ECR repositories
+        run: |
+          echo "Deleting ECR repositories..."
+          for repo in turaf-identity-service turaf-organization-service turaf-experiment-service turaf-metrics-service turaf-communications-service turaf-bff-api turaf-ws-gateway; do
+            aws ecr delete-repository --repository-name "$repo" --force --region ${{ env.AWS_REGION }} 2>/dev/null || true
+            echo "  Deleted ECR repo: $repo"
+          done
+
+      - name: Empty and delete Terraform state bucket
+        run: |
+          BUCKET="turaf-terraform-state-${{ inputs.environment }}"
+          echo "Emptying and deleting S3 bucket: $BUCKET"
+          aws s3 rb "s3://${BUCKET}" --force 2>/dev/null || echo "Bucket $BUCKET not found"
+
+      - name: Delete DynamoDB lock table (dev only)
+        if: inputs.environment == 'dev'
+        run: |
+          echo "Deleting DynamoDB lock table..."
+          aws dynamodb delete-table --table-name "turaf-terraform-locks" --region ${{ env.AWS_REGION }} 2>/dev/null || echo "Lock table not found"
+
+      - name: Delete remaining S3 buckets
+        run: |
+          echo "Deleting any remaining turaf S3 buckets..."
+          BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name,'turaf')].Name" --output text 2>/dev/null || echo "")
+          for bucket in $BUCKETS; do
+            aws s3 rb "s3://${bucket}" --force 2>/dev/null || true
+            echo "  Deleted bucket: $bucket"
+          done
+
+      - name: Bootstrap teardown summary
+        if: always()
+        run: |
+          echo "## Bootstrap Teardown" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Repos**: Deleted" >> $GITHUB_STEP_SUMMARY
+          echo "- **TF State Bucket**: Deleted" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Verification: confirm nothing billable remains
+  # ─────────────────────────────────────────────────────────────────────
+  verify:
+    name: 'Verify Teardown (${{ inputs.environment }})'
+    needs: [cleanup-remaining, destroy-bootstrap]
+    if: always()
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check for remaining ECS clusters
+        run: |
+          CLUSTERS=$(aws ecs list-clusters --region ${{ env.AWS_REGION }} \
+            --query "clusterArns[?contains(@,'turaf')]" --output text 2>/dev/null || echo "")
+          if [[ -n "$CLUSTERS" ]]; then
+            echo "::warning::Remaining ECS clusters: $CLUSTERS"
+          else
+            echo "✅ No ECS clusters found"
+          fi
+
+      - name: Check for remaining RDS instances
+        run: |
+          RDS=$(aws rds describe-db-instances --region ${{ env.AWS_REGION }} \
+            --query "DBInstances[?contains(DBInstanceIdentifier,'turaf')].{Id:DBInstanceIdentifier,Status:DBInstanceStatus}" \
+            --output table 2>/dev/null || echo "")
+          if [[ -n "$RDS" && "$RDS" != *"turaf"* ]]; then
+            echo "✅ No RDS instances found"
+          else
+            echo "::warning::Remaining RDS instances (may still be deleting):"
+            echo "$RDS"
+          fi
+
+      - name: Check for remaining ALBs
+        run: |
+          for name in "turaf-alb-${{ inputs.environment }}" "turaf-internal-alb-${{ inputs.environment }}"; do
+            ALB=$(aws elbv2 describe-load-balancers --names "$name" --region ${{ env.AWS_REGION }} \
+              --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null || echo "None")
+            if [[ "$ALB" != "None" && -n "$ALB" ]]; then
+              echo "::warning::Remaining ALB: $name"
+            fi
+          done
+          echo "✅ ALB check complete"
+
+      - name: Check for remaining Lambda functions
+        run: |
+          LAMBDAS=$(aws lambda list-functions --region ${{ env.AWS_REGION }} \
+            --query "Functions[?contains(FunctionName,'${{ inputs.environment }}')].FunctionName" \
+            --output text 2>/dev/null || echo "")
+          if [[ -n "$LAMBDAS" ]]; then
+            echo "::warning::Remaining Lambda functions: $LAMBDAS"
+          else
+            echo "✅ No Lambda functions found"
+          fi
+
+      - name: Check for remaining VPCs
+        run: |
+          VPCS=$(aws ec2 describe-vpcs --region ${{ env.AWS_REGION }} \
+            --filters "Name=tag:Name,Values=*turaf*" \
+            --query 'Vpcs[].VpcId' --output text 2>/dev/null || echo "")
+          if [[ -n "$VPCS" ]]; then
+            echo "::warning::Remaining VPCs: $VPCS"
+          else
+            echo "✅ No turaf VPCs found"
+          fi
+
+      - name: Check for remaining S3 buckets
+        run: |
+          BUCKETS=$(aws s3api list-buckets \
+            --query "Buckets[?contains(Name,'turaf')].Name" --output text 2>/dev/null || echo "")
+          if [[ -n "$BUCKETS" ]]; then
+            echo "::warning::Remaining S3 buckets: $BUCKETS"
+          else
+            echo "✅ No turaf S3 buckets found"
+          fi
+
+      - name: Verification summary
+        if: always()
+        run: |
+          echo "## 🔍 Teardown Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bootstrap Destroyed**: ${{ inputs.destroy_bootstrap }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered By**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the step outputs above for any remaining resources." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> **Note**: KMS keys are scheduled for deletion in 7 days (AWS minimum)." >> $GITHUB_STEP_SUMMARY
+          echo "> RDS instances may take several minutes to fully terminate." >> $GITHUB_STEP_SUMMARY
