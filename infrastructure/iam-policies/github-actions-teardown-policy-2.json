@@ -16,6 +16,7 @@
         "s3:PutBucketTagging",
         "s3:PutBucketPublicAccessBlock",
         "s3:PutEncryptionConfiguration",
+        "s3:PutLifecycleConfiguration",
         "s3:CreateBucket",
         "s3:PutBucketPolicy"
       ],

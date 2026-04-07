@@ -16,6 +16,9 @@
       "Condition": {
         "BoolIfExists": {
           "aws:MultiFactorAuthPresent": "false"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:role/GitHubActionsDeploymentRole"
         }
       }
     }

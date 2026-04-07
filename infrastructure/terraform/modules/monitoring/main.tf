@@ -28,7 +28,7 @@ resource "aws_sns_topic_subscription" "alerts_email" {
 
 # ECS Cluster Alarms
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
-  count = var.enable_alarms && var.cluster_name != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "ecs-cpu-high-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -57,7 +57,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
-  count = var.enable_alarms && var.cluster_name != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "ecs-memory-high-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -87,7 +87,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
 
 # ALB Alarms
 resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
-  count = var.enable_alarms && var.alb_arn_suffix != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "alb-5xx-errors-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -116,7 +116,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_response_time" {
-  count = var.enable_alarms && var.alb_arn_suffix != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "alb-response-time-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -146,7 +146,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_response_time" {
 
 # RDS Alarms
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
-  count = var.enable_alarms && var.rds_instance_id != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "rds-cpu-high-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -175,7 +175,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_storage_low" {
-  count = var.enable_alarms && var.rds_instance_id != "" ? 1 : 0
+  count = var.enable_alarms ? 1 : 0
   
   alarm_name          = "rds-storage-low-${var.environment}"
   comparison_operator = "LessThanThreshold"
