@@ -230,25 +230,25 @@ jobs:
       # ── Destroy database module (RDS, Redis, DocumentDB, Secrets Manager) ──
       - name: 'Terraform Destroy: database'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform destroy -auto-approve -target=module.database
+        run: terraform destroy -auto-approve -lock=false -target=module.database
         timeout-minutes: 30
 
       # ── Destroy compute module (ALBs — ECS cluster itself is free) ──
       - name: 'Terraform Destroy: compute (ALBs)'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform destroy -auto-approve -target=module.compute
+        run: terraform destroy -auto-approve -lock=false -target=module.compute
         timeout-minutes: 15
 
       # ── Destroy storage module (S3 buckets) ──
       - name: 'Terraform Destroy: storage'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform destroy -auto-approve -target=module.storage
+        run: terraform destroy -auto-approve -lock=false -target=module.storage
         timeout-minutes: 10
 
       # ── Destroy monitoring module (CloudWatch dashboards cost $3/month) ──
       - name: 'Terraform Destroy: monitoring'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
-        run: terraform destroy -auto-approve -target=module.monitoring
+        run: terraform destroy -auto-approve -lock=false -target=module.monitoring
         timeout-minutes: 10
 
       # ── Networking: destroy only NAT Gateways, EIPs, Interface Endpoints (costly) ──
@@ -256,7 +256,7 @@ jobs:
       - name: 'Terraform Destroy: NAT Gateways & Elastic IPs'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
         run: |
-          terraform destroy -auto-approve \
+          terraform destroy -auto-approve -lock=false \
             -target='module.networking.aws_nat_gateway.main' \
             -target='module.networking.aws_eip.nat' \
             -target='module.networking.aws_route.private_nat_gateway' \
@@ -280,7 +280,7 @@ jobs:
       - name: 'Terraform Destroy: Interface VPC Endpoints (~$7.20/month each)'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
         run: |
-          terraform destroy -auto-approve \
+          terraform destroy -auto-approve -lock=false \
             -target='module.networking.aws_vpc_endpoint.ecr_api' \
             -target='module.networking.aws_vpc_endpoint.ecr_dkr' \
             -target='module.networking.aws_vpc_endpoint.logs' \
@@ -294,7 +294,7 @@ jobs:
       - name: 'Terraform Destroy: KMS keys'
         working-directory: infrastructure/terraform/environments/${{ inputs.environment }}
         run: |
-          terraform destroy -auto-approve \
+          terraform destroy -auto-approve -lock=false \
             -target='module.security.aws_kms_key.main' \
             -target='module.security.aws_kms_alias.main' \
             -target='module.security.aws_kms_key.rds' \
