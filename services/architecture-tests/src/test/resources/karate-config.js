@@ -28,5 +28,22 @@ function fn() {
   karate.configure('connectTimeout', 10000);
   karate.configure('readTimeout', 30000);
   
+  // Seed test user (ignore 409 if already exists)
+  var testUserPayload = {
+    email: 'test@example.com',
+    password: 'Test123!',
+    username: 'testuser',
+    firstName: 'Test',
+    lastName: 'User',
+    organizationId: 'test-org-001'
+  };
+  
+  try {
+    var registerResult = karate.call('classpath:features/setup/seed-test-user.feature', { baseUrl: config.baseUrl, testUserPayload: testUserPayload });
+    karate.log('Test user seed result:', registerResult.seedStatus);
+  } catch (e) {
+    karate.log('Test user seed skipped or failed (services may not be running):', e.message);
+  }
+  
   return config;
 }

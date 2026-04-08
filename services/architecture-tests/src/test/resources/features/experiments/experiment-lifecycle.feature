@@ -13,9 +13,10 @@ Feature: Complete Experiment Lifecycle
     * def token = response.accessToken
     
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'exp-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Experiment Org', slug: 'exp-' + timestamp }
+    And request { name: 'Experiment Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

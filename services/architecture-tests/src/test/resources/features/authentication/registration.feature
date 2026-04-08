@@ -4,7 +4,7 @@ Feature: User Registration
     * url baseUrl
     * def timestamp = new Date().getTime()
     * def uniqueEmail = 'test+' + timestamp + '@example.com'
-    * def newUser = { email: '#(uniqueEmail)', password: 'Test123!', name: 'Test User' }
+    * def newUser = { email: '#(uniqueEmail)', password: 'Test123!', username: 'testuser_#(timestamp)', firstName: 'Test', lastName: 'User', organizationId: 'test-org-001' }
 
   Scenario: Successful registration returns LoginResponseDto
     Given path '/api/v1/auth/register'
@@ -30,14 +30,14 @@ Feature: User Registration
     And match response.message contains 'already exists'
     
   Scenario: Registration with invalid email returns 400
-    * def invalidUser = { email: 'invalid-email', password: 'Test123!', name: 'Test' }
+    * def invalidUser = { email: 'invalid-email', password: 'Test123!', username: 'invalid', firstName: 'Test', lastName: 'User', organizationId: 'test-org-001' }
     Given path '/api/v1/auth/register'
     And request invalidUser
     When method POST
     Then status 400
     
   Scenario: Registration with weak password returns 400
-    * def weakPasswordUser = { email: '#(uniqueEmail)', password: '123', name: 'Test' }
+    * def weakPasswordUser = { email: '#(uniqueEmail)', password: '123', username: 'weakpw', firstName: 'Test', lastName: 'User', organizationId: 'test-org-001' }
     Given path '/api/v1/auth/register'
     And request weakPasswordUser
     When method POST

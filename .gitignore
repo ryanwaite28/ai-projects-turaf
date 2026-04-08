@@ -8,6 +8,7 @@
 .mtj.tmp/
 hs_err_pid*
 replay_pid*
+local-integration-test-runs/
 
 # Maven
 target/

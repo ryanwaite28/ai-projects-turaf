@@ -28,9 +28,7 @@ public class RateLimitConfig {
             .build();
         
         RateLimiterRegistry registry = RateLimiterRegistry.of(defaultConfig);
-        
-        registry.rateLimiter("default", defaultConfig);
-        registry.rateLimiter("public", publicEndpointConfig);
+        registry.addConfiguration("public", publicEndpointConfig);
         
         log.info("Rate limiter registry configured - default: 100/min, public: 10/min");
         return registry;
