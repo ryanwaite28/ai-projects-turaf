@@ -9,8 +9,8 @@ output "s3_bucket_arn" {
 }
 
 output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  value       = var.environment == "dev" ? aws_dynamodb_table.terraform_locks[0].name : "turaf-terraform-locks"
+  description = "Name of the DynamoDB table for state locking (created via AWS CLI in bootstrap workflow)"
+  value       = "turaf-terraform-locks"
 }
 
 output "ecr_repositories" {
