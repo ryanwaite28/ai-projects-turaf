@@ -1,6 +1,7 @@
-# Apply IAM Policy Updates for Architecture Test Reports
+# Apply IAM Policy Updates
 
 **Created**: 2026-03-31  
+**Last Updated**: 2026-04-09  
 **Status**: Ready for Execution  
 **Related Task**: [004-update-iam-permissions.md](../tasks/architecture-tests/004-update-iam-permissions.md)
 
@@ -8,9 +9,33 @@
 
 ## Overview
 
-This document provides step-by-step instructions to apply the updated IAM permissions policy to all AWS accounts. The policy has been updated to include S3 and CloudFront permissions for architecture test reports.
+The `GitHubActionsDeploymentRole` uses **two separate inline policies** — split for size (AWS inline policy limit: 10,240 non-whitespace characters) and concern separation:
 
-**Policy File**: `infrastructure/iam-policies/github-actions-permissions-policy.json`
+| Policy Name | File | Purpose | Size |
+|-------------|------|---------|------|
+| `GitHubActionsDeploymentPolicy` | `github-actions-permissions-policy.json` | ECR, ECS, S3 artifacts, CloudWatch, CloudFront invalidation, Lambda deployment | ~2,100 chars |
+| `GitHubActionsTerraformPolicy` | `github-actions-terraform-policy.json` | Full Terraform provisioning (KMS, EC2 VPC, RDS, IAM roles, SQS, EventBridge, DynamoDB, ELB, Lambda, S3 buckets) | ~7,400 chars |
+
+Apply both policies to all environments.
+
+---
+
+## Policy History
+
+### 2026-04-09 — Terraform Infrastructure Permissions (CURRENT)
+
+Added comprehensive Terraform provisioning permissions after CI/CD failures:
+
+- **Problem**: `GitHubActionsDeploymentRole` was provisioned only for deployment (ECR push, ECS update). Running Terraform for full infrastructure management required additional permissions.
+- **Errors fixed**:
+  - `KMSKeyNotAccessibleFault` on RDS — added full `kms:*` management permissions including `kms:CreateGrant` (required when RDS uses a CMK)
+  - `AccessDeniedException: Access to KMS is not allowed` on Secrets Manager — same KMS fix
+  - `UnauthorizedOperation: ec2:ModifyVpcEndpoint` — added EC2 VPC management permissions
+- **Statements added**: `KMSTerraformManagement`, `SecretsManagerTerraformManagement`, `EC2TerraformManagement`, `RDSTerraformManagement`, `ElastiCacheTerraformManagement`, `DocumentDBTerraformManagement`, `S3TerraformManagement`, `SQSTerraformManagement`, `EventBridgeTerraformManagement`, `DynamoDBTerraformManagement`, `ELBTerraformManagement`, `LambdaTerraformManagement`, `CloudWatchTerraformManagement`
+
+### 2026-03-31 — Architecture Test Reports + CloudFront
+
+Added S3 (`ArchitectureTestReports`) and CloudFront (`CloudFrontInvalidation`) permissions.
 
 ---
 
@@ -25,229 +50,80 @@ This document provides step-by-step instructions to apply the updated IAM permis
 
 ---
 
-## Policy Changes
+## Policy Changes (Current)
 
-The following permissions have been added:
+The policy now includes full Terraform infrastructure provisioning permissions. Key additions:
 
-### S3 Permissions (Architecture Test Reports)
-```json
-{
-  "Sid": "ArchitectureTestReports",
-  "Effect": "Allow",
-  "Action": [
-    "s3:PutObject",
-    "s3:PutObjectAcl",
-    "s3:GetObject",
-    "s3:ListBucket"
-  ],
-  "Resource": [
-    "arn:aws:s3:::turaf-architecture-test-reports-*",
-    "arn:aws:s3:::turaf-architecture-test-reports-*/*"
-  ]
-}
+### KMS (required for RDS encryption + Secrets Manager CMK)
+- Full key lifecycle management: `kms:CreateKey`, `kms:CreateAlias`, `kms:ScheduleKeyDeletion`, etc.
+- **Critical**: `kms:CreateGrant` — required when Terraform creates an RDS instance or Secrets Manager secret with a CMK; Terraform must grant the AWS service access to the key
+
+### EC2 VPC Management (required for networking module)
+- VPC, subnet, route table, internet gateway, NAT gateway lifecycle
+- **Critical**: `ec2:ModifyVpcEndpoint` — required when associating route tables with existing VPC endpoints
+
+### Secrets Manager
+- `secretsmanager:CreateSecret`, `PutSecretValue`, `DescribeSecret`, `TagResource`
+- Resources scoped to `arn:aws:secretsmanager:*:${ACCOUNT_ID}:secret:turaf/*`
+
+### Broad Terraform permissions
+- RDS, ElastiCache, DocumentDB, S3, SQS, EventBridge, DynamoDB, ELB, Lambda, CloudWatch, ECS (full), ECR (full), IAM (turaf-* roles)
+
+---
+
+## Applying Policies
+
+All policies are applied by a single script:
+
+```bash
+# Preview what will be applied
+./scripts/apply-iam-policies.sh --list
+
+# Apply to all accounts (dev, qa, prod)
+./scripts/apply-iam-policies.sh --all
+
+# Apply to one account only
+./scripts/apply-iam-policies.sh --env dev
+
+# Verify all policies are present (no changes)
+./scripts/apply-iam-policies.sh --verify --all
 ```
 
-### CloudFront Permissions
-```json
-{
-  "Sid": "CloudFrontInvalidation",
-  "Effect": "Allow",
-  "Action": [
-    "cloudfront:CreateInvalidation",
-    "cloudfront:GetInvalidation",
-    "cloudfront:ListInvalidations"
-  ],
-  "Resource": "arn:aws:cloudfront::*:distribution/*"
-}
+The script substitutes `${ACCOUNT_ID}` in each policy file with the actual account ID at runtime. On first run it automatically migrates the old teardown managed policies (`TurafTeardownPolicy`, `TurafTeardownPolicy2`) to inline policies.
+
+---
+
+## Backup Before Updating
+
+```bash
+for env in dev qa prod; do
+  for policy in GitHubActionsDeploymentPolicy GitHubActionsTerraformPolicy \
+                TurafTeardownPolicy TurafTeardownPolicy2; do
+    aws iam get-role-policy \
+      --role-name GitHubActionsDeploymentRole \
+      --policy-name "$policy" \
+      --profile "turaf-${env}" \
+      --output json > "backup-${policy}-${env}-$(date +%Y%m%d).json" 2>/dev/null || true
+  done
+done
 ```
 
 ---
 
-## Step 1: Backup Current Policies
+## Rollback
 
-Before applying updates, backup the current policies from all accounts:
-
-```bash
-# DEV Account
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-dev \
-  --output json > backup-policy-dev-$(date +%Y%m%d).json
-
-# QA Account
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-qa \
-  --output json > backup-policy-qa-$(date +%Y%m%d).json
-
-# PROD Account
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-prod \
-  --output json > backup-policy-prod-$(date +%Y%m%d).json
-```
-
----
-
-## Step 2: Prepare Policy Document
-
-The policy document uses a placeholder `${ACCOUNT_ID}` that needs to be replaced for each account.
-
-### Option A: Manual Replacement
-
-Create account-specific policy files:
+Restore a backed-up policy:
 
 ```bash
-# DEV
-sed 's/${ACCOUNT_ID}/801651112319/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json \
-  > /tmp/policy-dev.json
-
-# QA
-sed 's/${ACCOUNT_ID}/965932217544/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json \
-  > /tmp/policy-qa.json
-
-# PROD
-sed 's/${ACCOUNT_ID}/811783768245/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json \
-  > /tmp/policy-prod.json
-```
-
-### Option B: Inline Replacement
-
-Use inline replacement during the `put-role-policy` command (shown in Step 3).
-
----
-
-## Step 3: Apply Policy to DEV Account
-
-**Test in DEV first before applying to QA/PROD**
-
-```bash
-# Replace ${ACCOUNT_ID} and apply
-sed 's/${ACCOUNT_ID}/801651112319/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json | \
+jq -r '.PolicyDocument | tostring' backup-GitHubActionsDeploymentPolicy-dev-YYYYMMDD.json | \
   aws iam put-role-policy \
     --role-name GitHubActionsDeploymentRole \
     --policy-name GitHubActionsDeploymentPolicy \
     --policy-document file:///dev/stdin \
     --profile turaf-dev
-
-echo "✅ Policy applied to DEV account"
 ```
 
----
-
-## Step 4: Verify DEV Policy
-
-```bash
-# Verify ArchitectureTestReports permissions
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-dev \
-  --query 'PolicyDocument.Statement[?Sid==`ArchitectureTestReports`]' \
-  --output json
-
-# Verify CloudFrontInvalidation permissions
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-dev \
-  --query 'PolicyDocument.Statement[?Sid==`CloudFrontInvalidation`]' \
-  --output json
-```
-
-**Expected Output**: Should show the new S3 and CloudFront permission statements.
-
----
-
-## Step 5: Apply Policy to QA Account
-
-After verifying DEV works correctly:
-
-```bash
-sed 's/${ACCOUNT_ID}/965932217544/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json | \
-  aws iam put-role-policy \
-    --role-name GitHubActionsDeploymentRole \
-    --policy-name GitHubActionsDeploymentPolicy \
-    --policy-document file:///dev/stdin \
-    --profile turaf-qa
-
-echo "✅ Policy applied to QA account"
-```
-
----
-
-## Step 6: Verify QA Policy
-
-```bash
-bash scripts/verify-iam-permissions.sh
-```
-
-Or manually:
-
-```bash
-aws iam get-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --profile turaf-qa \
-  --query 'PolicyDocument.Statement[?Sid==`ArchitectureTestReports` || Sid==`CloudFrontInvalidation`]' \
-  --output json
-```
-
----
-
-## Step 7: Apply Policy to PROD Account
-
-After verifying QA works correctly:
-
-```bash
-sed 's/${ACCOUNT_ID}/811783768245/g' \
-  infrastructure/iam-policies/github-actions-permissions-policy.json | \
-  aws iam put-role-policy \
-    --role-name GitHubActionsDeploymentRole \
-    --policy-name GitHubActionsDeploymentPolicy \
-    --policy-document file:///dev/stdin \
-    --profile turaf-prod
-
-echo "✅ Policy applied to PROD account"
-```
-
----
-
-## Step 8: Verify All Accounts
-
-Run the verification script to check all accounts:
-
-```bash
-bash scripts/verify-iam-permissions.sh
-```
-
----
-
-## Rollback Procedure
-
-If issues occur, restore the backup policy:
-
-```bash
-# Extract policy document from backup
-jq -r '.PolicyDocument | tostring' backup-policy-dev-YYYYMMDD.json > /tmp/rollback-policy.json
-
-# Apply backup policy
-aws iam put-role-policy \
-  --role-name GitHubActionsDeploymentRole \
-  --policy-name GitHubActionsDeploymentPolicy \
-  --policy-document file:///tmp/rollback-policy.json \
-  --profile turaf-dev
-```
-
-Repeat for QA and PROD if needed.
+Repeat for each policy and environment as needed.
 
 ---
 
