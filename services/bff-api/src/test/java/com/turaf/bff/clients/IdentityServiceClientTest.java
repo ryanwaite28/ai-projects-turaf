@@ -1,6 +1,7 @@
 package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.LoginRequest;
+import com.turaf.bff.dto.LoginResponseDto;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
 import okhttp3.mockwebserver.MockResponse;
@@ -9,7 +10,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 
@@ -25,11 +26,11 @@ class IdentityServiceClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         
-        WebClient webClient = WebClient.builder()
+        RestClient restClient = RestClient.builder()
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new IdentityServiceClient(webClient);
+        client = new IdentityServiceClient(restClient);
     }
     
     @AfterEach
@@ -40,7 +41,7 @@ class IdentityServiceClientTest {
     @Test
     void testLogin_Success() throws InterruptedException {
         mockWebServer.enqueue(new MockResponse()
-            .setBody("{\"id\":\"user-123\",\"email\":\"test@example.com\",\"name\":\"Test User\",\"token\":\"jwt-token\"}")
+            .setBody("{\"accessToken\":\"jwt-token\",\"user\":{\"id\":\"user-123\",\"email\":\"test@example.com\",\"username\":\"testuser\",\"firstName\":\"Test\",\"lastName\":\"User\"}}")
             .addHeader("Content-Type", "application/json"));
         
         LoginRequest request = LoginRequest.builder()
@@ -48,50 +49,53 @@ class IdentityServiceClientTest {
             .password("password")
             .build();
         
-        UserDto user = client.login(request).block();
+        LoginResponseDto response = client.login(request);
         
-        assertNotNull(user);
-        assertEquals("user-123", user.getId());
-        assertEquals("test@example.com", user.getEmail());
-        assertEquals("Test User", user.getName());
-        assertEquals("jwt-token", user.getToken());
+        assertNotNull(response);
+        assertNotNull(response.getUser());
+        assertEquals("user-123", response.getUser().getId());
+        assertEquals("test@example.com", response.getUser().getEmail());
+        assertEquals("jwt-token", response.getAccessToken());
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/identity/auth/login", recordedRequest.getPath());
+        assertEquals("/api/v1/auth/login", recordedRequest.getPath());
     }
     
     @Test
     void testRegister_Success() throws InterruptedException {
         mockWebServer.enqueue(new MockResponse()
-            .setBody("{\"id\":\"user-456\",\"email\":\"new@example.com\",\"name\":\"New User\",\"token\":\"jwt-token\"}")
+            .setBody("{\"accessToken\":\"jwt-token\",\"user\":{\"id\":\"user-456\",\"email\":\"new@example.com\",\"username\":\"newuser\",\"firstName\":\"New\",\"lastName\":\"User\"}}")
             .addHeader("Content-Type", "application/json"));
         
         RegisterRequest request = RegisterRequest.builder()
-            .name("New User")
+            .username("newuser")
+            .firstName("New")
+            .lastName("User")
             .email("new@example.com")
             .password("password123")
+            .organizationId("org-123")
             .build();
         
-        UserDto user = client.register(request).block();
+        LoginResponseDto response = client.register(request);
         
-        assertNotNull(user);
-        assertEquals("user-456", user.getId());
-        assertEquals("new@example.com", user.getEmail());
-        assertEquals("New User", user.getName());
+        assertNotNull(response);
+        assertNotNull(response.getUser());
+        assertEquals("user-456", response.getUser().getId());
+        assertEquals("new@example.com", response.getUser().getEmail());
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/identity/auth/register", recordedRequest.getPath());
+        assertEquals("/api/v1/auth/register", recordedRequest.getPath());
     }
     
     @Test
     void testGetCurrentUser_Success() throws InterruptedException {
         mockWebServer.enqueue(new MockResponse()
-            .setBody("{\"id\":\"user-789\",\"email\":\"current@example.com\",\"name\":\"Current User\"}")
+            .setBody("{\"id\":\"user-789\",\"email\":\"current@example.com\",\"username\":\"currentuser\",\"firstName\":\"Current\",\"lastName\":\"User\"}")
             .addHeader("Content-Type", "application/json"));
         
-        UserDto user = client.getCurrentUser("test-token").block();
+        UserDto user = client.getCurrentUser("user-789");
         
         assertNotNull(user);
         assertEquals("user-789", user.getId());
@@ -99,8 +103,8 @@ class IdentityServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/identity/auth/me", recordedRequest.getPath());
-        assertEquals("Bearer test-token", recordedRequest.getHeader("Authorization"));
+        assertEquals("/api/v1/users/me", recordedRequest.getPath());
+        assertEquals("user-789", recordedRequest.getHeader("X-User-Id"));
     }
     
     @Test
@@ -108,12 +112,12 @@ class IdentityServiceClientTest {
         mockWebServer.enqueue(new MockResponse()
             .setResponseCode(204));
         
-        client.logout("test-token").block();
+        client.logout("user-789");
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/identity/auth/logout", recordedRequest.getPath());
-        assertEquals("Bearer test-token", recordedRequest.getHeader("Authorization"));
+        assertEquals("/api/v1/auth/logout", recordedRequest.getPath());
+        assertEquals("user-789", recordedRequest.getHeader("X-User-Id"));
     }
     
     @Test
@@ -127,6 +131,6 @@ class IdentityServiceClientTest {
             .password("wrong")
             .build();
         
-        assertThrows(Exception.class, () -> client.login(request).block());
+        assertThrows(Exception.class, () -> client.login(request));
     }
 }

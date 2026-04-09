@@ -11,9 +11,10 @@ Feature: Organization Member Management
     * def userId = response.user.id
     
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'member-test-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Member Test Org', slug: 'member-test-' + timestamp }
+    And request { name: 'Member Test Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
@@ -29,7 +30,7 @@ Feature: Organization Member Management
   Scenario: Add member to organization
     * def newUserEmail = 'newmember+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(newUserEmail)', password: 'Test123!', name: 'New Member' }
+    And request { email: '#(newUserEmail)', password: 'Test123!', username: 'newmember_#(timestamp)', firstName: 'New', lastName: 'Member', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def newUserId = response.user.id
@@ -46,7 +47,7 @@ Feature: Organization Member Management
   Scenario: Update member role
     * def newUserEmail = 'member+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(newUserEmail)', password: 'Test123!', name: 'Member' }
+    And request { email: '#(newUserEmail)', password: 'Test123!', username: 'member_#(timestamp)', firstName: 'Member', lastName: 'User', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def newUserId = response.user.id
@@ -68,7 +69,7 @@ Feature: Organization Member Management
   Scenario: Remove member from organization
     * def newUserEmail = 'removeme+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(newUserEmail)', password: 'Test123!', name: 'Remove Me' }
+    And request { email: '#(newUserEmail)', password: 'Test123!', username: 'removeme_#(timestamp)', firstName: 'Remove', lastName: 'Me', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def newUserId = response.user.id
@@ -94,7 +95,7 @@ Feature: Organization Member Management
   Scenario: Adding member triggers notification event
     * def newUserEmail = 'notify+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(newUserEmail)', password: 'Test123!', name: 'Notify Me' }
+    And request { email: '#(newUserEmail)', password: 'Test123!', username: 'notify_#(timestamp)', firstName: 'Notify', lastName: 'Me', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def newUserId = response.user.id

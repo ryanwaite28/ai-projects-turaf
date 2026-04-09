@@ -10,94 +10,90 @@ import com.turaf.bff.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Component
 public class IdentityServiceClient {
     
-    private final WebClient webClient;
-    private static final String SERVICE_PATH = "/api/v1";
+    private final RestClient restClient;
+    private static final String SERVICE_PATH = "/api/v1/auth";
     
-    public IdentityServiceClient(@Qualifier("identityWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public IdentityServiceClient(@Qualifier("identityRestClient") RestClient restClient) {
+        this.restClient = restClient;
     }
     
-    public Mono<LoginResponseDto> login(LoginRequest request) {
+    public LoginResponseDto login(LoginRequest request) {
         log.debug("Calling Identity Service: POST /auth/login");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/login")
-            .bodyValue(request)
+        LoginResponseDto response = restClient.post()
+            .uri(SERVICE_PATH + "/login")
+            .body(request)
             .retrieve()
-            .bodyToMono(LoginResponseDto.class)
-            .doOnSuccess(response -> log.debug("Login successful for user: {}", response.getUser().getEmail()))
-            .doOnError(error -> log.error("Failed to login", error));
+            .body(LoginResponseDto.class);
+        log.debug("Login successful for user: {}", response.getUser().getEmail());
+        return response;
     }
     
-    public Mono<LoginResponseDto> register(RegisterRequest request) {
+    public LoginResponseDto register(RegisterRequest request) {
         log.debug("Calling Identity Service: POST /auth/register");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/register")
-            .bodyValue(request)
+        LoginResponseDto response = restClient.post()
+            .uri(SERVICE_PATH + "/register")
+            .body(request)
             .retrieve()
-            .bodyToMono(LoginResponseDto.class)
-            .doOnSuccess(response -> log.debug("Registration successful for user: {}", response.getUser().getEmail()))
-            .doOnError(error -> log.error("Failed to register", error));
+            .body(LoginResponseDto.class);
+        log.debug("Registration successful for user: {}", response.getUser().getEmail());
+        return response;
     }
     
-    public Mono<UserDto> getCurrentUser(String userId) {
+    public UserDto getCurrentUser(String userId) {
         log.debug("Calling Identity Service: GET /users/me");
-        return webClient.get()
-            .uri(SERVICE_PATH + "/users/me")
+        UserDto user = restClient.get()
+            .uri("/api/v1/users/me")
             .header("X-User-Id", userId)
             .retrieve()
-            .bodyToMono(UserDto.class)
-            .doOnSuccess(user -> log.debug("Retrieved current user: {}", user.getId()))
-            .doOnError(error -> log.error("Failed to get current user", error));
+            .body(UserDto.class);
+        log.debug("Retrieved current user: {}", user.getId());
+        return user;
     }
     
-    public Mono<Void> logout(String userId) {
+    public void logout(String userId) {
         log.debug("Calling Identity Service: POST /auth/logout");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/logout")
+        restClient.post()
+            .uri(SERVICE_PATH + "/logout")
             .header("X-User-Id", userId)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Logout successful"))
-            .doOnError(error -> log.error("Failed to logout", error));
+            .toBodilessEntity();
+        log.debug("Logout successful");
     }
     
-    public Mono<LoginResponseDto> refreshToken(RefreshTokenRequest request) {
+    public LoginResponseDto refreshToken(RefreshTokenRequest request) {
         log.debug("Calling Identity Service: POST /auth/refresh");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/refresh")
-            .bodyValue(request)
+        LoginResponseDto response = restClient.post()
+            .uri(SERVICE_PATH + "/refresh")
+            .body(request)
             .retrieve()
-            .bodyToMono(LoginResponseDto.class)
-            .doOnSuccess(response -> log.debug("Token refresh successful"))
-            .doOnError(error -> log.error("Failed to refresh token", error));
+            .body(LoginResponseDto.class);
+        log.debug("Token refresh successful");
+        return response;
     }
     
-    public Mono<Void> requestPasswordReset(PasswordResetRequest request) {
+    public void requestPasswordReset(PasswordResetRequest request) {
         log.debug("Calling Identity Service: POST /auth/password-reset/request");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/password-reset/request")
-            .bodyValue(request)
+        restClient.post()
+            .uri(SERVICE_PATH + "/password-reset/request")
+            .body(request)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Password reset request successful"))
-            .doOnError(error -> log.error("Failed to request password reset", error));
+            .toBodilessEntity();
+        log.debug("Password reset request successful");
     }
     
-    public Mono<Void> confirmPasswordReset(PasswordResetConfirmRequest request) {
+    public void confirmPasswordReset(PasswordResetConfirmRequest request) {
         log.debug("Calling Identity Service: POST /auth/password-reset/confirm");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/auth/password-reset/confirm")
-            .bodyValue(request)
+        restClient.post()
+            .uri(SERVICE_PATH + "/password-reset/confirm")
+            .body(request)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Password reset confirmation successful"))
-            .doOnError(error -> log.error("Failed to confirm password reset", error));
+            .toBodilessEntity();
+        log.debug("Password reset confirmation successful");
     }
 }

@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
@@ -26,64 +25,57 @@ public class AuthController {
     private final IdentityServiceClient identityServiceClient;
     
     @PostMapping("/login")
-    public Mono<ResponseEntity<LoginResponseDto>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login request for email: {}", request.getEmail());
-        return identityServiceClient.login(request)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Login successful"))
-            .doOnError(error -> log.error("Login failed", error));
+        LoginResponseDto response = identityServiceClient.login(request);
+        log.info("Login successful");
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/register")
-    public Mono<ResponseEntity<LoginResponseDto>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<LoginResponseDto> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Register request for email: {}", request.getEmail());
-        return identityServiceClient.register(request)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Registration successful"))
-            .doOnError(error -> log.error("Registration failed", error));
+        LoginResponseDto response = identityServiceClient.register(request);
+        log.info("Registration successful");
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/me")
-    public Mono<ResponseEntity<UserDto>> getCurrentUser(@AuthenticationPrincipal UserContext userContext) {
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserContext userContext) {
         log.info("Get current user request for userId: {}", userContext.getUserId());
-        return identityServiceClient.getCurrentUser(userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnError(error -> log.error("Failed to get current user", error));
+        UserDto user = identityServiceClient.getCurrentUser(userContext.getUserId());
+        return ResponseEntity.ok(user);
     }
     
     @PostMapping("/logout")
-    public Mono<ResponseEntity<Void>> logout(@AuthenticationPrincipal UserContext userContext) {
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserContext userContext) {
         log.info("Logout request for userId: {}", userContext.getUserId());
-        return identityServiceClient.logout(userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Logout successful"))
-            .doOnError(error -> log.error("Logout failed", error));
+        identityServiceClient.logout(userContext.getUserId());
+        log.info("Logout successful");
+        return ResponseEntity.ok().build();
     }
     
     @PostMapping("/refresh")
-    public Mono<ResponseEntity<LoginResponseDto>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<LoginResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         log.info("Token refresh request");
-        return identityServiceClient.refreshToken(request)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Token refresh successful"))
-            .doOnError(error -> log.error("Token refresh failed", error));
+        LoginResponseDto response = identityServiceClient.refreshToken(request);
+        log.info("Token refresh successful");
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/password-reset/request")
-    public Mono<ResponseEntity<Void>> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
         log.info("Password reset request for email: {}", request.getEmail());
-        return identityServiceClient.requestPasswordReset(request)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Password reset request successful"))
-            .doOnError(error -> log.error("Password reset request failed", error));
+        identityServiceClient.requestPasswordReset(request);
+        log.info("Password reset request successful");
+        return ResponseEntity.ok().build();
     }
     
     @PostMapping("/password-reset/confirm")
-    public Mono<ResponseEntity<Void>> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+    public ResponseEntity<Void> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
         log.info("Password reset confirmation request");
-        return identityServiceClient.confirmPasswordReset(request)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Password reset confirmation successful"))
-            .doOnError(error -> log.error("Password reset confirmation failed", error));
+        identityServiceClient.confirmPasswordReset(request);
+        log.info("Password reset confirmation successful");
+        return ResponseEntity.ok().build();
     }
 }

@@ -8,7 +8,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,11 +25,11 @@ class MetricsServiceClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         
-        WebClient webClient = WebClient.builder()
+        RestClient restClient = RestClient.builder()
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new MetricsServiceClient(webClient);
+        client = new MetricsServiceClient(restClient);
     }
     
     @AfterEach
@@ -50,7 +50,7 @@ class MetricsServiceClientTest {
             .unit("percentage")
             .build();
         
-        MetricDto metric = client.recordMetric(request, "user-123", "org-123").block();
+        MetricDto metric = client.recordMetric(request, "user-123", "org-123");
         
         assertNotNull(metric);
         assertEquals("metric-123", metric.getId());
@@ -72,7 +72,7 @@ class MetricsServiceClientTest {
                     "{\"id\":\"metric-2\",\"experimentId\":\"exp-456\",\"name\":\"views\",\"value\":1000.0}]")
             .addHeader("Content-Type", "application/json"));
         
-        List<MetricDto> metrics = client.getExperimentMetrics("exp-456", "user-123", "org-123").collectList().block();
+        List<MetricDto> metrics = client.getExperimentMetrics("exp-456", "user-123", "org-123");
         
         assertNotNull(metrics);
         assertEquals(2, metrics.size());
@@ -91,7 +91,7 @@ class MetricsServiceClientTest {
             .setBody("{\"id\":\"metric-789\",\"experimentId\":\"exp-789\",\"name\":\"revenue\",\"value\":5000.0}")
             .addHeader("Content-Type", "application/json"));
         
-        MetricDto metric = client.getMetric("metric-789", "user-123", "org-123").block();
+        MetricDto metric = client.getMetric("metric-789", "user-123", "org-123");
         
         assertNotNull(metric);
         assertEquals("metric-789", metric.getId());
@@ -108,7 +108,7 @@ class MetricsServiceClientTest {
         mockWebServer.enqueue(new MockResponse()
             .setResponseCode(204));
         
-        client.deleteMetric("metric-999", "user-123", "org-123").block();
+        client.deleteMetric("metric-999", "user-123", "org-123");
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("DELETE", recordedRequest.getMethod());

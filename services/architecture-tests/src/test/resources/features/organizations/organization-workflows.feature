@@ -11,10 +11,11 @@ Feature: Organization Workflows
 
   Scenario: Complete organization setup workflow
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'workflow-' + timestamp
     
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Workflow Org', slug: 'workflow-' + timestamp }
+    And request { name: 'Workflow Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
@@ -27,7 +28,7 @@ Feature: Organization Workflows
     
     * def member1Email = 'member1+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(member1Email)', password: 'Test123!', name: 'Member 1' }
+    And request { email: '#(member1Email)', password: 'Test123!', username: 'member1_#(timestamp)', firstName: 'Member', lastName: '1', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def member1Id = response.user.id
@@ -46,17 +47,18 @@ Feature: Organization Workflows
     
   Scenario: Organization access control
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'private-' + timestamp
     
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Private Org', slug: 'private-' + timestamp }
+    And request { name: 'Private Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
     
     * def user2Email = 'user2+' + timestamp + '@example.com'
     Given path '/api/v1/auth/register'
-    And request { email: '#(user2Email)', password: 'Test123!', name: 'User 2' }
+    And request { email: '#(user2Email)', password: 'Test123!', username: 'user2_#(timestamp)', firstName: 'User', lastName: '2', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def user2Token = response.accessToken

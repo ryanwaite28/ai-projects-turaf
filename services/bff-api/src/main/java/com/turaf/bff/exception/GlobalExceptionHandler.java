@@ -7,12 +7,13 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -75,11 +76,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
     
-    @ExceptionHandler(WebClientResponseException.class)
-    public ResponseEntity<ErrorResponse> handleWebClientResponseException(
-            WebClientResponseException ex, HttpServletRequest request) {
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<ErrorResponse> handleHttpClientError(
+            HttpClientErrorException ex, HttpServletRequest request) {
         
-        log.error("Downstream service error: {} - {}", ex.getStatusCode(), ex.getMessage());
+        log.error("Downstream service client error: {} - {}", ex.getStatusCode(), ex.getMessage());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -91,6 +92,42 @@ public class GlobalExceptionHandler {
             .build();
             
         return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+    
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ResponseEntity<ErrorResponse> handleHttpServerError(
+            HttpServerErrorException ex, HttpServletRequest request) {
+        
+        log.error("Downstream service server error: {} - {}", ex.getStatusCode(), ex.getMessage());
+        
+        ErrorResponse error = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(ex.getStatusCode().value())
+            .error(ex.getStatusText())
+            .message("Downstream service error")
+            .path(request.getRequestURI())
+            .correlationId(MDC.get("correlationId"))
+            .build();
+            
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+    
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAccessException(
+            ResourceAccessException ex, HttpServletRequest request) {
+        
+        log.error("Downstream service connection error: {}", ex.getMessage());
+        
+        ErrorResponse error = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+            .error("Service Unavailable")
+            .message("Unable to connect to downstream service")
+            .path(request.getRequestURI())
+            .correlationId(MDC.get("correlationId"))
+            .build();
+            
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)

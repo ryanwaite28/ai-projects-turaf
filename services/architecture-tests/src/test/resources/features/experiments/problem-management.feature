@@ -11,9 +11,10 @@ Feature: Problem Management
     * def token = response.accessToken
     
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'prob-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Problem Org', slug: 'prob-' + timestamp }
+    And request { name: 'Problem Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

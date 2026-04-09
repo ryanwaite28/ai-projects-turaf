@@ -4,96 +4,96 @@ import com.turaf.bff.dto.CreateHypothesisRequest;
 import com.turaf.bff.dto.HypothesisDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Slf4j
 @Component
 public class HypothesisServiceClient {
     
-    private final WebClient webClient;
-    private static final String SERVICE_PATH = "/api/v1";
+    private final RestClient restClient;
+    private static final String SERVICE_PATH = "/api/v1/hypotheses";
     
-    public HypothesisServiceClient(@Qualifier("experimentWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public HypothesisServiceClient(@Qualifier("experimentRestClient") RestClient restClient) {
+        this.restClient = restClient;
     }
     
-    public Flux<HypothesisDto> getHypotheses(String userId, String organizationId, String problemId) {
+    public List<HypothesisDto> getHypotheses(String userId, String organizationId, String problemId) {
         log.debug("Calling Experiment Service: GET /hypotheses");
         
-        WebClient.RequestHeadersUriSpec<?> spec = webClient.get();
-        
         if (problemId != null && !problemId.isEmpty()) {
-            return spec.uri(uriBuilder -> uriBuilder
-                    .path(SERVICE_PATH + "/hypotheses")
+            List<HypothesisDto> hypotheses = restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                    .path(SERVICE_PATH)
                     .queryParam("problemId", problemId)
                     .build())
                 .header("X-User-Id", userId)
                 .header("X-Organization-Id", organizationId)
                 .retrieve()
-                .bodyToFlux(HypothesisDto.class)
-                .doOnComplete(() -> log.debug("Retrieved hypotheses for problem: {}", problemId))
-                .doOnError(error -> log.error("Failed to get hypotheses", error));
+                .body(new ParameterizedTypeReference<List<HypothesisDto>>() {});
+            log.debug("Retrieved hypotheses for problem: {}", problemId);
+            return hypotheses;
         } else {
-            return spec.uri(SERVICE_PATH + "/hypotheses")
+            List<HypothesisDto> hypotheses = restClient.get()
+                .uri(SERVICE_PATH)
                 .header("X-User-Id", userId)
                 .header("X-Organization-Id", organizationId)
                 .retrieve()
-                .bodyToFlux(HypothesisDto.class)
-                .doOnComplete(() -> log.debug("Retrieved all hypotheses"))
-                .doOnError(error -> log.error("Failed to get hypotheses", error));
+                .body(new ParameterizedTypeReference<List<HypothesisDto>>() {});
+            log.debug("Retrieved all hypotheses");
+            return hypotheses;
         }
     }
     
-    public Mono<HypothesisDto> createHypothesis(CreateHypothesisRequest request, String userId, String organizationId) {
+    public HypothesisDto createHypothesis(CreateHypothesisRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /hypotheses");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/hypotheses")
+        HypothesisDto hypothesis = restClient.post()
+            .uri(SERVICE_PATH)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(HypothesisDto.class)
-            .doOnSuccess(hypothesis -> log.debug("Hypothesis created: {}", hypothesis.getId()))
-            .doOnError(error -> log.error("Failed to create hypothesis", error));
+            .body(HypothesisDto.class);
+        log.debug("Hypothesis created: {}", hypothesis.getId());
+        return hypothesis;
     }
     
-    public Mono<HypothesisDto> getHypothesis(String id, String userId, String organizationId) {
+    public HypothesisDto getHypothesis(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: GET /hypotheses/{}", id);
-        return webClient.get()
-            .uri(SERVICE_PATH + "/hypotheses/{id}", id)
+        HypothesisDto hypothesis = restClient.get()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(HypothesisDto.class)
-            .doOnSuccess(hypothesis -> log.debug("Retrieved hypothesis: {}", id))
-            .doOnError(error -> log.error("Failed to get hypothesis: {}", id, error));
+            .body(HypothesisDto.class);
+        log.debug("Retrieved hypothesis: {}", id);
+        return hypothesis;
     }
     
-    public Mono<HypothesisDto> updateHypothesis(String id, CreateHypothesisRequest request, String userId, String organizationId) {
+    public HypothesisDto updateHypothesis(String id, CreateHypothesisRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: PUT /hypotheses/{}", id);
-        return webClient.put()
-            .uri(SERVICE_PATH + "/hypotheses/{id}", id)
+        HypothesisDto hypothesis = restClient.put()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(HypothesisDto.class)
-            .doOnSuccess(hypothesis -> log.debug("Hypothesis updated: {}", id))
-            .doOnError(error -> log.error("Failed to update hypothesis: {}", id, error));
+            .body(HypothesisDto.class);
+        log.debug("Hypothesis updated: {}", id);
+        return hypothesis;
     }
     
-    public Mono<Void> deleteHypothesis(String id, String userId, String organizationId) {
+    public void deleteHypothesis(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: DELETE /hypotheses/{}", id);
-        return webClient.delete()
-            .uri(SERVICE_PATH + "/hypotheses/{id}", id)
+        restClient.delete()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Hypothesis deleted: {}", id))
-            .doOnError(error -> log.error("Failed to delete hypothesis: {}", id, error));
+            .toBodilessEntity();
+        log.debug("Hypothesis deleted: {}", id);
     }
 }

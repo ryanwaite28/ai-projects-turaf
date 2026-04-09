@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -22,48 +22,46 @@ public class MetricsController {
     private final MetricsServiceClient metricsServiceClient;
     
     @PostMapping
-    public Mono<ResponseEntity<MetricDto>> recordMetric(
+    public ResponseEntity<MetricDto> recordMetric(
             @Valid @RequestBody RecordMetricRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Record metric for experiment: {}", request.getExperimentId());
         String organizationId = userContext.getOrganizationId();
-        return metricsServiceClient.recordMetric(request, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Metric recorded"))
-            .doOnError(error -> log.error("Failed to record metric", error));
+        MetricDto metric = metricsServiceClient.recordMetric(request, userContext.getUserId(), organizationId);
+        log.info("Metric recorded");
+        return ResponseEntity.ok(metric);
     }
     
     @GetMapping("/experiments/{experimentId}")
-    public Flux<MetricDto> getExperimentMetrics(
+    public List<MetricDto> getExperimentMetrics(
             @PathVariable String experimentId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get metrics for experiment: {}", experimentId);
         String organizationId = userContext.getOrganizationId();
-        return metricsServiceClient.getExperimentMetrics(experimentId, userContext.getUserId(), organizationId)
-            .doOnComplete(() -> log.info("Retrieved metrics"))
-            .doOnError(error -> log.error("Failed to get metrics for experiment {}", experimentId, error));
+        List<MetricDto> metrics = metricsServiceClient.getExperimentMetrics(experimentId, userContext.getUserId(), organizationId);
+        log.info("Retrieved metrics");
+        return metrics;
     }
     
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<MetricDto>> getMetric(
+    public ResponseEntity<MetricDto> getMetric(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get metric: {}", id);
         String organizationId = userContext.getOrganizationId();
-        return metricsServiceClient.getMetric(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnError(error -> log.error("Failed to get metric {}", id, error));
+        MetricDto metric = metricsServiceClient.getMetric(id, userContext.getUserId(), organizationId);
+        log.info("Retrieved metric");
+        return ResponseEntity.ok(metric);
     }
     
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteMetric(
+    public ResponseEntity<Void> deleteMetric(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Delete metric: {}", id);
         String organizationId = userContext.getOrganizationId();
-        return metricsServiceClient.deleteMetric(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Metric deleted"))
-            .doOnError(error -> log.error("Failed to delete metric {}", id, error));
+        metricsServiceClient.deleteMetric(id, userContext.getUserId(), organizationId);
+        log.info("Metric deleted");
+        return ResponseEntity.ok().build();
     }
 }

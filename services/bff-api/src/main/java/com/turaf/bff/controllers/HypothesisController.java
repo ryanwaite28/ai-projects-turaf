@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -22,56 +22,53 @@ public class HypothesisController {
     private final HypothesisServiceClient hypothesisServiceClient;
     
     @GetMapping
-    public Flux<HypothesisDto> getHypotheses(
+    public List<HypothesisDto> getHypotheses(
             @RequestParam(required = false) String problemId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get hypotheses for organization: {}", userContext.getOrganizationId());
-        return hypothesisServiceClient.getHypotheses(userContext.getUserId(), userContext.getOrganizationId(), problemId)
-            .doOnComplete(() -> log.info("Retrieved hypotheses"))
-            .doOnError(error -> log.error("Failed to get hypotheses", error));
+        List<HypothesisDto> hypotheses = hypothesisServiceClient.getHypotheses(userContext.getUserId(), userContext.getOrganizationId(), problemId);
+        log.info("Retrieved hypotheses");
+        return hypotheses;
     }
     
     @PostMapping
-    public Mono<ResponseEntity<HypothesisDto>> createHypothesis(
+    public ResponseEntity<HypothesisDto> createHypothesis(
             @Valid @RequestBody CreateHypothesisRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Create hypothesis for problem: {}", request.getProblemId());
-        return hypothesisServiceClient.createHypothesis(request, userContext.getUserId(), userContext.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Hypothesis created"))
-            .doOnError(error -> log.error("Failed to create hypothesis", error));
+        HypothesisDto hypothesis = hypothesisServiceClient.createHypothesis(request, userContext.getUserId(), userContext.getOrganizationId());
+        log.info("Hypothesis created");
+        return ResponseEntity.ok(hypothesis);
     }
     
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<HypothesisDto>> getHypothesis(
+    public ResponseEntity<HypothesisDto> getHypothesis(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get hypothesis: {}", id);
-        return hypothesisServiceClient.getHypothesis(id, userContext.getUserId(), userContext.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnError(error -> log.error("Failed to get hypothesis {}", id, error));
+        HypothesisDto hypothesis = hypothesisServiceClient.getHypothesis(id, userContext.getUserId(), userContext.getOrganizationId());
+        log.info("Retrieved hypothesis");
+        return ResponseEntity.ok(hypothesis);
     }
     
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<HypothesisDto>> updateHypothesis(
+    public ResponseEntity<HypothesisDto> updateHypothesis(
             @PathVariable String id,
             @Valid @RequestBody CreateHypothesisRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Update hypothesis: {}", id);
-        return hypothesisServiceClient.updateHypothesis(id, request, userContext.getUserId(), userContext.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Hypothesis updated"))
-            .doOnError(error -> log.error("Failed to update hypothesis {}", id, error));
+        HypothesisDto hypothesis = hypothesisServiceClient.updateHypothesis(id, request, userContext.getUserId(), userContext.getOrganizationId());
+        log.info("Hypothesis updated");
+        return ResponseEntity.ok(hypothesis);
     }
     
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteHypothesis(
+    public ResponseEntity<Void> deleteHypothesis(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Delete hypothesis: {}", id);
-        return hypothesisServiceClient.deleteHypothesis(id, userContext.getUserId(), userContext.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Hypothesis deleted"))
-            .doOnError(error -> log.error("Failed to delete hypothesis {}", id, error));
+        hypothesisServiceClient.deleteHypothesis(id, userContext.getUserId(), userContext.getOrganizationId());
+        log.info("Hypothesis deleted");
+        return ResponseEntity.ok().build();
     }
 }

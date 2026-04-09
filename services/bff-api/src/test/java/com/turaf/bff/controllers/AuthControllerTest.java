@@ -1,32 +1,38 @@
 package com.turaf.bff.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.turaf.bff.clients.IdentityServiceClient;
 import com.turaf.bff.dto.LoginRequest;
+import com.turaf.bff.dto.LoginResponseDto;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Mono;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebFluxTest(AuthController.class)
+@WebMvcTest(AuthController.class)
 class AuthControllerTest {
     
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @MockBean
     private IdentityServiceClient identityServiceClient;
     
     @Test
-    void testLogin_Success() {
+    void testLogin_Success() throws Exception {
         LoginRequest request = LoginRequest.builder()
             .email("test@example.com")
             .password("password")
@@ -40,23 +46,26 @@ class AuthControllerTest {
             .lastName("User")
             .build();
         
-        when(identityServiceClient.login(any(LoginRequest.class)))
-            .thenReturn(Mono.just(userDto));
+        LoginResponseDto response = LoginResponseDto.builder()
+            .accessToken("jwt-token")
+            .user(userDto)
+            .build();
         
-        webTestClient.post()
-            .uri("/api/v1/auth/login")
+        when(identityServiceClient.login(any(LoginRequest.class)))
+            .thenReturn(response);
+        
+        mockMvc.perform(post("/api/v1/auth/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(request)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("user-123")
-            .jsonPath("$.email").isEqualTo("test@example.com")
-            .jsonPath("$.username").isEqualTo("testuser");
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+            .andExpect(jsonPath("$.user.id").value("user-123"))
+            .andExpect(jsonPath("$.user.email").value("test@example.com"))
+            .andExpect(jsonPath("$.user.username").value("testuser"));
     }
     
     @Test
-    void testRegister_Success() {
+    void testRegister_Success() throws Exception {
         RegisterRequest request = RegisterRequest.builder()
             .email("new@example.com")
             .password("password123")
@@ -74,22 +83,24 @@ class AuthControllerTest {
             .lastName("User")
             .build();
         
-        when(identityServiceClient.register(any(RegisterRequest.class)))
-            .thenReturn(Mono.just(userDto));
+        LoginResponseDto response = LoginResponseDto.builder()
+            .accessToken("jwt-token")
+            .user(userDto)
+            .build();
         
-        webTestClient.post()
-            .uri("/api/v1/auth/register")
+        when(identityServiceClient.register(any(RegisterRequest.class)))
+            .thenReturn(response);
+        
+        mockMvc.perform(post("/api/v1/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(request)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("user-456")
-            .jsonPath("$.email").isEqualTo("new@example.com");
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.user.id").value("user-456"))
+            .andExpect(jsonPath("$.user.email").value("new@example.com"));
     }
     
     @Test
-    void testGetCurrentUser_Success() {
+    void testGetCurrentUser_Success() throws Exception {
         UserDto userDto = UserDto.builder()
             .id("user-789")
             .email("current@example.com")
@@ -99,42 +110,32 @@ class AuthControllerTest {
             .build();
         
         when(identityServiceClient.getCurrentUser(anyString()))
-            .thenReturn(Mono.just(userDto));
+            .thenReturn(userDto);
         
-        webTestClient.get()
-            .uri("/api/v1/auth/me")
-            .header("Authorization", "Bearer test-token")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("user-789")
-            .jsonPath("$.email").isEqualTo("current@example.com");
+        mockMvc.perform(get("/api/v1/auth/me")
+            .header("Authorization", "Bearer test-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("user-789"))
+            .andExpect(jsonPath("$.email").value("current@example.com"));
     }
     
     @Test
-    void testLogout_Success() {
-        when(identityServiceClient.logout(anyString()))
-            .thenReturn(Mono.empty());
-        
-        webTestClient.post()
-            .uri("/api/v1/auth/logout")
-            .header("Authorization", "Bearer test-token")
-            .exchange()
-            .expectStatus().isOk();
+    void testLogout_Success() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout")
+            .header("Authorization", "Bearer test-token"))
+            .andExpect(status().isOk());
     }
     
     @Test
-    void testLogin_ValidationError() {
+    void testLogin_ValidationError() throws Exception {
         LoginRequest invalidRequest = LoginRequest.builder()
             .email("invalid-email")
             .password("")
             .build();
         
-        webTestClient.post()
-            .uri("/api/v1/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(invalidRequest)
-            .exchange()
-            .expectStatus().isBadRequest();
+            .content(objectMapper.writeValueAsString(invalidRequest)))
+            .andExpect(status().isBadRequest());
     }
 }

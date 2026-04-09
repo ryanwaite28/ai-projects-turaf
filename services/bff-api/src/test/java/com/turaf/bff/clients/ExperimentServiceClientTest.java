@@ -8,7 +8,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,11 +25,11 @@ class ExperimentServiceClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         
-        WebClient webClient = WebClient.builder()
+        RestClient restClient = RestClient.builder()
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new ExperimentServiceClient(webClient);
+        client = new ExperimentServiceClient(restClient);
     }
     
     @AfterEach
@@ -43,7 +43,7 @@ class ExperimentServiceClientTest {
             .setBody("[{\"id\":\"exp-123\",\"name\":\"Test Experiment\",\"status\":\"RUNNING\"}]")
             .addHeader("Content-Type", "application/json"));
         
-        List<ExperimentDto> experiments = client.getExperiments("org-123", "user-123").collectList().block();
+        List<ExperimentDto> experiments = client.getExperiments("org-123", "user-123");
         
         assertNotNull(experiments);
         assertEquals(1, experiments.size());
@@ -73,7 +73,7 @@ class ExperimentServiceClientTest {
             .hypothesisId("hyp-1")
             .build();
         
-        ExperimentDto experiment = client.createExperiment(request, "user-123", "org-123").block();
+        ExperimentDto experiment = client.createExperiment(request, "user-123", "org-123");
         
         assertNotNull(experiment);
         assertEquals("exp-456", experiment.getId());
@@ -92,7 +92,7 @@ class ExperimentServiceClientTest {
             .setBody("{\"id\":\"exp-789\",\"name\":\"Started Experiment\",\"status\":\"RUNNING\"}")
             .addHeader("Content-Type", "application/json"));
         
-        ExperimentDto experiment = client.startExperiment("exp-789", "user-123", "org-123").block();
+        ExperimentDto experiment = client.startExperiment("exp-789", "user-123", "org-123");
         
         assertNotNull(experiment);
         assertEquals("exp-789", experiment.getId());
@@ -109,7 +109,7 @@ class ExperimentServiceClientTest {
             .setBody("{\"id\":\"exp-999\",\"name\":\"Completed Experiment\",\"status\":\"COMPLETED\"}")
             .addHeader("Content-Type", "application/json"));
         
-        ExperimentDto experiment = client.completeExperiment("exp-999", "user-123", "org-123").block();
+        ExperimentDto experiment = client.completeExperiment("exp-999", "user-123", "org-123");
         
         assertNotNull(experiment);
         assertEquals("exp-999", experiment.getId());

@@ -5,25 +5,26 @@ import com.turaf.bff.clients.IdentityServiceClient;
 import com.turaf.bff.clients.MetricsServiceClient;
 import com.turaf.bff.clients.OrganizationServiceClient;
 import com.turaf.bff.dto.*;
-import com.turaf.bff.security.JwtAuthenticationFilter;
-import com.turaf.bff.security.UserContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebFluxTest(DashboardController.class)
+@WebMvcTest(DashboardController.class)
 class DashboardControllerTest {
     
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
     
     @MockBean
     private IdentityServiceClient identityServiceClient;
@@ -37,22 +38,9 @@ class DashboardControllerTest {
     @MockBean
     private MetricsServiceClient metricsServiceClient;
     
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    private UserContext createUserContext() {
-        return UserContext.builder()
-            .userId("user-123")
-            .organizationId("org-123")
-            .email("test@example.com")
-            .username("testuser")
-            .firstName("Test")
-            .lastName("User")
-            .build();
-    }
-    
     @Test
-    void testGetDashboardOverview_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetDashboardOverview_Success() throws Exception {
         UserDto user = UserDto.builder()
             .id("user-123")
             .email("test@example.com")
@@ -73,59 +61,51 @@ class DashboardControllerTest {
             .build();
         
         when(identityServiceClient.getCurrentUser(anyString()))
-            .thenReturn(Mono.just(user));
+            .thenReturn(user);
         when(organizationServiceClient.getOrganizations(anyString()))
-            .thenReturn(Flux.just(org));
+            .thenReturn(List.of(org));
         when(experimentServiceClient.getExperiments(anyString(), anyString()))
-            .thenReturn(Flux.just(experiment));
+            .thenReturn(List.of(experiment));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/dashboard/overview")
-            .header("Authorization", "Bearer test-token")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.user.id").isEqualTo("user-123")
-            .jsonPath("$.organizations[0].id").isEqualTo("org-123")
-            .jsonPath("$.activeExperiments[0].id").isEqualTo("exp-123")
-            .jsonPath("$.totalOrganizations").isEqualTo(1)
-            .jsonPath("$.totalActiveExperiments").isEqualTo(1);
+        mockMvc.perform(get("/api/v1/dashboard/overview")
+            .header("Authorization", "Bearer test-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.user.id").value("user-123"))
+            .andExpect(jsonPath("$.organizations[0].id").value("org-123"))
+            .andExpect(jsonPath("$.activeExperiments[0].id").value("exp-123"))
+            .andExpect(jsonPath("$.totalOrganizations").value(1))
+            .andExpect(jsonPath("$.totalActiveExperiments").value(1));
     }
     
     @Test
-    void testGetDashboardOverview_WithErrors() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetDashboardOverview_WithErrors() throws Exception {
         UserDto user = UserDto.builder()
             .id("user-123")
             .build();
         
         when(identityServiceClient.getCurrentUser(anyString()))
-            .thenReturn(Mono.just(user));
+            .thenReturn(user);
         when(organizationServiceClient.getOrganizations(anyString()))
-            .thenReturn(Flux.error(new RuntimeException("Service error")));
+            .thenThrow(new RuntimeException("Service error"));
         when(experimentServiceClient.getExperiments(anyString(), anyString()))
-            .thenReturn(Flux.error(new RuntimeException("Service error")));
+            .thenThrow(new RuntimeException("Service error"));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/dashboard/overview")
-            .header("Authorization", "Bearer test-token")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.user.id").isEqualTo("user-123")
-            .jsonPath("$.organizations").isEmpty()
-            .jsonPath("$.activeExperiments").isEmpty()
-            .jsonPath("$.totalOrganizations").isEqualTo(0)
-            .jsonPath("$.totalActiveExperiments").isEqualTo(0);
+        mockMvc.perform(get("/api/v1/dashboard/overview")
+            .header("Authorization", "Bearer test-token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.user.id").value("user-123"))
+            .andExpect(jsonPath("$.organizations").isArray())
+            .andExpect(jsonPath("$.organizations").isEmpty())
+            .andExpect(jsonPath("$.activeExperiments").isArray())
+            .andExpect(jsonPath("$.activeExperiments").isEmpty())
+            .andExpect(jsonPath("$.totalOrganizations").value(0))
+            .andExpect(jsonPath("$.totalActiveExperiments").value(0));
     }
     
     @Test
-    void testGetExperimentFull_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetExperimentFull_Success() throws Exception {
         ExperimentDto experiment = ExperimentDto.builder()
             .id("exp-456")
             .name("Full Experiment")
@@ -145,26 +125,21 @@ class DashboardControllerTest {
             .build();
         
         when(experimentServiceClient.getExperiment(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.just(experiment));
+            .thenReturn(experiment);
         when(metricsServiceClient.getExperimentMetrics(anyString(), anyString(), anyString()))
-            .thenReturn(Flux.just(metric1, metric2));
+            .thenReturn(List.of(metric1, metric2));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/dashboard/experiments/exp-456/full?organizationId=org-123")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.experiment.id").isEqualTo("exp-456")
-            .jsonPath("$.metrics[0].id").isEqualTo("metric-1")
-            .jsonPath("$.metrics[1].id").isEqualTo("metric-2")
-            .jsonPath("$.totalMetrics").isEqualTo(2);
+        mockMvc.perform(get("/api/v1/dashboard/experiments/exp-456/full?organizationId=org-123"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.experiment.id").value("exp-456"))
+            .andExpect(jsonPath("$.metrics[0].id").value("metric-1"))
+            .andExpect(jsonPath("$.metrics[1].id").value("metric-2"))
+            .andExpect(jsonPath("$.totalMetrics").value(2));
     }
     
     @Test
-    void testGetOrganizationSummary_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetOrganizationSummary_Success() throws Exception {
         OrganizationDto org = OrganizationDto.builder()
             .id("org-789")
             .name("Summary Org")
@@ -181,49 +156,39 @@ class DashboardControllerTest {
             .build();
         
         when(organizationServiceClient.getOrganization(anyString(), anyString()))
-            .thenReturn(Mono.just(org));
+            .thenReturn(org);
         when(organizationServiceClient.getMembers(anyString(), anyString()))
-            .thenReturn(Flux.just(member));
+            .thenReturn(List.of(member));
         when(experimentServiceClient.getExperiments(anyString(), anyString()))
-            .thenReturn(Flux.just(experiment));
+            .thenReturn(List.of(experiment));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/dashboard/organizations/org-789/summary")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.organization.id").isEqualTo("org-789")
-            .jsonPath("$.members[0].id").isEqualTo("member-1")
-            .jsonPath("$.experiments[0].id").isEqualTo("exp-789")
-            .jsonPath("$.totalMembers").isEqualTo(1)
-            .jsonPath("$.totalExperiments").isEqualTo(1);
+        mockMvc.perform(get("/api/v1/dashboard/organizations/org-789/summary"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.organization.id").value("org-789"))
+            .andExpect(jsonPath("$.members[0].id").value("member-1"))
+            .andExpect(jsonPath("$.experiments[0].id").value("exp-789"))
+            .andExpect(jsonPath("$.totalMembers").value(1))
+            .andExpect(jsonPath("$.totalExperiments").value(1));
     }
     
     @Test
-    void testGetExperimentFull_WithMetricsError() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetExperimentFull_WithMetricsError() throws Exception {
         ExperimentDto experiment = ExperimentDto.builder()
             .id("exp-999")
             .name("Experiment with Error")
             .build();
         
         when(experimentServiceClient.getExperiment(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.just(experiment));
+            .thenReturn(experiment);
         when(metricsServiceClient.getExperimentMetrics(anyString(), anyString(), anyString()))
-            .thenReturn(Flux.error(new RuntimeException("Metrics service error")));
+            .thenThrow(new RuntimeException("Metrics service error"));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/dashboard/experiments/exp-999/full?organizationId=org-123")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.experiment.id").isEqualTo("exp-999")
-            .jsonPath("$.metrics").isEmpty()
-            .jsonPath("$.totalMetrics").isEqualTo(0);
+        mockMvc.perform(get("/api/v1/dashboard/experiments/exp-999/full?organizationId=org-123"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.experiment.id").value("exp-999"))
+            .andExpect(jsonPath("$.metrics").isArray())
+            .andExpect(jsonPath("$.metrics").isEmpty())
+            .andExpect(jsonPath("$.totalMetrics").value(0));
     }
 }

@@ -13,7 +13,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
 
@@ -80,20 +82,46 @@ class GlobalExceptionHandlerTest {
     }
     
     @Test
-    void testHandleWebClientResponseException() {
-        WebClientResponseException exception = WebClientResponseException.create(
-            500, 
-            "Internal Server Error", 
-            null, 
-            null, 
-            null);
+    void testHandleHttpClientError() {
+        HttpClientErrorException exception = new HttpClientErrorException(
+            HttpStatus.NOT_FOUND, 
+            "Not Found");
         
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleWebClientResponseException(exception, request);
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleHttpClientError(exception, request);
+        
+        assertNotNull(response);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(404, response.getBody().getStatus());
+        assertEquals("Downstream service error", response.getBody().getMessage());
+    }
+    
+    @Test
+    void testHandleHttpServerError() {
+        HttpServerErrorException exception = new HttpServerErrorException(
+            HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Internal Server Error");
+        
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleHttpServerError(exception, request);
         
         assertNotNull(response);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(500, response.getBody().getStatus());
+        assertEquals("Downstream service error", response.getBody().getMessage());
+    }
+    
+    @Test
+    void testHandleResourceAccessException() {
+        ResourceAccessException exception = new ResourceAccessException("Connection refused");
+        
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleResourceAccessException(exception, request);
+        
+        assertNotNull(response);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(503, response.getBody().getStatus());
+        assertEquals("Unable to connect to downstream service", response.getBody().getMessage());
     }
     
     @Test

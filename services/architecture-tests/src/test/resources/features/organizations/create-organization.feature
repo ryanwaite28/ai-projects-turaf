@@ -37,10 +37,11 @@ Feature: Organization CRUD Operations
   Scenario: Get organization by ID
     * def timestamp = new Date().getTime()
     * def orgName = 'Test Org ' + timestamp
+    * def orgSlug = 'test-' + timestamp
     
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: '#(orgName)', slug: 'test-' + timestamp }
+    And request { name: '#(orgName)', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
@@ -54,9 +55,10 @@ Feature: Organization CRUD Operations
     
   Scenario: Update organization
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'org-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Original Name', slug: 'org-' + timestamp }
+    And request { name: 'Original Name', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
@@ -70,9 +72,10 @@ Feature: Organization CRUD Operations
     
   Scenario: Delete organization
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'delete-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'To Delete', slug: 'delete-' + timestamp }
+    And request { name: 'To Delete', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

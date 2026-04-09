@@ -29,6 +29,8 @@ function fn() {
   karate.configure('readTimeout', 30000);
   
   // Seed test user (ignore 409 if already exists)
+  // Temporarily disabled to debug 401 issues
+  /*
   var testUserPayload = {
     email: 'test@example.com',
     password: 'Test123!',
@@ -44,6 +46,7 @@ function fn() {
   } catch (e) {
     karate.log('Test user seed skipped or failed (services may not be running):', e.message);
   }
+  */
   
   return config;
 }

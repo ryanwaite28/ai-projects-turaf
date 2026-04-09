@@ -14,10 +14,11 @@ Feature: Report Generation
 
   Scenario: Async report generation workflow
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'gen-' + timestamp
     
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Gen Org', slug: 'gen-' + timestamp }
+    And request { name: 'Gen Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id
@@ -87,10 +88,11 @@ Feature: Report Generation
     
   Scenario: Multiple report formats
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'format-' + timestamp
     
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Format Org', slug: 'format-' + timestamp }
+    And request { name: 'Format Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

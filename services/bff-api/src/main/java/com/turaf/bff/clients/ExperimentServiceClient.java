@@ -4,120 +4,120 @@ import com.turaf.bff.dto.CreateExperimentRequest;
 import com.turaf.bff.dto.ExperimentDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Slf4j
 @Component
 public class ExperimentServiceClient {
     
-    private final WebClient webClient;
-    private static final String SERVICE_PATH = "/api/v1";
+    private final RestClient restClient;
+    private static final String SERVICE_PATH = "/api/v1/experiments";
     
-    public ExperimentServiceClient(@Qualifier("experimentWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public ExperimentServiceClient(@Qualifier("experimentRestClient") RestClient restClient) {
+        this.restClient = restClient;
     }
     
-    public Flux<ExperimentDto> getExperiments(String organizationId, String userId) {
+    public List<ExperimentDto> getExperiments(String organizationId, String userId) {
         log.debug("Calling Experiment Service: GET /experiments for organization: {}", organizationId);
-        return webClient.get()
+        List<ExperimentDto> experiments = restClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path(SERVICE_PATH + "/experiments")
+                .path(SERVICE_PATH)
                 .queryParam("organizationId", organizationId)
                 .build())
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToFlux(ExperimentDto.class)
-            .doOnComplete(() -> log.debug("Retrieved experiments for organization: {}", organizationId))
-            .doOnError(error -> log.error("Failed to get experiments for organization: {}", organizationId, error));
+            .body(new ParameterizedTypeReference<List<ExperimentDto>>() {});
+        log.debug("Retrieved experiments for organization: {}", organizationId);
+        return experiments;
     }
     
-    public Mono<ExperimentDto> createExperiment(CreateExperimentRequest request, String userId, String organizationId) {
+    public ExperimentDto createExperiment(CreateExperimentRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /experiments");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/experiments")
+        ExperimentDto exp = restClient.post()
+            .uri(SERVICE_PATH)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Experiment created: {}", exp.getId()))
-            .doOnError(error -> log.error("Failed to create experiment", error));
+            .body(ExperimentDto.class);
+        log.debug("Experiment created: {}", exp.getId());
+        return exp;
     }
     
-    public Mono<ExperimentDto> getExperiment(String id, String userId, String organizationId) {
+    public ExperimentDto getExperiment(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: GET /experiments/{}", id);
-        return webClient.get()
-            .uri(SERVICE_PATH + "/experiments/{id}", id)
+        ExperimentDto exp = restClient.get()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Retrieved experiment: {}", id))
-            .doOnError(error -> log.error("Failed to get experiment: {}", id, error));
+            .body(ExperimentDto.class);
+        log.debug("Retrieved experiment: {}", id);
+        return exp;
     }
     
-    public Mono<ExperimentDto> updateExperiment(String id, CreateExperimentRequest request, String userId, String organizationId) {
+    public ExperimentDto updateExperiment(String id, CreateExperimentRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: PUT /experiments/{}", id);
-        return webClient.put()
-            .uri(SERVICE_PATH + "/experiments/{id}", id)
+        ExperimentDto exp = restClient.put()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Experiment updated: {}", id))
-            .doOnError(error -> log.error("Failed to update experiment: {}", id, error));
+            .body(ExperimentDto.class);
+        log.debug("Experiment updated: {}", id);
+        return exp;
     }
     
-    public Mono<Void> deleteExperiment(String id, String userId, String organizationId) {
+    public void deleteExperiment(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: DELETE /experiments/{}", id);
-        return webClient.delete()
-            .uri(SERVICE_PATH + "/experiments/{id}", id)
+        restClient.delete()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Experiment deleted: {}", id))
-            .doOnError(error -> log.error("Failed to delete experiment: {}", id, error));
+            .toBodilessEntity();
+        log.debug("Experiment deleted: {}", id);
     }
     
-    public Mono<ExperimentDto> startExperiment(String id, String userId, String organizationId) {
+    public ExperimentDto startExperiment(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /experiments/{}/start", id);
-        return webClient.post()
-            .uri(SERVICE_PATH + "/experiments/{id}/start", id)
+        ExperimentDto exp = restClient.post()
+            .uri(SERVICE_PATH + "/{id}/start", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Experiment started: {}", id))
-            .doOnError(error -> log.error("Failed to start experiment: {}", id, error));
+            .body(ExperimentDto.class);
+        log.debug("Experiment started: {}", id);
+        return exp;
     }
     
-    public Mono<ExperimentDto> completeExperiment(String id, String userId, String organizationId) {
+    public ExperimentDto completeExperiment(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /experiments/{}/complete", id);
-        return webClient.post()
-            .uri(SERVICE_PATH + "/experiments/{id}/complete", id)
+        ExperimentDto exp = restClient.post()
+            .uri(SERVICE_PATH + "/{id}/complete", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Experiment completed: {}", id))
-            .doOnError(error -> log.error("Failed to complete experiment: {}", id, error));
+            .body(ExperimentDto.class);
+        log.debug("Experiment completed: {}", id);
+        return exp;
     }
     
-    public Mono<ExperimentDto> cancelExperiment(String id, String userId, String organizationId) {
+    public ExperimentDto cancelExperiment(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /experiments/{}/cancel", id);
-        return webClient.post()
-            .uri(SERVICE_PATH + "/experiments/{id}/cancel", id)
+        ExperimentDto exp = restClient.post()
+            .uri(SERVICE_PATH + "/{id}/cancel", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(ExperimentDto.class)
-            .doOnSuccess(exp -> log.debug("Experiment cancelled: {}", id))
-            .doOnError(error -> log.error("Failed to cancel experiment: {}", id, error));
+            .body(ExperimentDto.class);
+        log.debug("Experiment cancelled: {}", id);
+        return exp;
     }
 }

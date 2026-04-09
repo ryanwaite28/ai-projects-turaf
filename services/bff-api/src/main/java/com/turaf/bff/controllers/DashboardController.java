@@ -11,10 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -28,129 +28,128 @@ public class DashboardController {
     private final MetricsServiceClient metricsServiceClient;
     
     @GetMapping("/overview")
-    public Mono<ResponseEntity<DashboardOverviewDto>> getDashboardOverview(
+    public ResponseEntity<DashboardOverviewDto> getDashboardOverview(
             @AuthenticationPrincipal UserContext userContext,
             @RequestHeader("Authorization") String authHeader) {
         
         log.info("Get dashboard overview for user: {}", userContext.getUserId());
         String token = authHeader.substring(7);
         
-        Mono<UserDto> userMono = identityServiceClient.getCurrentUser(token)
-            .doOnError(error -> log.error("Failed to get user", error))
-            .onErrorReturn(UserDto.builder().build());
+        UserDto user;
+        try {
+            user = identityServiceClient.getCurrentUser(token);
+        } catch (Exception e) {
+            log.error("Failed to get user", e);
+            user = UserDto.builder().build();
+        }
         
-        Mono<List<OrganizationDto>> organizationsMono = 
-            organizationServiceClient.getOrganizations(userContext.getUserId())
-                .collectList()
-                .doOnError(error -> log.error("Failed to get organizations", error))
-                .onErrorReturn(Collections.emptyList());
+        List<OrganizationDto> organizations;
+        try {
+            organizations = organizationServiceClient.getOrganizations(userContext.getUserId());
+        } catch (Exception e) {
+            log.error("Failed to get organizations", e);
+            organizations = Collections.emptyList();
+        }
         
-        Mono<List<ExperimentDto>> experimentsMono = 
-            userContext.getOrganizationId() != null
-                ? experimentServiceClient.getExperiments(
+        List<ExperimentDto> experiments;
+        if (userContext.getOrganizationId() != null) {
+            try {
+                List<ExperimentDto> allExperiments = experimentServiceClient.getExperiments(
                         userContext.getOrganizationId(), 
-                        userContext.getUserId())
+                        userContext.getUserId());
+                experiments = allExperiments.stream()
                     .filter(exp -> "RUNNING".equals(exp.getStatus()))
-                    .collectList()
-                    .doOnError(error -> log.error("Failed to get experiments", error))
-                    .onErrorReturn(Collections.emptyList())
-                : Mono.just(Collections.emptyList());
+                    .collect(Collectors.toList());
+            } catch (Exception e) {
+                log.error("Failed to get experiments", e);
+                experiments = Collections.emptyList();
+            }
+        } else {
+            experiments = Collections.emptyList();
+        }
         
-        return Mono.zip(userMono, organizationsMono, experimentsMono)
-            .map(tuple -> {
-                List<OrganizationDto> orgs = tuple.getT2();
-                List<ExperimentDto> exps = tuple.getT3();
-                
-                DashboardOverviewDto overview = DashboardOverviewDto.builder()
-                    .user(tuple.getT1())
-                    .organizations(orgs)
-                    .activeExperiments(exps)
-                    .totalOrganizations(orgs.size())
-                    .totalActiveExperiments(exps.size())
-                    .build();
-                return ResponseEntity.ok(overview);
-            })
-            .doOnSuccess(response -> log.info("Dashboard overview retrieved"))
-            .doOnError(error -> log.error("Failed to get dashboard overview", error));
+        DashboardOverviewDto overview = DashboardOverviewDto.builder()
+            .user(user)
+            .organizations(organizations)
+            .activeExperiments(experiments)
+            .totalOrganizations(organizations.size())
+            .totalActiveExperiments(experiments.size())
+            .build();
+        
+        log.info("Dashboard overview retrieved");
+        return ResponseEntity.ok(overview);
     }
     
     @GetMapping("/experiments/{id}/full")
-    public Mono<ResponseEntity<ExperimentFullDto>> getExperimentFull(
+    public ResponseEntity<ExperimentFullDto> getExperimentFull(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         
         log.info("Get full experiment details: {}", id);
         
-        Mono<ExperimentDto> experimentMono = experimentServiceClient.getExperiment(
+        ExperimentDto experiment = experimentServiceClient.getExperiment(
                 id, 
                 userContext.getUserId(), 
-                organizationId)
-            .doOnError(error -> log.error("Failed to get experiment", error));
+                organizationId);
         
-        Mono<List<MetricDto>> metricsMono = 
-            metricsServiceClient.getExperimentMetrics(
+        List<MetricDto> metrics;
+        try {
+            metrics = metricsServiceClient.getExperimentMetrics(
                     id, 
                     userContext.getUserId(), 
-                    organizationId)
-                .collectList()
-                .doOnError(error -> log.error("Failed to get metrics", error))
-                .onErrorReturn(Collections.emptyList());
+                    organizationId);
+        } catch (Exception e) {
+            log.error("Failed to get metrics", e);
+            metrics = Collections.emptyList();
+        }
         
-        return Mono.zip(experimentMono, metricsMono)
-            .map(tuple -> {
-                List<MetricDto> metrics = tuple.getT2();
-                
-                ExperimentFullDto fullDto = ExperimentFullDto.builder()
-                    .experiment(tuple.getT1())
-                    .metrics(metrics)
-                    .totalMetrics(metrics.size())
-                    .build();
-                return ResponseEntity.ok(fullDto);
-            })
-            .doOnSuccess(response -> log.info("Full experiment details retrieved"))
-            .doOnError(error -> log.error("Failed to get full experiment details", error));
+        ExperimentFullDto fullDto = ExperimentFullDto.builder()
+            .experiment(experiment)
+            .metrics(metrics)
+            .totalMetrics(metrics.size())
+            .build();
+        
+        log.info("Full experiment details retrieved");
+        return ResponseEntity.ok(fullDto);
     }
     
     @GetMapping("/organizations/{id}/summary")
-    public Mono<ResponseEntity<OrganizationSummaryDto>> getOrganizationSummary(
+    public ResponseEntity<OrganizationSummaryDto> getOrganizationSummary(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         
         log.info("Get organization summary: {}", id);
         
-        Mono<OrganizationDto> organizationMono = organizationServiceClient.getOrganization(
+        OrganizationDto organization = organizationServiceClient.getOrganization(
                 id, 
-                userContext.getUserId())
-            .doOnError(error -> log.error("Failed to get organization", error));
+                userContext.getUserId());
         
-        Mono<List<MemberDto>> membersMono = 
-            organizationServiceClient.getMembers(id, userContext.getUserId())
-                .collectList()
-                .doOnError(error -> log.error("Failed to get members", error))
-                .onErrorReturn(Collections.emptyList());
+        List<MemberDto> members;
+        try {
+            members = organizationServiceClient.getMembers(id, userContext.getUserId());
+        } catch (Exception e) {
+            log.error("Failed to get members", e);
+            members = Collections.emptyList();
+        }
         
-        Mono<List<ExperimentDto>> experimentsMono = 
-            experimentServiceClient.getExperiments(id, userContext.getUserId())
-                .collectList()
-                .doOnError(error -> log.error("Failed to get experiments", error))
-                .onErrorReturn(Collections.emptyList());
+        List<ExperimentDto> experiments;
+        try {
+            experiments = experimentServiceClient.getExperiments(id, userContext.getUserId());
+        } catch (Exception e) {
+            log.error("Failed to get experiments", e);
+            experiments = Collections.emptyList();
+        }
         
-        return Mono.zip(organizationMono, membersMono, experimentsMono)
-            .map(tuple -> {
-                List<MemberDto> members = tuple.getT2();
-                List<ExperimentDto> experiments = tuple.getT3();
-                
-                OrganizationSummaryDto summary = OrganizationSummaryDto.builder()
-                    .organization(tuple.getT1())
-                    .members(members)
-                    .experiments(experiments)
-                    .totalMembers(members.size())
-                    .totalExperiments(experiments.size())
-                    .build();
-                return ResponseEntity.ok(summary);
-            })
-            .doOnSuccess(response -> log.info("Organization summary retrieved"))
-            .doOnError(error -> log.error("Failed to get organization summary", error));
+        OrganizationSummaryDto summary = OrganizationSummaryDto.builder()
+            .organization(organization)
+            .members(members)
+            .experiments(experiments)
+            .totalMembers(members.size())
+            .totalExperiments(experiments.size())
+            .build();
+        
+        log.info("Organization summary retrieved");
+        return ResponseEntity.ok(summary);
     }
 }

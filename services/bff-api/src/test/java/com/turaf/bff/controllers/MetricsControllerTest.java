@@ -1,49 +1,41 @@
 package com.turaf.bff.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.turaf.bff.clients.MetricsServiceClient;
 import com.turaf.bff.dto.MetricDto;
 import com.turaf.bff.dto.RecordMetricRequest;
-import com.turaf.bff.security.JwtAuthenticationFilter;
-import com.turaf.bff.security.UserContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebFluxTest(MetricsController.class)
+@WebMvcTest(MetricsController.class)
 class MetricsControllerTest {
     
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @MockBean
     private MetricsServiceClient metricsServiceClient;
     
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    private UserContext createUserContext() {
-        return UserContext.builder()
-            .userId("user-123")
-            .organizationId("org-123")
-            .email("test@example.com")
-            .username("testuser")
-            .firstName("Test")
-            .lastName("User")
-            .build();
-    }
-    
     @Test
-    void testRecordMetric_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testRecordMetric_Success() throws Exception {
         RecordMetricRequest request = RecordMetricRequest.builder()
             .experimentId("exp-123")
             .name("conversion_rate")
@@ -59,24 +51,19 @@ class MetricsControllerTest {
             .build();
         
         when(metricsServiceClient.recordMetric(any(), anyString(), anyString()))
-            .thenReturn(Mono.just(metric));
+            .thenReturn(metric);
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .post()
-            .uri("/api/v1/metrics?organizationId=org-123")
+        mockMvc.perform(post("/api/v1/metrics")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(request)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("metric-123")
-            .jsonPath("$.name").isEqualTo("conversion_rate");
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("metric-123"))
+            .andExpect(jsonPath("$.name").value("conversion_rate"));
     }
     
     @Test
-    void testGetExperimentMetrics_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetExperimentMetrics_Success() throws Exception {
         MetricDto metric1 = MetricDto.builder()
             .id("metric-1")
             .experimentId("exp-456")
@@ -92,21 +79,18 @@ class MetricsControllerTest {
             .build();
         
         when(metricsServiceClient.getExperimentMetrics(anyString(), anyString(), anyString()))
-            .thenReturn(Flux.just(metric1, metric2));
+            .thenReturn(List.of(metric1, metric2));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/metrics/experiments/exp-456?organizationId=org-123")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBodyList(MetricDto.class)
-            .hasSize(2);
+        mockMvc.perform(get("/api/v1/metrics/experiments/exp-456"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].id").value("metric-1"))
+            .andExpect(jsonPath("$[1].id").value("metric-2"));
     }
     
     @Test
-    void testGetMetric_Success() {
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testGetMetric_Success() throws Exception {
         MetricDto metric = MetricDto.builder()
             .id("metric-789")
             .experimentId("exp-789")
@@ -115,31 +99,20 @@ class MetricsControllerTest {
             .build();
         
         when(metricsServiceClient.getMetric(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.just(metric));
+            .thenReturn(metric);
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/metrics/metric-789?organizationId=org-123")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("metric-789")
-            .jsonPath("$.name").isEqualTo("revenue");
+        mockMvc.perform(get("/api/v1/metrics/metric-789"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("metric-789"))
+            .andExpect(jsonPath("$.name").value("revenue"));
     }
     
     @Test
-    void testDeleteMetric_Success() {
-        when(metricsServiceClient.deleteMetric(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.empty());
+    @WithMockUser(username = "user-123", authorities = {"ROLE_USER"})
+    void testDeleteMetric_Success() throws Exception {
+        doNothing().when(metricsServiceClient).deleteMetric(anyString(), anyString(), anyString());
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .delete()
-            .uri("/api/v1/metrics/metric-999?organizationId=org-123")
-            .exchange()
-            .expectStatus().isOk();
+        mockMvc.perform(delete("/api/v1/metrics/metric-999"))
+            .andExpect(status().isOk());
     }
 }

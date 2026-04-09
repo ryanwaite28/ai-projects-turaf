@@ -4,81 +4,81 @@ import com.turaf.bff.dto.CreateProblemRequest;
 import com.turaf.bff.dto.ProblemDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Slf4j
 @Component
 public class ProblemServiceClient {
     
-    private final WebClient webClient;
-    private static final String SERVICE_PATH = "/api/v1";
+    private final RestClient restClient;
+    private static final String SERVICE_PATH = "/api/v1/problems";
     
-    public ProblemServiceClient(@Qualifier("experimentWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public ProblemServiceClient(@Qualifier("experimentRestClient") RestClient restClient) {
+        this.restClient = restClient;
     }
     
-    public Flux<ProblemDto> getProblems(String userId, String organizationId) {
+    public List<ProblemDto> getProblems(String userId, String organizationId) {
         log.debug("Calling Experiment Service: GET /problems");
-        return webClient.get()
-            .uri(SERVICE_PATH + "/problems")
+        List<ProblemDto> problems = restClient.get()
+            .uri(SERVICE_PATH)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToFlux(ProblemDto.class)
-            .doOnComplete(() -> log.debug("Retrieved problems"))
-            .doOnError(error -> log.error("Failed to get problems", error));
+            .body(new ParameterizedTypeReference<List<ProblemDto>>() {});
+        log.debug("Retrieved problems");
+        return problems;
     }
     
-    public Mono<ProblemDto> createProblem(CreateProblemRequest request, String userId, String organizationId) {
+    public ProblemDto createProblem(CreateProblemRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: POST /problems");
-        return webClient.post()
-            .uri(SERVICE_PATH + "/problems")
+        ProblemDto problem = restClient.post()
+            .uri(SERVICE_PATH)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(ProblemDto.class)
-            .doOnSuccess(problem -> log.debug("Problem created: {}", problem.getId()))
-            .doOnError(error -> log.error("Failed to create problem", error));
+            .body(ProblemDto.class);
+        log.debug("Problem created: {}", problem.getId());
+        return problem;
     }
     
-    public Mono<ProblemDto> getProblem(String id, String userId, String organizationId) {
+    public ProblemDto getProblem(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: GET /problems/{}", id);
-        return webClient.get()
-            .uri(SERVICE_PATH + "/problems/{id}", id)
+        ProblemDto problem = restClient.get()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(ProblemDto.class)
-            .doOnSuccess(problem -> log.debug("Retrieved problem: {}", id))
-            .doOnError(error -> log.error("Failed to get problem: {}", id, error));
+            .body(ProblemDto.class);
+        log.debug("Retrieved problem: {}", id);
+        return problem;
     }
     
-    public Mono<ProblemDto> updateProblem(String id, CreateProblemRequest request, String userId, String organizationId) {
+    public ProblemDto updateProblem(String id, CreateProblemRequest request, String userId, String organizationId) {
         log.debug("Calling Experiment Service: PUT /problems/{}", id);
-        return webClient.put()
-            .uri(SERVICE_PATH + "/problems/{id}", id)
+        ProblemDto problem = restClient.put()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(ProblemDto.class)
-            .doOnSuccess(problem -> log.debug("Problem updated: {}", id))
-            .doOnError(error -> log.error("Failed to update problem: {}", id, error));
+            .body(ProblemDto.class);
+        log.debug("Problem updated: {}", id);
+        return problem;
     }
     
-    public Mono<Void> deleteProblem(String id, String userId, String organizationId) {
+    public void deleteProblem(String id, String userId, String organizationId) {
         log.debug("Calling Experiment Service: DELETE /problems/{}", id);
-        return webClient.delete()
-            .uri(SERVICE_PATH + "/problems/{id}", id)
+        restClient.delete()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Problem deleted: {}", id))
-            .doOnError(error -> log.error("Failed to delete problem: {}", id, error));
+            .toBodilessEntity();
+        log.debug("Problem deleted: {}", id);
     }
 }

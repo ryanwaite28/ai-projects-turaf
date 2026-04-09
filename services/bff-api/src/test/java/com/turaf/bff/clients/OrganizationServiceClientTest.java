@@ -9,7 +9,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,11 +26,11 @@ class OrganizationServiceClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         
-        WebClient webClient = WebClient.builder()
+        RestClient restClient = RestClient.builder()
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new OrganizationServiceClient(webClient);
+        client = new OrganizationServiceClient(restClient);
     }
     
     @AfterEach
@@ -44,7 +44,7 @@ class OrganizationServiceClientTest {
             .setBody("[{\"id\":\"org-123\",\"name\":\"Test Org\",\"ownerId\":\"user-123\"}]")
             .addHeader("Content-Type", "application/json"));
         
-        List<OrganizationDto> organizations = client.getOrganizations("user-123").collectList().block();
+        List<OrganizationDto> organizations = client.getOrganizations("user-123");
         
         assertNotNull(organizations);
         assertEquals(1, organizations.size());
@@ -53,7 +53,7 @@ class OrganizationServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/organization/organizations", recordedRequest.getPath());
+        assertEquals("/api/v1/organizations", recordedRequest.getPath());
         assertEquals("user-123", recordedRequest.getHeader("X-User-Id"));
     }
     
@@ -68,7 +68,7 @@ class OrganizationServiceClientTest {
             .description("Test Description")
             .build();
         
-        OrganizationDto organization = client.createOrganization(request, "user-123").block();
+        OrganizationDto organization = client.createOrganization(request, "user-123");
         
         assertNotNull(organization);
         assertEquals("org-456", organization.getId());
@@ -76,7 +76,7 @@ class OrganizationServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/organization/organizations", recordedRequest.getPath());
+        assertEquals("/api/v1/organizations", recordedRequest.getPath());
         assertEquals("user-123", recordedRequest.getHeader("X-User-Id"));
     }
     
@@ -86,7 +86,7 @@ class OrganizationServiceClientTest {
             .setBody("{\"id\":\"org-789\",\"name\":\"Specific Org\"}")
             .addHeader("Content-Type", "application/json"));
         
-        OrganizationDto organization = client.getOrganization("org-789", "user-123").block();
+        OrganizationDto organization = client.getOrganization("org-789", "user-123");
         
         assertNotNull(organization);
         assertEquals("org-789", organization.getId());
@@ -94,7 +94,7 @@ class OrganizationServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/organization/organizations/org-789", recordedRequest.getPath());
+        assertEquals("/api/v1/organizations/org-789", recordedRequest.getPath());
     }
     
     @Test
@@ -103,7 +103,7 @@ class OrganizationServiceClientTest {
             .setBody("[{\"id\":\"member-1\",\"userId\":\"user-1\",\"userName\":\"John Doe\",\"role\":\"ADMIN\"}]")
             .addHeader("Content-Type", "application/json"));
         
-        List<MemberDto> members = client.getMembers("org-123", "user-123").collectList().block();
+        List<MemberDto> members = client.getMembers("org-123", "user-123");
         
         assertNotNull(members);
         assertEquals(1, members.size());
@@ -113,6 +113,6 @@ class OrganizationServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/organization/organizations/org-123/members", recordedRequest.getPath());
+        assertEquals("/api/v1/organizations/org-123/members", recordedRequest.getPath());
     }
 }

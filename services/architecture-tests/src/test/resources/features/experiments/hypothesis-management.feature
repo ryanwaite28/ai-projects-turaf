@@ -11,9 +11,10 @@ Feature: Hypothesis Management
     * def token = response.accessToken
     
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'hyp-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Hypothesis Org', slug: 'hyp-' + timestamp }
+    And request { name: 'Hypothesis Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

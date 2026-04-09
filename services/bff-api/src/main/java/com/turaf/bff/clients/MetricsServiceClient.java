@@ -4,71 +4,71 @@ import com.turaf.bff.dto.MetricDto;
 import com.turaf.bff.dto.RecordMetricRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Slf4j
 @Component
 public class MetricsServiceClient {
     
-    private final WebClient webClient;
-    private static final String SERVICE_PATH = "/api/v1";
+    private final RestClient restClient;
+    private static final String SERVICE_PATH = "/api/v1/metrics";
     
-    public MetricsServiceClient(@Qualifier("metricsWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public MetricsServiceClient(@Qualifier("metricsRestClient") RestClient restClient) {
+        this.restClient = restClient;
     }
     
-    public Mono<MetricDto> recordMetric(RecordMetricRequest request, String userId, String organizationId) {
+    public MetricDto recordMetric(RecordMetricRequest request, String userId, String organizationId) {
         log.debug("Calling Metrics Service: POST /metrics for experiment: {}", request.getExperimentId());
-        return webClient.post()
-            .uri(SERVICE_PATH + "/metrics")
+        MetricDto metric = restClient.post()
+            .uri(SERVICE_PATH)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
-            .bodyValue(request)
+            .body(request)
             .retrieve()
-            .bodyToMono(MetricDto.class)
-            .doOnSuccess(metric -> log.debug("Metric recorded: {}", metric.getId()))
-            .doOnError(error -> log.error("Failed to record metric", error));
+            .body(MetricDto.class);
+        log.debug("Metric recorded: {}", metric.getId());
+        return metric;
     }
     
-    public Flux<MetricDto> getExperimentMetrics(String experimentId, String userId, String organizationId) {
+    public List<MetricDto> getExperimentMetrics(String experimentId, String userId, String organizationId) {
         log.debug("Calling Metrics Service: GET /metrics?experimentId={}", experimentId);
-        return webClient.get()
+        List<MetricDto> metrics = restClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path(SERVICE_PATH + "/metrics")
+                .path(SERVICE_PATH)
                 .queryParam("experimentId", experimentId)
                 .build())
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToFlux(MetricDto.class)
-            .doOnComplete(() -> log.debug("Retrieved metrics for experiment: {}", experimentId))
-            .doOnError(error -> log.error("Failed to get metrics for experiment: {}", experimentId, error));
+            .body(new ParameterizedTypeReference<List<MetricDto>>() {});
+        log.debug("Retrieved metrics for experiment: {}", experimentId);
+        return metrics;
     }
     
-    public Mono<MetricDto> getMetric(String id, String userId, String organizationId) {
+    public MetricDto getMetric(String id, String userId, String organizationId) {
         log.debug("Calling Metrics Service: GET /metrics/{}", id);
-        return webClient.get()
-            .uri(SERVICE_PATH + "/metrics/{id}", id)
+        MetricDto metric = restClient.get()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(MetricDto.class)
-            .doOnSuccess(metric -> log.debug("Retrieved metric: {}", id))
-            .doOnError(error -> log.error("Failed to get metric: {}", id, error));
+            .body(MetricDto.class);
+        log.debug("Retrieved metric: {}", id);
+        return metric;
     }
     
-    public Mono<Void> deleteMetric(String id, String userId, String organizationId) {
+    public void deleteMetric(String id, String userId, String organizationId) {
         log.debug("Calling Metrics Service: DELETE /metrics/{}", id);
-        return webClient.delete()
-            .uri(SERVICE_PATH + "/metrics/{id}", id)
+        restClient.delete()
+            .uri(SERVICE_PATH + "/{id}", id)
             .header("X-User-Id", userId)
             .header("X-Organization-Id", organizationId)
             .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(v -> log.debug("Metric deleted: {}", id))
-            .doOnError(error -> log.error("Failed to delete metric: {}", id, error));
+            .toBodilessEntity();
+        log.debug("Metric deleted: {}", id);
     }
 }

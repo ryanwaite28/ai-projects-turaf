@@ -11,9 +11,10 @@ Feature: Metrics Recording
     * def token = response.accessToken
     
     * def timestamp = new Date().getTime()
+    * def orgSlug = 'metrics-' + timestamp
     Given path '/api/v1/organizations'
     And header Authorization = 'Bearer ' + token
-    And request { name: 'Metrics Org', slug: 'metrics-' + timestamp }
+    And request { name: 'Metrics Org', slug: '#(orgSlug)' }
     When method POST
     Then status 201
     * def orgId = response.id

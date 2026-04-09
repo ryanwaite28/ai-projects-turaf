@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -22,101 +22,95 @@ public class ExperimentController {
     private final ExperimentServiceClient experimentServiceClient;
     
     @GetMapping
-    public Flux<ExperimentDto> getExperiments(
+    public List<ExperimentDto> getExperiments(
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get experiments for organization: {}", organizationId);
-        return experimentServiceClient.getExperiments(organizationId, userContext.getUserId())
-            .doOnComplete(() -> log.info("Retrieved experiments"))
-            .doOnError(error -> log.error("Failed to get experiments", error));
+        List<ExperimentDto> experiments = experimentServiceClient.getExperiments(organizationId, userContext.getUserId());
+        log.info("Retrieved experiments");
+        return experiments;
     }
     
     @PostMapping
-    public Mono<ResponseEntity<ExperimentDto>> createExperiment(
+    public ResponseEntity<ExperimentDto> createExperiment(
             @Valid @RequestBody CreateExperimentRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Create experiment: {}", request.getName());
-        return experimentServiceClient.createExperiment(
+        ExperimentDto exp = experimentServiceClient.createExperiment(
                 request, 
                 userContext.getUserId(), 
-                request.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment created"))
-            .doOnError(error -> log.error("Failed to create experiment", error));
+                request.getOrganizationId());
+        log.info("Experiment created");
+        return ResponseEntity.ok(exp);
     }
     
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<ExperimentDto>> getExperiment(
+    public ResponseEntity<ExperimentDto> getExperiment(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get experiment: {}", id);
-        return experimentServiceClient.getExperiment(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnError(error -> log.error("Failed to get experiment {}", id, error));
+        ExperimentDto exp = experimentServiceClient.getExperiment(id, userContext.getUserId(), organizationId);
+        log.info("Retrieved experiment");
+        return ResponseEntity.ok(exp);
     }
     
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<ExperimentDto>> updateExperiment(
+    public ResponseEntity<ExperimentDto> updateExperiment(
             @PathVariable String id,
             @Valid @RequestBody CreateExperimentRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Update experiment: {}", id);
-        return experimentServiceClient.updateExperiment(
+        ExperimentDto exp = experimentServiceClient.updateExperiment(
                 id, 
                 request, 
                 userContext.getUserId(), 
-                request.getOrganizationId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment updated"))
-            .doOnError(error -> log.error("Failed to update experiment {}", id, error));
+                request.getOrganizationId());
+        log.info("Experiment updated");
+        return ResponseEntity.ok(exp);
     }
     
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteExperiment(
+    public ResponseEntity<Void> deleteExperiment(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Delete experiment: {}", id);
-        return experimentServiceClient.deleteExperiment(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment deleted"))
-            .doOnError(error -> log.error("Failed to delete experiment {}", id, error));
+        experimentServiceClient.deleteExperiment(id, userContext.getUserId(), organizationId);
+        log.info("Experiment deleted");
+        return ResponseEntity.ok().build();
     }
     
     @PostMapping("/{id}/start")
-    public Mono<ResponseEntity<ExperimentDto>> startExperiment(
+    public ResponseEntity<ExperimentDto> startExperiment(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Start experiment: {}", id);
-        return experimentServiceClient.startExperiment(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment started"))
-            .doOnError(error -> log.error("Failed to start experiment {}", id, error));
+        ExperimentDto exp = experimentServiceClient.startExperiment(id, userContext.getUserId(), organizationId);
+        log.info("Experiment started");
+        return ResponseEntity.ok(exp);
     }
     
     @PostMapping("/{id}/complete")
-    public Mono<ResponseEntity<ExperimentDto>> completeExperiment(
+    public ResponseEntity<ExperimentDto> completeExperiment(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Complete experiment: {}", id);
-        return experimentServiceClient.completeExperiment(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment completed"))
-            .doOnError(error -> log.error("Failed to complete experiment {}", id, error));
+        ExperimentDto exp = experimentServiceClient.completeExperiment(id, userContext.getUserId(), organizationId);
+        log.info("Experiment completed");
+        return ResponseEntity.ok(exp);
     }
     
     @PostMapping("/{id}/cancel")
-    public Mono<ResponseEntity<ExperimentDto>> cancelExperiment(
+    public ResponseEntity<ExperimentDto> cancelExperiment(
             @PathVariable String id,
             @RequestParam String organizationId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Cancel experiment: {}", id);
-        return experimentServiceClient.cancelExperiment(id, userContext.getUserId(), organizationId)
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Experiment cancelled"))
-            .doOnError(error -> log.error("Failed to cancel experiment {}", id, error));
+        ExperimentDto exp = experimentServiceClient.cancelExperiment(id, userContext.getUserId(), organizationId);
+        log.info("Experiment cancelled");
+        return ResponseEntity.ok(exp);
     }
 }

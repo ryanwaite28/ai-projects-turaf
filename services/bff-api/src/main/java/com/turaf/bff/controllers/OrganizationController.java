@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,101 +23,95 @@ public class OrganizationController {
     private final OrganizationServiceClient organizationServiceClient;
     
     @GetMapping
-    public Flux<OrganizationDto> getOrganizations(@AuthenticationPrincipal UserContext userContext) {
+    public List<OrganizationDto> getOrganizations(@AuthenticationPrincipal UserContext userContext) {
         log.info("Get organizations for user: {}", userContext.getUserId());
-        return organizationServiceClient.getOrganizations(userContext.getUserId())
-            .doOnComplete(() -> log.info("Retrieved organizations"))
-            .doOnError(error -> log.error("Failed to get organizations", error));
+        List<OrganizationDto> organizations = organizationServiceClient.getOrganizations(userContext.getUserId());
+        log.info("Retrieved organizations");
+        return organizations;
     }
     
     @PostMapping
-    public Mono<ResponseEntity<OrganizationDto>> createOrganization(
+    public ResponseEntity<OrganizationDto> createOrganization(
             @Valid @RequestBody CreateOrganizationRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Create organization: {}", request.getName());
-        return organizationServiceClient.createOrganization(request, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Organization created"))
-            .doOnError(error -> log.error("Failed to create organization", error));
+        OrganizationDto org = organizationServiceClient.createOrganization(request, userContext.getUserId());
+        log.info("Organization created");
+        return ResponseEntity.ok(org);
     }
     
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<OrganizationDto>> getOrganization(
+    public ResponseEntity<OrganizationDto> getOrganization(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get organization: {}", id);
-        return organizationServiceClient.getOrganization(id, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnError(error -> log.error("Failed to get organization {}", id, error));
+        OrganizationDto org = organizationServiceClient.getOrganization(id, userContext.getUserId());
+        log.info("Retrieved organization");
+        return ResponseEntity.ok(org);
     }
     
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<OrganizationDto>> updateOrganization(
+    public ResponseEntity<OrganizationDto> updateOrganization(
             @PathVariable String id,
             @Valid @RequestBody CreateOrganizationRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Update organization: {}", id);
-        return organizationServiceClient.updateOrganization(id, request, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Organization updated"))
-            .doOnError(error -> log.error("Failed to update organization {}", id, error));
+        OrganizationDto org = organizationServiceClient.updateOrganization(id, request, userContext.getUserId());
+        log.info("Organization updated");
+        return ResponseEntity.ok(org);
     }
     
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteOrganization(
+    public ResponseEntity<Void> deleteOrganization(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Delete organization: {}", id);
-        return organizationServiceClient.deleteOrganization(id, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Organization deleted"))
-            .doOnError(error -> log.error("Failed to delete organization {}", id, error));
+        organizationServiceClient.deleteOrganization(id, userContext.getUserId());
+        log.info("Organization deleted");
+        return ResponseEntity.ok().build();
     }
     
     @GetMapping("/{id}/members")
-    public Flux<MemberDto> getMembers(
+    public List<MemberDto> getMembers(
             @PathVariable String id,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Get members for organization: {}", id);
-        return organizationServiceClient.getMembers(id, userContext.getUserId())
-            .doOnComplete(() -> log.info("Retrieved members"))
-            .doOnError(error -> log.error("Failed to get members for organization {}", id, error));
+        List<MemberDto> members = organizationServiceClient.getMembers(id, userContext.getUserId());
+        log.info("Retrieved members");
+        return members;
     }
     
     @PostMapping("/{id}/members")
-    public Mono<ResponseEntity<MemberDto>> addMember(
+    public ResponseEntity<MemberDto> addMember(
             @PathVariable String id,
             @Valid @RequestBody com.turaf.bff.dto.AddMemberRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Add member to organization: {}", id);
-        return organizationServiceClient.addMember(id, request, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Member added to organization"))
-            .doOnError(error -> log.error("Failed to add member to organization {}", id, error));
+        MemberDto member = organizationServiceClient.addMember(id, request, userContext.getUserId());
+        log.info("Member added to organization");
+        return ResponseEntity.ok(member);
     }
     
     @PatchMapping("/{id}/members/{memberId}")
-    public Mono<ResponseEntity<MemberDto>> updateMemberRole(
+    public ResponseEntity<MemberDto> updateMemberRole(
             @PathVariable String id,
             @PathVariable String memberId,
             @Valid @RequestBody com.turaf.bff.dto.UpdateMemberRoleRequest request,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Update member role in organization: {}", id);
-        return organizationServiceClient.updateMemberRole(id, memberId, request, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Member role updated"))
-            .doOnError(error -> log.error("Failed to update member role in organization {}", id, error));
+        MemberDto member = organizationServiceClient.updateMemberRole(id, memberId, request, userContext.getUserId());
+        log.info("Member role updated");
+        return ResponseEntity.ok(member);
     }
     
     @DeleteMapping("/{id}/members/{memberId}")
-    public Mono<ResponseEntity<Void>> removeMember(
+    public ResponseEntity<Void> removeMember(
             @PathVariable String id,
             @PathVariable String memberId,
             @AuthenticationPrincipal UserContext userContext) {
         log.info("Remove member from organization: {}", id);
-        return organizationServiceClient.removeMember(id, memberId, userContext.getUserId())
-            .map(ResponseEntity::ok)
-            .doOnSuccess(response -> log.info("Member removed from organization"))
-            .doOnError(error -> log.error("Failed to remove member from organization {}", id, error));
+        organizationServiceClient.removeMember(id, memberId, userContext.getUserId());
+        log.info("Member removed from organization");
+        return ResponseEntity.ok().build();
     }
 }

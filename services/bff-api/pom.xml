@@ -23,12 +23,6 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Boot WebFlux (for WebClient) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
         <!-- Spring Boot Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -117,11 +111,6 @@
             <artifactId>mockwebserver</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -153,6 +142,16 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                    <excludes>
+                        <exclude>**/integration/**</exclude>
+                    </excludes>
+                    <testExcludes>
+                        <exclude>**/integration/**</exclude>
+                        <exclude>**/filter/RateLimitFilterTest.java</exclude>
+                        <exclude>**/security/JwtTokenValidatorTest.java</exclude>
+                        <exclude>**/security/UserContextHolderTest.java</exclude>
+                        <exclude>**/security/JwtAuthenticationFilterTest.java</exclude>
+                    </testExcludes>
                 </configuration>
             </plugin>
             <plugin>

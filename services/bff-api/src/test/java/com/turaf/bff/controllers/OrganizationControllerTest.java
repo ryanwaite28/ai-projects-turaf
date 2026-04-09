@@ -1,52 +1,41 @@
 package com.turaf.bff.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.turaf.bff.clients.OrganizationServiceClient;
 import com.turaf.bff.dto.CreateOrganizationRequest;
 import com.turaf.bff.dto.MemberDto;
 import com.turaf.bff.dto.OrganizationDto;
-import com.turaf.bff.security.JwtAuthenticationFilter;
-import com.turaf.bff.security.UserContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebFluxTest(OrganizationController.class)
+@WebMvcTest(OrganizationController.class)
 class OrganizationControllerTest {
     
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @MockBean
     private OrganizationServiceClient organizationServiceClient;
     
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    private UserContext createUserContext() {
-        return UserContext.builder()
-            .userId("user-123")
-            .organizationId("org-123")
-            .email("test@example.com")
-            .username("testuser")
-            .firstName("Test")
-            .lastName("User")
-            .build();
-    }
-    
     @Test
-    void testGetOrganizations_Success() {
+    @WithMockUser(username = "user-123")
+    void testGetOrganizations_Success() throws Exception {
         OrganizationDto org = OrganizationDto.builder()
             .id("org-123")
             .name("Test Org")
@@ -54,21 +43,18 @@ class OrganizationControllerTest {
             .build();
         
         when(organizationServiceClient.getOrganizations(anyString()))
-            .thenReturn(Flux.just(org));
+            .thenReturn(List.of(org));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/organizations")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBodyList(OrganizationDto.class)
-            .hasSize(1);
+        mockMvc.perform(get("/api/v1/organizations"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].id").value("org-123"))
+            .andExpect(jsonPath("$[0].name").value("Test Org"));
     }
     
     @Test
-    void testCreateOrganization_Success() {
+    @WithMockUser(username = "user-123")
+    void testCreateOrganization_Success() throws Exception {
         CreateOrganizationRequest request = CreateOrganizationRequest.builder()
             .name("New Org")
             .description("Test Description")
@@ -81,46 +67,36 @@ class OrganizationControllerTest {
             .build();
         
         when(organizationServiceClient.createOrganization(any(), anyString()))
-            .thenReturn(Mono.just(org));
+            .thenReturn(org);
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .post()
-            .uri("/api/v1/organizations")
+        mockMvc.perform(post("/api/v1/organizations")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(request)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("org-456")
-            .jsonPath("$.name").isEqualTo("New Org");
+            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("org-456"))
+            .andExpect(jsonPath("$.name").value("New Org"));
     }
     
     @Test
-    void testGetOrganization_Success() {
+    @WithMockUser(username = "user-123")
+    void testGetOrganization_Success() throws Exception {
         OrganizationDto org = OrganizationDto.builder()
             .id("org-789")
             .name("Specific Org")
             .build();
         
         when(organizationServiceClient.getOrganization(anyString(), anyString()))
-            .thenReturn(Mono.just(org));
+            .thenReturn(org);
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/organizations/org-789")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.id").isEqualTo("org-789")
-            .jsonPath("$.name").isEqualTo("Specific Org");
+        mockMvc.perform(get("/api/v1/organizations/org-789"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value("org-789"))
+            .andExpect(jsonPath("$.name").value("Specific Org"));
     }
     
     @Test
-    void testGetMembers_Success() {
+    @WithMockUser(username = "user-123")
+    void testGetMembers_Success() throws Exception {
         MemberDto member = MemberDto.builder()
             .id("member-1")
             .userId("user-1")
@@ -129,16 +105,12 @@ class OrganizationControllerTest {
             .build();
         
         when(organizationServiceClient.getMembers(anyString(), anyString()))
-            .thenReturn(Flux.just(member));
+            .thenReturn(List.of(member));
         
-        webTestClient
-            .mutateWith(mockAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                createUserContext(), null, createUserContext().getAuthorities())))
-            .get()
-            .uri("/api/v1/organizations/org-123/members")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBodyList(MemberDto.class)
-            .hasSize(1);
+        mockMvc.perform(get("/api/v1/organizations/org-123/members"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].id").value("member-1"))
+            .andExpect(jsonPath("$[0].userName").value("John Doe"));
     }
 }
