@@ -1,0 +1,63 @@
+name: Bootstrap Environment Infrastructure
+
+# Run once per environment to create: S3 state bucket, DynamoDB lock table (dev only), ECR repos.
+# These are long-lived resources — do NOT add this to push triggers.
+# ECR repositories have no environment suffix and are shared across environments;
+# running this for qa/prod will skip ECR creation if repos already exist.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to bootstrap'
+        type: choice
+        options: [dev, qa, prod]
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Bootstrap ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform init -backend=false
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform plan -var="environment=${{ inputs.environment }}"
+
+      - name: Terraform Apply
+        working-directory: infrastructure/terraform/bootstrap
+        run: terraform apply -auto-approve -var="environment=${{ inputs.environment }}"
+
+      - name: Summary
+        working-directory: infrastructure/terraform/bootstrap
+        run: |
+          echo "## Bootstrap Complete: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** $(terraform output -raw s3_bucket_name)" >> $GITHUB_STEP_SUMMARY
+          echo "**DynamoDB Table:** $(terraform output -raw dynamodb_table_name)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ECR Repositories:" >> $GITHUB_STEP_SUMMARY
+          terraform output -json ecr_repositories | jq -r 'to_entries[] | "- **\(.key)**: \(.value)"' >> $GITHUB_STEP_SUMMARY

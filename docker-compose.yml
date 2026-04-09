@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database with multi-schema architecture
   postgres:
@@ -42,7 +40,7 @@ services:
     networks:
       - turaf-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4566/_localstack/health')\" || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
       timeout: 5s
       retries: 10
