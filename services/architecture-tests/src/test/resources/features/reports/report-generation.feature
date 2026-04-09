@@ -12,7 +12,7 @@ Feature: Report Generation
     Then status 200
     * def token = response.accessToken
 
-  Scenario: Async report generation workflow
+  Scenario: Async report generation workflow via Lambda
     * def timestamp = new Date().getTime()
     * def orgSlug = 'gen-' + timestamp
     
@@ -55,38 +55,37 @@ Feature: Report Generation
     When method POST
     Then status 201
     
+    # Complete experiment - triggers ExperimentCompleted event -> EventBridge -> Reporting Lambda
     Given path '/api/v1/experiments', experimentId, 'complete'
     And header Authorization = 'Bearer ' + token
     And request { resultSummary: 'Complete' }
     When method POST
     Then status 200
     
-    Given path '/api/v1/reports'
-    And header Authorization = 'Bearer ' + token
-    And request { type: 'EXPERIMENT', format: 'PDF', experimentId: '#(experimentId)', organizationId: '#(orgId)' }
-    When method POST
-    Then status 201
-    * def reportId = response.id
-    And match response.status == 'PENDING'
-    
-    * def reportReady = waitHelper.waitForFieldValue('/api/v1/reports/' + reportId, '$.status', 'COMPLETED', 30)
+    # Wait for Lambda to process event and generate report (async)
+    * def reportReady = waitHelper.waitForCondition(30, function(){ var resp = karate.call('GET', '/api/v1/reports?experimentId=' + experimentId); return resp.length > 0; })
     * match reportReady == true
     
-    Given path '/api/v1/reports', reportId
+    # Query the generated report
+    Given path '/api/v1/reports'
+    And param experimentId = experimentId
     And header Authorization = 'Bearer ' + token
     When method GET
     Then status 200
-    And match response.status == 'COMPLETED'
-    And match response.downloadUrl != null
+    * def reportId = response[0].id
+    And match response[0].status == 'COMPLETED'
+    And match response[0].downloadUrl != null
     
-  Scenario: Report generation failure handling
+  Scenario: Query reports for non-existent experiment
+    # Query reports for non-existent experiment should return empty list
     Given path '/api/v1/reports'
+    And param experimentId = 'non-existent-id'
     And header Authorization = 'Bearer ' + token
-    And request { type: 'EXPERIMENT', format: 'PDF', experimentId: 'non-existent-id' }
-    When method POST
-    Then status 404
+    When method GET
+    Then status 200
+    And match response == []
     
-  Scenario: Multiple report formats
+  Scenario: Query generated reports by experiment
     * def timestamp = new Date().getTime()
     * def orgSlug = 'format-' + timestamp
     
@@ -118,16 +117,33 @@ Feature: Report Generation
     Then status 201
     * def experimentId = response.id
     
-    Given path '/api/v1/reports'
+    # Start and complete experiment to trigger Lambda report generation
+    Given path '/api/v1/experiments', experimentId, 'start'
     And header Authorization = 'Bearer ' + token
-    And request { type: 'EXPERIMENT', format: 'PDF', experimentId: '#(experimentId)', organizationId: '#(orgId)' }
     When method POST
-    Then status 201
-    And match response.format == 'PDF'
+    Then status 200
     
-    Given path '/api/v1/reports'
+    Given path '/api/v1/metrics'
     And header Authorization = 'Bearer ' + token
-    And request { type: 'EXPERIMENT', format: 'CSV', experimentId: '#(experimentId)', organizationId: '#(orgId)' }
+    And request { experimentId: '#(experimentId)', name: 'test_metric', value: 1.0 }
     When method POST
     Then status 201
-    And match response.format == 'CSV'
+    
+    Given path '/api/v1/experiments', experimentId, 'complete'
+    And header Authorization = 'Bearer ' + token
+    And request { resultSummary: 'Complete' }
+    When method POST
+    Then status 200
+    
+    # Wait for Lambda to generate report
+    * def reportReady = waitHelper.waitForCondition(30, function(){ var resp = karate.call('GET', '/api/v1/reports?experimentId=' + experimentId); return resp.length > 0; })
+    * match reportReady == true
+    
+    # Query generated reports for this experiment
+    Given path '/api/v1/reports'
+    And param experimentId = experimentId
+    And header Authorization = 'Bearer ' + token
+    When method GET
+    Then status 200
+    And assert response.length > 0
+    And match response[0].format != null

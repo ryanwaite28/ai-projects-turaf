@@ -9,6 +9,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +31,11 @@ class ExperimentServiceClientTest {
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new ExperimentServiceClient(restClient);
+        // Create HttpExchange proxy for the interface
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(restClient))
+            .build();
+        client = factory.createClient(ExperimentServiceClient.class);
     }
     
     @AfterEach
@@ -53,10 +59,9 @@ class ExperimentServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertTrue(recordedRequest.getPath().startsWith("/experiment/experiments"));
+        assertTrue(recordedRequest.getPath().startsWith("/api/v1/experiments"));
         assertTrue(recordedRequest.getPath().contains("organizationId=org-123"));
         assertEquals("user-123", recordedRequest.getHeader("X-User-Id"));
-        assertEquals("org-123", recordedRequest.getHeader("X-Organization-Id"));
     }
     
     @Test
@@ -81,7 +86,7 @@ class ExperimentServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/experiment/experiments", recordedRequest.getPath());
+        assertEquals("/api/v1/experiments", recordedRequest.getPath());
         assertEquals("user-123", recordedRequest.getHeader("X-User-Id"));
         assertEquals("org-123", recordedRequest.getHeader("X-Organization-Id"));
     }
@@ -100,7 +105,7 @@ class ExperimentServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/experiment/experiments/exp-789/start", recordedRequest.getPath());
+        assertEquals("/api/v1/experiments/exp-789/start", recordedRequest.getPath());
     }
     
     @Test
@@ -117,6 +122,6 @@ class ExperimentServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/experiment/experiments/exp-999/complete", recordedRequest.getPath());
+        assertEquals("/api/v1/experiments/exp-999/complete", recordedRequest.getPath());
     }
 }

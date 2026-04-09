@@ -7,93 +7,36 @@ import com.turaf.bff.dto.PasswordResetRequest;
 import com.turaf.bff.dto.RefreshTokenRequest;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
+import org.springframework.web.service.annotation.GetExchange;
 
-@Slf4j
-@Component
-public class IdentityServiceClient {
+/**
+ * Identity Service HTTP Client using Spring's declarative HTTP interface.
+ */
+@HttpExchange(url = "/api/v1", accept = "application/json", contentType = "application/json")
+public interface IdentityServiceClient {
     
-    private final RestClient restClient;
-    private static final String SERVICE_PATH = "/api/v1/auth";
+    @PostExchange("/auth/login")
+    LoginResponseDto login(@RequestBody LoginRequest request);
     
-    public IdentityServiceClient(@Qualifier("identityRestClient") RestClient restClient) {
-        this.restClient = restClient;
-    }
+    @PostExchange("/auth/register")
+    LoginResponseDto register(@RequestBody RegisterRequest request);
     
-    public LoginResponseDto login(LoginRequest request) {
-        log.debug("Calling Identity Service: POST /auth/login");
-        LoginResponseDto response = restClient.post()
-            .uri(SERVICE_PATH + "/login")
-            .body(request)
-            .retrieve()
-            .body(LoginResponseDto.class);
-        log.debug("Login successful for user: {}", response.getUser().getEmail());
-        return response;
-    }
+    @GetExchange("/users/me")
+    UserDto getCurrentUser(@RequestHeader("X-User-Id") String userId);
     
-    public LoginResponseDto register(RegisterRequest request) {
-        log.debug("Calling Identity Service: POST /auth/register");
-        LoginResponseDto response = restClient.post()
-            .uri(SERVICE_PATH + "/register")
-            .body(request)
-            .retrieve()
-            .body(LoginResponseDto.class);
-        log.debug("Registration successful for user: {}", response.getUser().getEmail());
-        return response;
-    }
+    @PostExchange("/auth/logout")
+    void logout(@RequestHeader("X-User-Id") String userId);
     
-    public UserDto getCurrentUser(String userId) {
-        log.debug("Calling Identity Service: GET /users/me");
-        UserDto user = restClient.get()
-            .uri("/api/v1/users/me")
-            .header("X-User-Id", userId)
-            .retrieve()
-            .body(UserDto.class);
-        log.debug("Retrieved current user: {}", user.getId());
-        return user;
-    }
+    @PostExchange("/auth/refresh")
+    LoginResponseDto refreshToken(@RequestBody RefreshTokenRequest request);
     
-    public void logout(String userId) {
-        log.debug("Calling Identity Service: POST /auth/logout");
-        restClient.post()
-            .uri(SERVICE_PATH + "/logout")
-            .header("X-User-Id", userId)
-            .retrieve()
-            .toBodilessEntity();
-        log.debug("Logout successful");
-    }
+    @PostExchange("/auth/password-reset/request")
+    void requestPasswordReset(@RequestBody PasswordResetRequest request);
     
-    public LoginResponseDto refreshToken(RefreshTokenRequest request) {
-        log.debug("Calling Identity Service: POST /auth/refresh");
-        LoginResponseDto response = restClient.post()
-            .uri(SERVICE_PATH + "/refresh")
-            .body(request)
-            .retrieve()
-            .body(LoginResponseDto.class);
-        log.debug("Token refresh successful");
-        return response;
-    }
-    
-    public void requestPasswordReset(PasswordResetRequest request) {
-        log.debug("Calling Identity Service: POST /auth/password-reset/request");
-        restClient.post()
-            .uri(SERVICE_PATH + "/password-reset/request")
-            .body(request)
-            .retrieve()
-            .toBodilessEntity();
-        log.debug("Password reset request successful");
-    }
-    
-    public void confirmPasswordReset(PasswordResetConfirmRequest request) {
-        log.debug("Calling Identity Service: POST /auth/password-reset/confirm");
-        restClient.post()
-            .uri(SERVICE_PATH + "/password-reset/confirm")
-            .body(request)
-            .retrieve()
-            .toBodilessEntity();
-        log.debug("Password reset confirmation successful");
-    }
+    @PostExchange("/auth/password-reset/confirm")
+    void confirmPasswordReset(@RequestBody PasswordResetConfirmRequest request);
 }

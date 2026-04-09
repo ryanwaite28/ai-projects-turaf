@@ -1,0 +1,625 @@
+bff-api                 | 2026-04-09 03:51:23.918 [http-nio-8080-exec-5] [80c4820e-1c62-49c7-98bf-b33bfab8d82b] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=401, duration=5322ms
+turaf-bff-api                 | 2026-04-09 03:51:28.978 [http-nio-8080-exec-6] [99627b23-ca0d-4810-80e2-b85eaa8714a7] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:51:28.981 [http-nio-8080-exec-6] [99627b23-ca0d-4810-80e2-b85eaa8714a7] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:28.992Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:29.007Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:29.009Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:29.010Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:51:29.291 [http-nio-8080-exec-6] [99627b23-ca0d-4810-80e2-b85eaa8714a7] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:51:29.293 [http-nio-8080-exec-6] [99627b23-ca0d-4810-80e2-b85eaa8714a7] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:51:29.295 [http-nio-8080-exec-6] [99627b23-ca0d-4810-80e2-b85eaa8714a7] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=5329ms
+turaf-bff-api                 | 2026-04-09 03:51:29.331 [http-nio-8080-exec-4] [2c53232c-6985-465a-bdd9-6db8e2993ab8] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:51:29.332 [http-nio-8080-exec-4] [2c53232c-6985-465a-bdd9-6db8e2993ab8] INFO  c.t.bff.controllers.AuthController - Get current user request for userId: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:51:29.333 [http-nio-8080-exec-4] [2c53232c-6985-465a-bdd9-6db8e2993ab8] DEBUG c.turaf.bff.config.RestClientConfig - → GET http://identity-service:8081/api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:51:29.334Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:51:29.334Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:51:29.339Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:51:29.339Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] c.turaf.common.tenant.JwtTenantFilter    : Extracted tenant context from JWT - Org: test-org-001, User: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:51:29.350 [http-nio-8080-exec-4] [2c53232c-6985-465a-bdd9-6db8e2993ab8] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/users/me
+turaf-bff-api                 | 2026-04-09 03:51:29.351 [http-nio-8080-exec-4] [2c53232c-6985-465a-bdd9-6db8e2993ab8] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=GET, uri=/api/v1/auth/me, status=200, duration=19ms
+turaf-bff-api                 | 2026-04-09 03:51:29.373 [http-nio-8080-exec-7] [662340a4-0bd0-42ff-ad81-dcb772842aed] ERROR c.t.b.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+turaf-bff-api                 | 2026-04-09 03:51:29.383 [http-nio-8080-exec-3] [0c856182-3b40-4eae-90e4-ea3c42442a71] ERROR c.t.bff.security.JwtTokenValidator - Invalid JWT token: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.
+turaf-bff-api                 | 2026-04-09 03:51:29.384 [http-nio-8080-exec-3] [0c856182-3b40-4eae-90e4-ea3c42442a71] ERROR c.t.b.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+turaf-ministack               | INFO:     127.0.0.1:50730 - "GET /_localstack/health HTTP/1.1" 200 OK
+turaf-identity-service        | 2026-04-09T03:51:32.436Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+turaf-identity-service        | 2026-04-09T03:51:32.437Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:32.437Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+turaf-ministack               | INFO:     172.24.0.9:39106 - "POST / HTTP/1.1" 200 OK
+turaf-ministack               | INFO:     172.24.0.9:39104 - "POST / HTTP/1.1" 200 OK
+turaf-bff-api                 | 2026-04-09 03:51:34.451 [http-nio-8080-exec-10] [f4777143-a125-4ecf-90b8-03b0da6f66bc] INFO  c.t.bff.controllers.AuthController - Register request for email: test+1775706689440@example.com
+turaf-bff-api                 | 2026-04-09 03:51:34.452 [http-nio-8080-exec-10] [f4777143-a125-4ecf-90b8-03b0da6f66bc] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:34.460Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:34.464Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:34.465Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:34.466Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/register
+turaf-postgres                | 2026-04-09 03:51:34.731 UTC [70] ERROR:  duplicate key value violates unique constraint "uq_users_username"
+turaf-postgres                | 2026-04-09 03:51:34.731 UTC [70] DETAIL:  Key (username)=(testuser_#(timestamp)) already exists.
+turaf-postgres                | 2026-04-09 03:51:34.731 UTC [70] STATEMENT:  insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+turaf-identity-service        | 2026-04-09T03:51:34.732Z  WARN 1 --- [identity-service] [nio-8081-exec-3] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23505
+turaf-identity-service        | 2026-04-09T03:51:34.732Z ERROR 1 --- [identity-service] [nio-8081-exec-3] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.
+turaf-identity-service        | 2026-04-09T03:51:34.734Z ERROR 1 --- [identity-service] [nio-8081-exec-3] c.t.i.i.rest.GlobalExceptionHandler      : Unexpected error occurred
+turaf-identity-service        | 
+turaf-identity-service        | org.springframework.dao.DataIntegrityViolationException: could not execute statement [ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.] [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]; SQL [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]; constraint [uq_users_username]
+turaf-identity-service        | 	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:290) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:565) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.processCommit(AbstractPlatformTransactionManager.java:794) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.commit(AbstractPlatformTransactionManager.java:757) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionAspectSupport.commitTransactionAfterReturning(TransactionAspectSupport.java:676) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:426) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-bff-api                 | 2026-04-09 03:51:34.742 [http-nio-8080-exec-10] [f4777143-a125-4ecf-90b8-03b0da6f66bc] DEBUG c.turaf.bff.config.RestClientConfig - ← 500 INTERNAL_SERVER_ERROR http://identity-service:8081/api/v1/auth/register
+
+
+turaf-identity-service        | 	at com.turaf.identity.application.AuthenticationService$$SpringCGLIB$$0.register(<generated>) ~[!/:na]
+turaf-bff-api                 | 2026-04-09 03:51:34.752 [http-nio-8080-exec-10] [f4777143-a125-4ecf-90b8-03b0da6f66bc] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service server error: 500 INTERNAL_SERVER_ERROR - 500 : "{"code":"INTERNAL_ERROR","message":"An unexpected error occurred","timestamp":"2026-04-09T03:51:34.741084424Z"}"; Request Host: localhost, Request Path: /api/v1/auth/register, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:51:34.753 [http-nio-8080-exec-10] [f4777143-a125-4ecf-90b8-03b0da6f66bc] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/register, status=500, duration=5311ms
+turaf-identity-service        | 	at com.turaf.identity.interfaces.rest.AuthController.register(AuthController.java:29) ~[!/:na]
+turaf-identity-service        | 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:174) ~[spring-context-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at com.turaf.identity.interfaces.rest.AuthController$$SpringCGLIB$$0.register(<generated>) ~[!/:na]
+turaf-identity-service        | 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:925) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:830) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at com.turaf.identity.infrastructure.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:50) ~[!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:230) ~[spring-security-config-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at com.turaf.common.tenant.TenantFilter.doFilter(TenantFilter.java:46) ~[turaf-common-1.0.0-SNAPSHOT.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+turaf-identity-service        | Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement [ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.] [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]
+turaf-identity-service        | 	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:97) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:197) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.performNonBatchedMutation(AbstractMutationExecutor.java:108) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleNonBatched.performNonBatchedOperations(MutationExecutorSingleNonBatched.java:40) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:52) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.mutation.InsertCoordinator.doStaticInserts(InsertCoordinator.java:175) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.mutation.InsertCoordinator.coordinateInsert(InsertCoordinator.java:113) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:2873) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.action.internal.EntityInsertAction.execute(EntityInsertAction.java:104) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:632) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:499) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:363) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:41) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1403) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:484) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.flushBeforeTransactionCompletion(SessionImpl.java:2319) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:1976) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:439) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:169) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:267) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:101) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:561) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	... 162 common frames omitted
+turaf-identity-service        | Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:152) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61) ~[HikariCP-5.0.1.jar!/:na]
+turaf-identity-service        | 	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java) ~[HikariCP-5.0.1.jar!/:na]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:194) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	... 183 common frames omitted
+turaf-identity-service        | 
+turaf-bff-api                 | 2026-04-09 03:51:39.771 [http-nio-8080-exec-8] [422c49bc-2934-42cd-a891-1c0be8405f5a] INFO  c.t.bff.controllers.AuthController - Register request for email: test+1775706694765@example.com
+turaf-bff-api                 | 2026-04-09 03:51:39.772 [http-nio-8080-exec-8] [422c49bc-2934-42cd-a891-1c0be8405f5a] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:39.775Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:39.776Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/register
+turaf-identity-service        | 2026-04-09T03:51:39.777Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:39.778Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/register
+turaf-postgres                | 2026-04-09 03:51:40.044 UTC [70] ERROR:  duplicate key value violates unique constraint "uq_users_username"
+turaf-postgres                | 2026-04-09 03:51:40.044 UTC [70] DETAIL:  Key (username)=(testuser_#(timestamp)) already exists.
+turaf-postgres                | 2026-04-09 03:51:40.044 UTC [70] STATEMENT:  insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+turaf-identity-service        | 2026-04-09T03:51:40.045Z  WARN 1 --- [identity-service] [nio-8081-exec-4] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23505
+turaf-identity-service        | 2026-04-09T03:51:40.045Z ERROR 1 --- [identity-service] [nio-8081-exec-4] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.
+turaf-identity-service        | 2026-04-09T03:51:40.045Z ERROR 1 --- [identity-service] [nio-8081-exec-4] c.t.i.i.rest.GlobalExceptionHandler      : Unexpected error occurred
+turaf-identity-service        | 
+turaf-identity-service        | org.springframework.dao.DataIntegrityViolationException: could not execute statement [ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.] [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]; SQL [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]; constraint [uq_users_username]
+turaf-identity-service        | 	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:290) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:565) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.processCommit(AbstractPlatformTransactionManager.java:794) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.support.AbstractPlatformTransactionManager.commit(AbstractPlatformTransactionManager.java:757) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionAspectSupport.commitTransactionAfterReturning(TransactionAspectSupport.java:676) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:426) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+
+
+turaf-bff-api                 | 2026-04-09 03:51:40.050 [http-nio-8080-exec-8] [422c49bc-2934-42cd-a891-1c0be8405f5a] DEBUG c.turaf.bff.config.RestClientConfig - ← 500 INTERNAL_SERVER_ERROR http://identity-service:8081/api/v1/auth/register
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at com.turaf.identity.application.AuthenticationService$$SpringCGLIB$$0.register(<generated>) ~[!/:na]
+turaf-identity-service        | 	at com.turaf.identity.interfaces.rest.AuthController.register(AuthController.java:29) ~[!/:na]
+turaf-identity-service        | 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.validation.beanvalidation.MethodValidationInterceptor.invoke(MethodValidationInterceptor.java:174) ~[spring-context-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-bff-api                 | 2026-04-09 03:51:40.066 [http-nio-8080-exec-8] [422c49bc-2934-42cd-a891-1c0be8405f5a] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service server error: 500 INTERNAL_SERVER_ERROR - 500 : "{"code":"INTERNAL_ERROR","message":"An unexpected error occurred","timestamp":"2026-04-09T03:51:40.048275469Z"}"; Request Host: localhost, Request Path: /api/v1/auth/register, Request Method: POST
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717) ~[spring-aop-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at com.turaf.identity.interfaces.rest.AuthController$$SpringCGLIB$$0.register(<generated>) ~[!/:na]
+
+
+turaf-bff-api                 | 2026-04-09 03:51:40.068 [http-nio-8080-exec-8] [422c49bc-2934-42cd-a891-1c0be8405f5a] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/register, status=500, duration=5301ms
+turaf-identity-service        | 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+
+
+turaf-identity-service        | 	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+turaf-identity-service        | 	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:925) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:830) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at com.turaf.identity.infrastructure.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:50) ~[!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195) ~[spring-webmvc-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:230) ~[spring-security-config-6.2.3.jar!/:6.2.3]
+turaf-identity-service        | 	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at com.turaf.common.tenant.TenantFilter.doFilter(TenantFilter.java:46) ~[turaf-common-1.0.0-SNAPSHOT.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.19.jar!/:na]
+turaf-identity-service        | 	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+turaf-identity-service        | Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement [ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.] [insert into identity_schema.users (created_at,email,first_name,last_name,organization_id,password,updated_at,username,id) values (?,?,?,?,?,?,?,?,?)]
+turaf-identity-service        | 	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:97) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:197) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.performNonBatchedMutation(AbstractMutationExecutor.java:108) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.MutationExecutorSingleNonBatched.performNonBatchedOperations(MutationExecutorSingleNonBatched.java:40) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.mutation.internal.AbstractMutationExecutor.execute(AbstractMutationExecutor.java:52) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.mutation.InsertCoordinator.doStaticInserts(InsertCoordinator.java:175) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.mutation.InsertCoordinator.coordinateInsert(InsertCoordinator.java:113) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:2873) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.action.internal.EntityInsertAction.execute(EntityInsertAction.java:104) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:632) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:499) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:363) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:41) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1403) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:484) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.flushBeforeTransactionCompletion(SessionImpl.java:2319) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:1976) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:439) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:169) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:267) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:101) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:561) ~[spring-orm-6.1.5.jar!/:6.1.5]
+turaf-identity-service        | 	... 162 common frames omitted
+turaf-identity-service        | Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "uq_users_username"
+turaf-identity-service        |   Detail: Key (username)=(testuser_#(timestamp)) already exists.
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:368) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:498) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:415) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:190) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:152) ~[postgresql-42.6.0.jar!/:42.6.0]
+turaf-identity-service        | 	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61) ~[HikariCP-5.0.1.jar!/:na]
+turaf-identity-service        | 	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java) ~[HikariCP-5.0.1.jar!/:na]
+turaf-identity-service        | 	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:194) ~[hibernate-core-6.4.4.Final.jar!/:6.4.4.Final]
+turaf-identity-service        | 	... 183 common frames omitted
+turaf-identity-service        | 
+turaf-ministack               | INFO:     127.0.0.1:56536 - "GET /_localstack/health HTTP/1.1" 200 OK
+turaf-identity-service        | 2026-04-09T03:51:42.518Z DEBUG 1 --- [identity-service] [nio-8081-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+turaf-identity-service        | 2026-04-09T03:51:42.521Z DEBUG 1 --- [identity-service] [nio-8081-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:42.522Z DEBUG 1 --- [identity-service] [nio-8081-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+turaf-ministack               | INFO:     172.24.0.9:39106 - "POST / HTTP/1.1" 200 OK
+turaf-ministack               | INFO:     172.24.0.9:39104 - "POST / HTTP/1.1" 200 OK
+turaf-bff-api                 | 2026-04-09 03:51:45.141 [http-nio-8080-exec-6] [fe9ff738-7e10-4f88-9768-047e3d6fb8bc] ERROR c.t.b.e.GlobalExceptionHandler - Validation error: Email must be valid; Request Host: localhost, Request Path: /api/v1/auth/register, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:51:45.146 [http-nio-8080-exec-6] [fe9ff738-7e10-4f88-9768-047e3d6fb8bc] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/register, status=400, duration=5030ms
+turaf-bff-api                 | 2026-04-09 03:51:50.198 [http-nio-8080-exec-2] [771c18b7-d685-41b5-afa8-4a79f02a8979] ERROR c.t.b.e.GlobalExceptionHandler - Validation error: Password must be at least 8 characters; Request Host: localhost, Request Path: /api/v1/auth/register, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:51:50.204 [http-nio-8080-exec-2] [771c18b7-d685-41b5-afa8-4a79f02a8979] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/register, status=400, duration=5039ms
+turaf-ministack               | INFO:     127.0.0.1:44458 - "GET /_localstack/health HTTP/1.1" 200 OK
+turaf-identity-service        | 2026-04-09T03:51:52.631Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+turaf-identity-service        | 2026-04-09T03:51:52.634Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:52.635Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+turaf-ministack               | INFO:     172.24.0.9:39104 - "POST / HTTP/1.1" 200 OK
+turaf-ministack               | INFO:     172.24.0.9:39106 - "POST / HTTP/1.1" 200 OK
+turaf-bff-api                 | 2026-04-09 03:51:55.333 [http-nio-8080-exec-7] [9ff91462-f26a-4bcb-ba17-d8464b8fc42e] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:51:55.337 [http-nio-8080-exec-7] [9ff91462-f26a-4bcb-ba17-d8464b8fc42e] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:55.341Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:55.342Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:51:55.343Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:51:55.344Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:51:55.649 [http-nio-8080-exec-7] [9ff91462-f26a-4bcb-ba17-d8464b8fc42e] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:51:55.651 [http-nio-8080-exec-7] [9ff91462-f26a-4bcb-ba17-d8464b8fc42e] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:51:55.652 [http-nio-8080-exec-7] [9ff91462-f26a-4bcb-ba17-d8464b8fc42e] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=5329ms
+turaf-bff-api                 | 2026-04-09 03:51:55.673 [http-nio-8080-exec-5] [13ffd646-c4fc-411e-9316-9e06bcbd41be] ERROR c.t.b.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+turaf-bff-api                 | 2026-04-09 03:51:55.692 [http-nio-8080-exec-10] [e1bf1ec7-38f5-48fa-bf97-a043d6b5c1ef] ERROR c.t.b.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+turaf-bff-api                 | 2026-04-09 03:52:00.760 [http-nio-8080-exec-4] [38ef86e9-b0d0-464f-b467-f4d1c1b6b62f] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:00.764 [http-nio-8080-exec-4] [38ef86e9-b0d0-464f-b467-f4d1c1b6b62f] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:00.783Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:00.792Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:00.797Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:00.801Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:01.065 [http-nio-8080-exec-4] [38ef86e9-b0d0-464f-b467-f4d1c1b6b62f] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:01.066 [http-nio-8080-exec-4] [38ef86e9-b0d0-464f-b467-f4d1c1b6b62f] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:52:01.067 [http-nio-8080-exec-4] [38ef86e9-b0d0-464f-b467-f4d1c1b6b62f] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=5325ms
+turaf-bff-api                 | 2026-04-09 03:52:01.080 [http-nio-8080-exec-6] [9a84ab32-c74f-4a37-b39e-c928ce0fa0f2] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:01.082 [http-nio-8080-exec-6] [9a84ab32-c74f-4a37-b39e-c928ce0fa0f2] INFO  c.t.bff.controllers.AuthController - Get current user request for userId: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.082 [http-nio-8080-exec-6] [9a84ab32-c74f-4a37-b39e-c928ce0fa0f2] DEBUG c.turaf.bff.config.RestClientConfig - → GET http://identity-service:8081/api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.084Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.084Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.088Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.088Z DEBUG 1 --- [identity-service] [nio-8081-exec-2] c.turaf.common.tenant.JwtTenantFilter    : Extracted tenant context from JWT - Org: test-org-001, User: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.090 [http-nio-8080-exec-6] [9a84ab32-c74f-4a37-b39e-c928ce0fa0f2] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/users/me
+turaf-bff-api                 | 2026-04-09 03:52:01.092 [http-nio-8080-exec-6] [9a84ab32-c74f-4a37-b39e-c928ce0fa0f2] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=GET, uri=/api/v1/auth/me, status=200, duration=11ms
+turaf-bff-api                 | 2026-04-09 03:52:01.098 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:01.099 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] INFO  c.t.bff.controllers.AuthController - Logout request for userId: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.099 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/logout
+turaf-identity-service        | 2026-04-09T03:52:01.102Z DEBUG 1 --- [identity-service] [io-8081-exec-10] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/logout
+turaf-identity-service        | 2026-04-09T03:52:01.103Z DEBUG 1 --- [identity-service] [io-8081-exec-10] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/logout
+turaf-identity-service        | 2026-04-09T03:52:01.105Z DEBUG 1 --- [identity-service] [io-8081-exec-10] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/logout
+turaf-identity-service        | 2026-04-09T03:52:01.105Z DEBUG 1 --- [identity-service] [io-8081-exec-10] c.turaf.common.tenant.JwtTenantFilter    : Extracted tenant context from JWT - Org: test-org-001, User: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.120 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] DEBUG c.turaf.bff.config.RestClientConfig - ← 204 NO_CONTENT http://identity-service:8081/api/v1/auth/logout
+turaf-bff-api                 | 2026-04-09 03:52:01.120 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] INFO  c.t.bff.controllers.AuthController - Logout successful
+turaf-bff-api                 | 2026-04-09 03:52:01.121 [http-nio-8080-exec-9] [9985b2a2-5598-4261-8277-5fbb21b5a79d] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/logout, status=200, duration=23ms
+turaf-bff-api                 | 2026-04-09 03:52:01.126 [http-nio-8080-exec-3] [4e125c5a-203f-4576-bc2f-c13fa71127c1] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:01.126 [http-nio-8080-exec-3] [4e125c5a-203f-4576-bc2f-c13fa71127c1] INFO  c.t.bff.controllers.AuthController - Get current user request for userId: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.126 [http-nio-8080-exec-3] [4e125c5a-203f-4576-bc2f-c13fa71127c1] DEBUG c.turaf.bff.config.RestClientConfig - → GET http://identity-service:8081/api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.127Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.128Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.129Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /api/v1/users/me
+turaf-identity-service        | 2026-04-09T03:52:01.130Z DEBUG 1 --- [identity-service] [nio-8081-exec-3] c.turaf.common.tenant.JwtTenantFilter    : Extracted tenant context from JWT - Org: test-org-001, User: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3
+turaf-bff-api                 | 2026-04-09 03:52:01.132 [http-nio-8080-exec-3] [4e125c5a-203f-4576-bc2f-c13fa71127c1] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/users/me
+turaf-bff-api                 | 2026-04-09 03:52:01.134 [http-nio-8080-exec-3] [4e125c5a-203f-4576-bc2f-c13fa71127c1] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=GET, uri=/api/v1/auth/me, status=200, duration=8ms
+turaf-ministack               | INFO:     127.0.0.1:55694 - "GET /_localstack/health HTTP/1.1" 200 OK
+turaf-identity-service        | 2026-04-09T03:52:02.707Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /actuator/health
+turaf-identity-service        | 2026-04-09T03:52:02.708Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:02.708Z DEBUG 1 --- [identity-service] [nio-8081-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /actuator/health
+turaf-ministack               | INFO:     172.24.0.9:39106 - "POST / HTTP/1.1" 200 OK
+turaf-ministack               | INFO:     172.24.0.9:39104 - "POST / HTTP/1.1" 200 OK
+turaf-bff-api                 | 2026-04-09 03:52:06.192 [http-nio-8080-exec-1] [a599b938-ddba-4f79-93de-66eb9ba1123f] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:06.193 [http-nio-8080-exec-1] [a599b938-ddba-4f79-93de-66eb9ba1123f] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:06.198Z DEBUG 1 --- [identity-service] [nio-8081-exec-6] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:06.199Z DEBUG 1 --- [identity-service] [nio-8081-exec-6] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:06.200Z DEBUG 1 --- [identity-service] [nio-8081-exec-6] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:06.200Z DEBUG 1 --- [identity-service] [nio-8081-exec-6] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:06.455 [http-nio-8080-exec-1] [a599b938-ddba-4f79-93de-66eb9ba1123f] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:06.456 [http-nio-8080-exec-1] [a599b938-ddba-4f79-93de-66eb9ba1123f] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:52:06.456 [http-nio-8080-exec-1] [a599b938-ddba-4f79-93de-66eb9ba1123f] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=5271ms
+turaf-bff-api                 | 2026-04-09 03:52:06.462 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:06.463 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] INFO  c.t.b.c.OrganizationController - Create organization: Workflow Org
+turaf-bff-api                 | 2026-04-09 03:52:06.463 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://organization-service:8082/api/v1/organizations
+turaf-organization-service    | 2026-04-09T03:52:06.472Z DEBUG 1 --- [organization-service] [nio-8082-exec-2] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:06.493 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] DEBUG c.turaf.bff.config.RestClientConfig - ← 401 UNAUTHORIZED http://organization-service:8082/api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:06.498 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service client error: 401 UNAUTHORIZED - 401 : [no body]; Request Host: localhost, Request Path: /api/v1/organizations, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:52:06.498 [http-nio-8080-exec-6] [08e7f2bd-c6bc-451d-8b95-d88589905d9c] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/organizations, status=401, duration=36ms
+turaf-bff-api                 | 2026-04-09 03:52:09.693 [http-nio-8080-exec-9] [c847ea99-d584-41ec-90cb-c531316cdc76] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:09.701 [http-nio-8080-exec-9] [c847ea99-d584-41ec-90cb-c531316cdc76] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:09.712Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:09.733Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:09.735Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:09.735Z DEBUG 1 --- [identity-service] [nio-8081-exec-7] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.008 [http-nio-8080-exec-9] [c847ea99-d584-41ec-90cb-c531316cdc76] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.009 [http-nio-8080-exec-9] [c847ea99-d584-41ec-90cb-c531316cdc76] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:52:10.012 [http-nio-8080-exec-9] [c847ea99-d584-41ec-90cb-c531316cdc76] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=3502ms
+turaf-bff-api                 | 2026-04-09 03:52:10.048 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:10.050 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] INFO  c.t.b.c.OrganizationController - Create organization: Private Org
+turaf-bff-api                 | 2026-04-09 03:52:10.050 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://organization-service:8082/api/v1/organizations
+turaf-organization-service    | 2026-04-09T03:52:10.052Z DEBUG 1 --- [organization-service] [nio-8082-exec-4] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.059 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] DEBUG c.turaf.bff.config.RestClientConfig - ← 401 UNAUTHORIZED http://organization-service:8082/api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.062 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service client error: 401 UNAUTHORIZED - 401 : [no body]; Request Host: localhost, Request Path: /api/v1/organizations, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:52:10.063 [http-nio-8080-exec-3] [27fc0701-67c7-4589-8510-a4dc00b5a736] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/organizations, status=401, duration=14ms
+turaf-bff-api                 | 2026-04-09 03:52:10.126 [http-nio-8080-exec-5] [8e67c6bb-a7a4-4e4c-b1a3-d43b64eeb4c5] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:10.126 [http-nio-8080-exec-5] [8e67c6bb-a7a4-4e4c-b1a3-d43b64eeb4c5] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.130Z DEBUG 1 --- [identity-service] [nio-8081-exec-9] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.130Z DEBUG 1 --- [identity-service] [nio-8081-exec-9] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.130Z DEBUG 1 --- [identity-service] [nio-8081-exec-9] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:10.130Z DEBUG 1 --- [identity-service] [nio-8081-exec-9] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.370 [http-nio-8080-exec-5] [8e67c6bb-a7a4-4e4c-b1a3-d43b64eeb4c5] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.371 [http-nio-8080-exec-5] [8e67c6bb-a7a4-4e4c-b1a3-d43b64eeb4c5] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:52:10.371 [http-nio-8080-exec-5] [8e67c6bb-a7a4-4e4c-b1a3-d43b64eeb4c5] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=246ms
+turaf-bff-api                 | 2026-04-09 03:52:10.378 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:10.379 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] INFO  c.t.b.c.OrganizationController - Create organization: Member Test Org
+turaf-bff-api                 | 2026-04-09 03:52:10.380 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://organization-service:8082/api/v1/organizations
+turaf-organization-service    | 2026-04-09T03:52:10.382Z DEBUG 1 --- [organization-service] [nio-8082-exec-7] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.388 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] DEBUG c.turaf.bff.config.RestClientConfig - ← 401 UNAUTHORIZED http://organization-service:8082/api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.390 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service client error: 401 UNAUTHORIZED - 401 : [no body]; Request Host: localhost, Request Path: /api/v1/organizations, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:52:10.390 [http-nio-8080-exec-8] [ab4704d1-b371-4401-bdac-ab1cc5fa8749] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/organizations, status=401, duration=11ms
+turaf-bff-api                 | 2026-04-09 03:52:10.399 [http-nio-8080-exec-4] [e4db397e-e590-41c0-83e4-e3ed0109f46a] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:10.399 [http-nio-8080-exec-4] [e4db397e-e590-41c0-83e4-e3ed0109f46a] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.402Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.402Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Securing POST /api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.403Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+turaf-identity-service        | 2026-04-09T03:52:10.403Z DEBUG 1 --- [identity-service] [nio-8081-exec-1] o.s.security.web.FilterChainProxy        : Secured POST /api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.641 [http-nio-8080-exec-4] [e4db397e-e590-41c0-83e4-e3ed0109f46a] DEBUG c.turaf.bff.config.RestClientConfig - ← 200 OK http://identity-service:8081/api/v1/auth/login
+turaf-bff-api                 | 2026-04-09 03:52:10.643 [http-nio-8080-exec-4] [e4db397e-e590-41c0-83e4-e3ed0109f46a] INFO  c.t.bff.controllers.AuthController - Login successful
+turaf-bff-api                 | 2026-04-09 03:52:10.644 [http-nio-8080-exec-4] [e4db397e-e590-41c0-83e4-e3ed0109f46a] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/auth/login, status=200, duration=245ms
+turaf-bff-api                 | 2026-04-09 03:52:10.648 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] DEBUG c.t.b.s.JwtAuthenticationFilter - Authenticated user: 6b205354-7885-4a96-9f0b-90f6c4ee1ae3 (test@example.com)
+turaf-bff-api                 | 2026-04-09 03:52:10.649 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] INFO  c.t.b.c.OrganizationController - Create organization: Member Test Org
+turaf-bff-api                 | 2026-04-09 03:52:10.649 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://organization-service:8082/api/v1/organizations
+turaf-organization-service    | 2026-04-09T03:52:10.651Z DEBUG 1 --- [organization-service] [nio-8082-exec-8] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.657 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] DEBUG c.turaf.bff.config.RestClientConfig - ← 401 UNAUTHORIZED http://organization-service:8082/api/v1/organizations
+turaf-bff-api                 | 2026-04-09 03:52:10.659 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] ERROR c.t.b.e.GlobalExceptionHandler - Downstream service client error: 401 UNAUTHORIZED - 401 : [no body]; Request Host: localhost, Request Path: /api/v1/organizations, Request Method: POST
+turaf-bff-api                 | 2026-04-09 03:52:10.659 [http-nio-8080-exec-2] [97f6a81a-0736-49bc-aa9d-ce4b2e70b778] INFO  c.t.bff.filter.RequestLoggingFilter - Request: method=POST, uri=/api/v1/organizations, status=401, duration=10ms
+turaf-bff-api                 | 2026-04-09 03:52:10.668 [http-nio-8080-exec-7] [37948f61-535d-4c10-9829-751af3116211] INFO  c.t.bff.controllers.AuthController - Login request for email: test@example.com
+turaf-bff-api                 | 2026-04-09 03:52:10.669 [http-nio-8080-exec-7] [37948f61-535d-4c10-9829-751af3116211] DEBUG c.turaf.bff.config.RestClientConfig - → POST http://identity-service:8081/api/v1/auth/login
+turaf-identity-service        | 2026-04-09T03:52:10.671Z DEBUG 1 --- [identity-service] [nio-8081-exec-8] com.turaf.common.tenant.TenantFilter     : No tenant context set - missing headers. URI: /api/v1/auth/login

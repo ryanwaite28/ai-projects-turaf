@@ -1,0 +1,371 @@
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR] features/authentication/login.[1:8] Successful login returns LoginResponseDto with tokens
+[ERROR]   Run 1: no step-definition method match found for: match response.expiresIn > 0
+classpath:features/authentication/login.feature:18
+[ERROR]   Run 2: no step-definition method match found for: match response.expiresIn > 0
+classpath:features/authentication/login.feature:18
+[INFO] 
+[ERROR] features/authentication/logout.[1:7] Successful logout invalidates token
+[ERROR]   Run 1: status code was: 200, expected: 401, response time in milliseconds: 20, url: http://localhost:8080/api/v1/auth/me, response: 
+{"id":"6b205354-7885-4a96-9f0b-90f6c4ee1ae3","email":"test@example.com","username":"testuser","firstName":"Test","lastName":"User","createdAt":"2026-04-09T03:49:12.096814428Z","updatedAt":"2026-04-09T03:49:12.096814553Z"}
+classpath:features/authentication/logout.feature:27
+[ERROR]   Run 2: status code was: 200, expected: 401, response time in milliseconds: 11, url: http://localhost:8080/api/v1/auth/me, response: 
+{"id":"6b205354-7885-4a96-9f0b-90f6c4ee1ae3","email":"test@example.com","username":"testuser","firstName":"Test","lastName":"User","createdAt":"2026-04-09T03:52:01.132196089Z","updatedAt":"2026-04-09T03:52:01.132196298Z"}
+classpath:features/authentication/logout.feature:27
+[INFO] 
+[ERROR] features/authentication/registration.[1:9] Successful registration returns LoginResponseDto
+[ERROR]   Run 1: status code was: 500, expected: 201, response time in milliseconds: 348, url: http://localhost:8080/api/v1/auth/register, response: 
+{"timestamp":"2026-04-09T03:49:12","status":500,"error":"","message":"Downstream service error","path":"/api/v1/auth/register","correlationId":"05a343a0-ae24-45c6-9c0a-4b4fb941752a"}
+classpath:features/authentication/registration.feature:13
+[ERROR]   Run 2: status code was: 500, expected: 201, response time in milliseconds: 5315, url: http://localhost:8080/api/v1/auth/register, response: 
+{"timestamp":"2026-04-09T03:51:34","status":500,"error":"","message":"Downstream service error","path":"/api/v1/auth/register","correlationId":"f4777143-a125-4ecf-90b8-03b0da6f66bc"}
+classpath:features/authentication/registration.feature:13
+[INFO] 
+[ERROR] features/authentication/registration.[2:20] Registration with existing email returns 409
+[ERROR]   Run 1: status code was: 500, expected: 201, response time in milliseconds: 269, url: http://localhost:8080/api/v1/auth/register, response: 
+{"timestamp":"2026-04-09T03:49:12","status":500,"error":"","message":"Downstream service error","path":"/api/v1/auth/register","correlationId":"e2bd8ada-7394-4946-b371-229940ed7d48"}
+classpath:features/authentication/registration.feature:24
+[ERROR]   Run 2: status code was: 500, expected: 201, response time in milliseconds: 5306, url: http://localhost:8080/api/v1/auth/register, response: 
+{"timestamp":"2026-04-09T03:51:40","status":500,"error":"","message":"Downstream service error","path":"/api/v1/auth/register","correlationId":"422c49bc-2934-42cd-a891-1c0be8405f5a"}
+classpath:features/authentication/registration.feature:24
+[INFO] 
+[ERROR] features/authentication/token-refresh.[1:7] Refresh token returns new access token
+[ERROR]   Run 1: status code was: 401, expected: 200, response time in milliseconds: 3, url: http://localhost:8080/api/v1/auth/refresh, response: 
+{"path":"/api/v1/auth/refresh","error":"Unauthorized","message":"Authentication is required to access this resource","status":401}
+classpath:features/authentication/token-refresh.feature:17
+[ERROR]   Run 2: status code was: 401, expected: 200, response time in milliseconds: 4, url: http://localhost:8080/api/v1/auth/refresh, response: 
+{"path":"/api/v1/auth/refresh","error":"Unauthorized","message":"Authentication is required to access this resource","status":401}
+classpath:features/authentication/token-refresh.feature:17
+[INFO] 
+[ERROR] features/experiments/experiment-lifecycle.[1:24] Complete experiment workflow with async report generation
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 165, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:13","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"33b584a3-1fb1-4154-a06a-30e6bb43b760"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 10, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"833cc65f-c6cb-4104-916e-6073da012f75"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 23, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"bae2f6c7-bb64-45fe-917c-516aab9de1a6"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[INFO] 
+[ERROR] features/experiments/experiment-lifecycle.[2:81] Cancel running experiment
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 22, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:19","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d3936848-9c4b-489d-852a-152b3eb00f27"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"6d35c15e-5153-4af5-838b-c2391d8efcde"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"31faeb95-270f-4156-9da8-cbba9632c1aa"}
+classpath:features/experiments/experiment-lifecycle.feature:21
+[INFO] 
+[ERROR] features/experiments/hypothesis-management.[1:29] Create and list hypotheses
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 27, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:24","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"01871e95-fede-490f-a50e-73869acd6f6e"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 9, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"9c17119d-1afa-4995-9f2e-cc041ea80a33"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 32, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:08","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"91f29b68-a481-4e1b-9d67-03ac8d8edb71"}
+classpath:features/experiments/hypothesis-management.feature:19
+[INFO] 
+[ERROR] features/experiments/hypothesis-management.[2:45] Filter hypotheses by problem
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 17, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:29","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"87f621bb-6049-4627-ab97-9cde42b44238"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 13, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"5a2db81c-ab4e-4933-b361-a6b26d012ad1"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 10, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:09","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d8b510a8-e3e7-4a80-891f-abb84246f28b"}
+classpath:features/experiments/hypothesis-management.feature:19
+[INFO] 
+[ERROR] features/experiments/hypothesis-management.[3:66] Update hypothesis
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 32, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:35","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"fc4df016-2128-489e-bb30-cfd5f93d62e7"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 31, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:18","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"0200e851-6a51-46d7-b8e7-2c882adb781e"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 9, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"41dea30a-b413-4355-b5f7-091df62d445a"}
+classpath:features/experiments/hypothesis-management.feature:19
+[INFO] 
+[ERROR] features/experiments/hypothesis-management.[4:81] Delete hypothesis
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 24, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:40","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"bf57585b-e012-4f01-9fdd-74951306b078"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 40, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:23","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"596c4129-53ca-4b93-9418-3122e619023e"}
+classpath:features/experiments/hypothesis-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 14, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"b695fb91-9d95-4e81-9ef8-5f8d413803ee"}
+classpath:features/experiments/hypothesis-management.feature:19
+[INFO] 
+[ERROR] features/experiments/metrics-recording.[1:43] Record and retrieve metrics
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 14, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:45","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"b4796b55-e07d-4946-be1b-c6446ef367d5"}
+classpath:features/experiments/metrics-recording.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 60, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:29","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"9473b788-a7e7-4db8-94d5-0043aed1916d"}
+classpath:features/experiments/metrics-recording.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 49, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:57","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e8a0c508-7ec5-4897-b471-559573996f6c"}
+classpath:features/experiments/metrics-recording.feature:19
+[INFO] 
+[ERROR] features/experiments/metrics-recording.[2:58] Delete metric
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 38, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:51","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"a9e66de1-1056-4443-9a36-487150bdc010"}
+classpath:features/experiments/metrics-recording.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 43, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:34","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"50eca3d0-ecfe-4b53-b426-5c0acb135d95"}
+classpath:features/experiments/metrics-recording.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 23, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:54:03","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"338176c9-54bb-4591-bcd1-5960ad1d649c"}
+classpath:features/experiments/metrics-recording.feature:19
+[INFO] 
+[ERROR] features/experiments/problem-management.[1:22] Create and list problems
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:49:56","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"a0af0c3c-bee0-4fd3-a988-ba180bfda29b"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 21, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e0a17f16-22d7-47dc-8527-b412e5fe6c6f"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:40","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"210ef1cd-27d8-48a9-b099-1f7414246e6d"}
+classpath:features/experiments/problem-management.feature:19
+[INFO] 
+[ERROR] features/experiments/problem-management.[2:38] Update problem
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 18, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:02","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"8dbc6a0b-4563-483c-b4f7-da1109a580db"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 16, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"0ed5b067-f123-4687-a50e-f3a1b81f7d5d"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 41, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:45","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"dcefe813-eaa7-461f-a71a-df2b0527a1c9"}
+classpath:features/experiments/problem-management.feature:19
+[INFO] 
+[ERROR] features/experiments/problem-management.[3:53] Delete problem
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 29, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:07","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"8d60bb42-1e86-4821-956e-eac5063a6dea"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 7, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"ae26a296-cb00-4037-87bc-9328a8401447"}
+classpath:features/experiments/problem-management.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 141, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:52","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"db9672ba-1ca6-4226-8d93-d1cd407272b0"}
+classpath:features/experiments/problem-management.feature:19
+[INFO] 
+[ERROR] features/organizations/create-organization.[1:13] Create organization successfully
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 20, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:09","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"6a639801-55b6-4eff-bfc9-4ee3b718a597"}
+classpath:features/organizations/create-organization.feature:22
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"3b5e1f4b-490d-4a4d-9202-c24ab6d8fa23"}
+classpath:features/organizations/create-organization.feature:22
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 34, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:01","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"4cbb3aa0-0af9-44f8-86b2-afddf98ea110"}
+classpath:features/organizations/create-organization.feature:22
+[INFO] 
+[ERROR] features/organizations/create-organization.[2:28] List user's organizations
+[ERROR]   Run 1: status code was: 401, expected: 200, response time in milliseconds: 32, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"391ebf1e-49d6-4286-bf3c-8d2ad046c91e"}
+classpath:features/organizations/create-organization.feature:32
+[ERROR]   Run 2: status code was: 401, expected: 200, response time in milliseconds: 14, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e64b1510-c892-440a-93f6-0300ca02c536"}
+classpath:features/organizations/create-organization.feature:32
+[ERROR]   Run 3: status code was: 401, expected: 200, response time in milliseconds: 37, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:07","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"0807d981-610f-4cfc-a7f0-90c752d74e32"}
+classpath:features/organizations/create-organization.feature:32
+[INFO] 
+[ERROR] features/organizations/create-organization.[3:37] Get organization by ID
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 12, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d7b5663b-82d3-445a-8299-6a13792ac8cb"}
+classpath:features/organizations/create-organization.feature:46
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 12, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"284fedaa-f4f2-4b32-9dec-015483b2da41"}
+classpath:features/organizations/create-organization.feature:46
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 27, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"9529d4e4-2d43-4522-86ae-1d6f852bf282"}
+classpath:features/organizations/create-organization.feature:46
+[INFO] 
+[ERROR] features/organizations/create-organization.[4:56] Update organization
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"86342260-7dfc-4ead-80ce-9e782be55b8b"}
+classpath:features/organizations/create-organization.feature:63
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 14, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"8f026ed7-61c7-473c-b5ed-96b6c03034cc"}
+classpath:features/organizations/create-organization.feature:63
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 18, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"fd39e319-f8ba-440a-95ff-b80bf4a78532"}
+classpath:features/organizations/create-organization.feature:63
+[INFO] 
+[ERROR] features/organizations/create-organization.[5:73] Delete organization
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 10, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"3b3b10ee-aed9-46b0-aff0-d375847cb2f6"}
+classpath:features/organizations/create-organization.feature:80
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 29, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:18","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"97033a5e-60af-4f05-b9a1-9ee5a28ddb8d"}
+classpath:features/organizations/create-organization.feature:80
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:53:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"781df38a-ee7c-4ca3-a34e-5d732e7bf1e5"}
+classpath:features/organizations/create-organization.feature:80
+[INFO] 
+[ERROR] features/organizations/manage-members.[1:22] List organization members
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 9, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e76f9e1e-e86c-41bd-978a-2dff3d60c4fb"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 16, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"ab4704d1-b371-4401-bdac-ab1cc5fa8749"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 39, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:23","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"da070827-63ff-42d9-8ffe-fcfa7950dbc8"}
+classpath:features/organizations/manage-members.feature:19
+[INFO] 
+[ERROR] features/organizations/manage-members.[2:30] Add member to organization
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 13, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"6284d513-c511-4240-a75f-739171cdc09e"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 13, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"97f6a81a-0736-49bc-aa9d-ce4b2e70b778"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 44, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:29","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"2b8a1bba-0e66-4492-93a2-71299523d22b"}
+classpath:features/organizations/manage-members.feature:19
+[INFO] 
+[ERROR] features/organizations/manage-members.[3:47] Update member role
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 14, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"ee8f3903-ac74-4975-8434-132a54428e86"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 8, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"3582d0aa-8806-4b31-a342-1dae3acd25d1"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 18, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:34","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"115664d5-34bf-486f-b503-161628202486"}
+classpath:features/organizations/manage-members.feature:19
+[INFO] 
+[ERROR] features/organizations/manage-members.[4:69] Remove member from organization
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 9, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"37d1d9be-7fbd-490f-b601-5ba605a32d26"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"93d58b45-6cb3-4a15-befc-b6945ced8ae9"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 33, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:39","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d1d2acc6-f34a-46ab-af13-ccef8b6e7b37"}
+classpath:features/organizations/manage-members.feature:19
+[INFO] 
+[ERROR] features/organizations/manage-members.[5:95] Adding member triggers notification event
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 10, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d7290b48-18b4-418b-b466-20f701efbf62"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 12, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"0af369ac-e280-4ce9-952d-b75d1cdcad9c"}
+classpath:features/organizations/manage-members.feature:19
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 44, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:45","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"2b060249-f9bf-4600-a529-2c5e6f3608ef"}
+classpath:features/organizations/manage-members.feature:19
+[INFO] 
+[ERROR] features/organizations/organization-workflows.[1:12] Complete organization setup workflow
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 23, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:17","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e61cc988-5dda-495d-84e6-61c8606271d1"}
+classpath:features/organizations/organization-workflows.feature:20
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 41, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:06","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"08e7f2bd-c6bc-451d-8b95-d88589905d9c"}
+classpath:features/organizations/organization-workflows.feature:20
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 75, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:50","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"7d7d2bdb-40c6-410c-8506-0771d23d68e1"}
+classpath:features/organizations/organization-workflows.feature:20
+[INFO] 
+[ERROR] features/organizations/organization-workflows.[2:48] Organization access control
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 34, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:23","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"ec807142-89a5-4b9f-8ea5-744f8a958f89"}
+classpath:features/organizations/organization-workflows.feature:56
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 23, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"27fc0701-67c7-4589-8510-a4dc00b5a736"}
+classpath:features/organizations/organization-workflows.feature:56
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 34, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:52:56","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"cec0f8b2-6119-4bbe-b492-4135d4582938"}
+classpath:features/organizations/organization-workflows.feature:56
+[INFO] 
+[ERROR] features/reports/report-generation.[1:15] Async report generation workflow via Lambda
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 37, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:28","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"a7397c09-4425-4727-9285-63f553ca6674"}
+classpath:features/reports/report-generation.feature:23
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"944d4151-f86f-4caa-85ac-3043a8abc5a0"}
+classpath:features/reports/report-generation.feature:23
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"34351292-8662-4532-8bca-6aa5e58bc703"}
+classpath:features/reports/report-generation.feature:23
+[INFO] 
+[ERROR] features/reports/report-generation.[3:88] Query generated reports by experiment
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 22, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:39","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"11e227b3-4476-47cb-ae69-168116c02bd5"}
+classpath:features/reports/report-generation.feature:96
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 16, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:11","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"ff3080be-3e50-4ab5-aafa-9be2b3e11f51"}
+classpath:features/reports/report-generation.feature:96
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 13, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"7a8952b0-ae98-4833-b920-811dff6b89fd"}
+classpath:features/reports/report-generation.feature:96
+[INFO] 
+[ERROR] features/reports/report-management.[1:44] List reports with filters
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 34, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:45","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"e2dd2add-5b57-4288-842a-b4b1fb0348a8"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 60, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:02","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"3ba742bb-b7d0-42ca-a6be-bc3a5230d4ce"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 11, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"6dfc95b7-c6b1-46a2-b69f-9c04fc090e1e"}
+classpath:features/reports/report-management.feature:20
+[INFO] 
+[ERROR] features/reports/report-management.[2:87] Query and download report generated by Lambda
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 118, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:50","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"2027c281-f68b-4ca7-9cb1-ef9c5572d5fa"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 270, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:07","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"d526bbab-7f8d-422a-b867-b58b0c31fd0e"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 9, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:12","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"abc717d1-cec6-4b48-b696-6dfb31e46469"}
+classpath:features/reports/report-management.feature:20
+[INFO] 
+[ERROR] features/reports/report-management.[3:136] Report generation from completed experiment
+[ERROR]   Run 1: status code was: 401, expected: 201, response time in milliseconds: 33, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:50:56","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"451bc699-75c2-486b-ad91-22102ac9e709"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 2: status code was: 401, expected: 201, response time in milliseconds: 28, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:10","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"6e475755-4eeb-4f6c-88ee-361d5fb0d156"}
+classpath:features/reports/report-management.feature:20
+[ERROR]   Run 3: status code was: 401, expected: 201, response time in milliseconds: 15, url: http://localhost:8080/api/v1/organizations, response: 
+{"timestamp":"2026-04-09T03:51:13","status":401,"error":"","message":"Downstream service error","path":"/api/v1/organizations","correlationId":"717460a2-be0d-4835-8c42-6e7b82476934"}
+classpath:features/reports/report-management.feature:20
+[INFO] 
+[INFO] 
+[ERROR] Tests run: 50, Failures: 33, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  05:03 min
+[INFO] Finished at: 2026-04-08T23:54:11-04:00
+[INFO] ------------------------------------------------------------------------
+[WARNING] The requested profile "integration-tests" could not be activated because it does not exist.
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.1.2:test (default-test) on project architecture-tests: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /Users/ryanwaite28/Developer/portfolio-projects/Turaf/services/architecture-tests/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+ryanwaite28@Ryans-MacBook-Air Turaf % 

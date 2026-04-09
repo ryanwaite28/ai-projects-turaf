@@ -15,7 +15,7 @@ Feature: User Authentication
     And match response.user.email == testUser.email
     And match response.user.id != null
     And match response.tokenType == 'Bearer'
-    And match response.expiresIn > 0
+    And assert response.expiresIn > 0
     
   Scenario: Login with invalid credentials returns 401
     Given path '/api/v1/auth/login'

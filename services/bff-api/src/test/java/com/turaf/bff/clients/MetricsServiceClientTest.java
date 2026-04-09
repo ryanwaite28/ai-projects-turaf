@@ -9,6 +9,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +31,11 @@ class MetricsServiceClientTest {
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new MetricsServiceClient(restClient);
+        // Create HttpExchange proxy for the interface
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(restClient))
+            .build();
+        client = factory.createClient(MetricsServiceClient.class);
     }
     
     @AfterEach
@@ -60,7 +66,7 @@ class MetricsServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/metrics/metrics", recordedRequest.getPath());
+        assertEquals("/api/v1/metrics", recordedRequest.getPath());
         assertEquals("user-123", recordedRequest.getHeader("X-User-Id"));
         assertEquals("org-123", recordedRequest.getHeader("X-Organization-Id"));
     }
@@ -82,7 +88,8 @@ class MetricsServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/metrics/experiments/exp-456/metrics", recordedRequest.getPath());
+        assertTrue(recordedRequest.getPath().startsWith("/api/v1/metrics"));
+        assertTrue(recordedRequest.getPath().contains("experimentId=exp-456"));
     }
     
     @Test
@@ -100,7 +107,7 @@ class MetricsServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/metrics/metrics/metric-789", recordedRequest.getPath());
+        assertEquals("/api/v1/metrics/metric-789", recordedRequest.getPath());
     }
     
     @Test
@@ -112,6 +119,6 @@ class MetricsServiceClientTest {
         
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("DELETE", recordedRequest.getMethod());
-        assertEquals("/metrics/metrics/metric-999", recordedRequest.getPath());
+        assertEquals("/api/v1/metrics/metric-999", recordedRequest.getPath());
     }
 }

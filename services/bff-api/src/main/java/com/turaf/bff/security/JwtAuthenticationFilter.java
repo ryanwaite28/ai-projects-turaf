@@ -18,26 +18,27 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     private final JwtTokenValidator jwtTokenValidator;
-    
+    private final TokenBlacklistService tokenBlacklistService;
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        
+
         try {
             String authHeader = request.getHeader("Authorization");
-            
+
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
                 return;
             }
-            
+
             String token = jwtTokenValidator.extractToken(authHeader);
-            
-            if (token != null && jwtTokenValidator.validateToken(token)) {
+
+            if (token != null && !tokenBlacklistService.isBlacklisted(token) && jwtTokenValidator.validateToken(token)) {
                 UserContext userContext = jwtTokenValidator.extractUserContext(token);
                 
                 UsernamePasswordAuthenticationToken authentication = 
@@ -62,8 +63,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/actuator") || 
-               path.equals("/api/v1/auth/login") || 
-               path.equals("/api/v1/auth/register");
+        return path.startsWith("/actuator") ||
+               path.equals("/api/v1/auth/login") ||
+               path.equals("/api/v1/auth/register") ||
+               path.equals("/api/v1/auth/refresh");
     }
 }

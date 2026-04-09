@@ -8,7 +8,10 @@ import com.turaf.bff.dto.PasswordResetRequest;
 import com.turaf.bff.dto.RefreshTokenRequest;
 import com.turaf.bff.dto.RegisterRequest;
 import com.turaf.bff.dto.UserDto;
+import com.turaf.bff.security.JwtTokenValidator;
+import com.turaf.bff.security.TokenBlacklistService;
 import com.turaf.bff.security.UserContext;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     
     private final IdentityServiceClient identityServiceClient;
-    
+    private final JwtTokenValidator jwtTokenValidator;
+    private final TokenBlacklistService tokenBlacklistService;
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login request for email: {}", request.getEmail());
@@ -48,8 +53,14 @@ public class AuthController {
     }
     
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserContext userContext) {
+    public ResponseEntity<Void> logout(
+            @AuthenticationPrincipal UserContext userContext,
+            HttpServletRequest request) {
         log.info("Logout request for userId: {}", userContext.getUserId());
+        String token = jwtTokenValidator.extractToken(request.getHeader("Authorization"));
+        if (token != null) {
+            tokenBlacklistService.invalidate(token, jwtTokenValidator.extractExpiry(token));
+        }
         identityServiceClient.logout(userContext.getUserId());
         log.info("Logout successful");
         return ResponseEntity.ok().build();

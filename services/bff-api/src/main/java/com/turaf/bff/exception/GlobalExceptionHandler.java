@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleServiceUnavailable(
             ServiceUnavailableException ex, HttpServletRequest request) {
         
-        log.error("Service unavailable: {}", ex.getMessage(), ex);
+        log.error("Service unavailable: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod(), ex);
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
         
-        log.error("Resource not found: {}", ex.getMessage());
+        log.error("Resource not found: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCircuitBreakerOpen(
             CallNotPermittedException ex, HttpServletRequest request) {
         
-        log.error("Circuit breaker open: {}", ex.getMessage());
+        log.error("Circuit breaker open: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHttpClientError(
             HttpClientErrorException ex, HttpServletRequest request) {
         
-        log.error("Downstream service client error: {} - {}", ex.getStatusCode(), ex.getMessage());
+        log.error("Downstream service client error: {} - {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getStatusCode(), ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -98,7 +98,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHttpServerError(
             HttpServerErrorException ex, HttpServletRequest request) {
         
-        log.error("Downstream service server error: {} - {}", ex.getStatusCode(), ex.getMessage());
+        log.error("Downstream service server error: {} - {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getStatusCode(), ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResourceAccessException(
             ResourceAccessException ex, HttpServletRequest request) {
         
-        log.error("Downstream service connection error: {}", ex.getMessage());
+        log.error("Downstream service connection error: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
             .map(FieldError::getDefaultMessage)
             .collect(Collectors.joining(", "));
         
-        log.error("Validation error: {}", errors);
+        log.error("Validation error: {}; Request Host: {}, Request Path: {}, Request Method: {}", errors, request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -158,7 +158,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorized(
             UnauthorizedException ex, HttpServletRequest request) {
         
-        log.error("Unauthorized: {}", ex.getMessage());
+        log.error("Unauthorized: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -176,7 +176,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
         
-        log.error("Access denied: {}", ex.getMessage());
+        log.error("Access denied: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod());
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -194,7 +194,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
         
-        log.error("Unexpected error: {}", ex.getMessage(), ex);
+        log.error("Unexpected error: {}; Request Host: {}, Request Path: {}, Request Method: {}", ex.getMessage(), request.getServerName(), request.getRequestURI(), request.getMethod(), ex);
         
         ErrorResponse error = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())

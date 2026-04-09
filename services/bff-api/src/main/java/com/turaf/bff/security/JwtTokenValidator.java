@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 @Slf4j
@@ -77,5 +78,22 @@ public class JwtTokenValidator {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    /**
+     * Returns the expiry of the token as an {@link Instant}, or
+     * {@link Instant#now()} if the token cannot be parsed (treat as already expired).
+     */
+    public Instant extractExpiry(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+            return claims.getExpiration().toInstant();
+        } catch (Exception e) {
+            return Instant.now();
+        }
     }
 }

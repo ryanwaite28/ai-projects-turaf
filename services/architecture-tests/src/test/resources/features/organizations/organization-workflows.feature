@@ -27,8 +27,9 @@ Feature: Organization Workflows
     And match response[?(@.id == orgId)] != []
     
     * def member1Email = 'member1+' + timestamp + '@example.com'
+    * def member1Username = 'member1_' + timestamp
     Given path '/api/v1/auth/register'
-    And request { email: '#(member1Email)', password: 'Test123!', username: 'member1_#(timestamp)', firstName: 'Member', lastName: '1', organizationId: 'test-org-001' }
+    And request { email: '#(member1Email)', password: 'Test123!', username: '#(member1Username)', firstName: 'Member', lastName: '1', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def member1Id = response.user.id
@@ -43,7 +44,7 @@ Feature: Organization Workflows
     And header Authorization = 'Bearer ' + token
     When method GET
     Then status 200
-    And match response.length >= 2
+    And assert response.length >= 2
     
   Scenario: Organization access control
     * def timestamp = new Date().getTime()
@@ -57,8 +58,9 @@ Feature: Organization Workflows
     * def orgId = response.id
     
     * def user2Email = 'user2+' + timestamp + '@example.com'
+    * def user2Username = 'user2_' + timestamp
     Given path '/api/v1/auth/register'
-    And request { email: '#(user2Email)', password: 'Test123!', username: 'user2_#(timestamp)', firstName: 'User', lastName: '2', organizationId: 'test-org-001' }
+    And request { email: '#(user2Email)', password: 'Test123!', username: '#(user2Username)', firstName: 'User', lastName: '2', organizationId: 'test-org-001' }
     When method POST
     Then status 201
     * def user2Token = response.accessToken

@@ -1,14 +1,15 @@
 # Task 010: Implement Report Tests
 
-**Status**: ✅ Completed  
+**Status**: 🔄 Updated for Event-Driven Architecture  
 **Assignee**: AI Assistant  
 **Estimated Time**: 4 hours  
 **Actual Time**: < 1 hour  
 **Completed**: 2026-03-31  
+**Updated**: 2026-04-08 (Event-driven architecture alignment)  
 **Dependencies**: Tasks 001, 002, 003, 007, 009  
 **Related Spec**: [Architecture Testing](../../specs/architecture-testing.md#5-report-management-tests)  
 **Related Docs**: [API Alignment Review](../../docs/assessments/architecture-tests-api-alignment-2026-03-31.md)  
-**Note**: All report management test scenarios implemented including creation, listing with filters, downloading, and async report generation validation.
+**Note**: Tests updated to validate event-driven report generation via Reporting Lambda, not REST API creation.
 
 ---
 

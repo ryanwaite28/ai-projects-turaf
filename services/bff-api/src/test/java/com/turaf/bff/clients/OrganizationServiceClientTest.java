@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +32,11 @@ class OrganizationServiceClientTest {
             .baseUrl(mockWebServer.url("/").toString())
             .build();
         
-        client = new OrganizationServiceClient(restClient);
+        // Create HttpExchange proxy for the interface
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(restClient))
+            .build();
+        client = factory.createClient(OrganizationServiceClient.class);
     }
     
     @AfterEach

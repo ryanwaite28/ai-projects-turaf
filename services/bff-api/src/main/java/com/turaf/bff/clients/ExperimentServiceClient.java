@@ -2,122 +2,61 @@ package com.turaf.bff.clients;
 
 import com.turaf.bff.dto.CreateExperimentRequest;
 import com.turaf.bff.dto.ExperimentDto;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.DeleteExchange;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
+import org.springframework.web.service.annotation.PutExchange;
 
 import java.util.List;
 
-@Slf4j
-@Component
-public class ExperimentServiceClient {
+/**
+ * Experiment Service HTTP Client using Spring's declarative HTTP interface.
+ */
+@HttpExchange(url = "/api/v1/experiments", accept = "application/json", contentType = "application/json")
+public interface ExperimentServiceClient {
     
-    private final RestClient restClient;
-    private static final String SERVICE_PATH = "/api/v1/experiments";
+    @GetExchange
+    List<ExperimentDto> getExperiments(@RequestParam String organizationId,
+                                       @RequestHeader("X-User-Id") String userId);
     
-    public ExperimentServiceClient(@Qualifier("experimentRestClient") RestClient restClient) {
-        this.restClient = restClient;
-    }
+    @PostExchange
+    ExperimentDto createExperiment(@RequestBody CreateExperimentRequest request,
+                                   @RequestHeader("X-User-Id") String userId,
+                                   @RequestHeader("X-Organization-Id") String organizationId);
     
-    public List<ExperimentDto> getExperiments(String organizationId, String userId) {
-        log.debug("Calling Experiment Service: GET /experiments for organization: {}", organizationId);
-        List<ExperimentDto> experiments = restClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path(SERVICE_PATH)
-                .queryParam("organizationId", organizationId)
-                .build())
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .body(new ParameterizedTypeReference<List<ExperimentDto>>() {});
-        log.debug("Retrieved experiments for organization: {}", organizationId);
-        return experiments;
-    }
+    @GetExchange("/{id}")
+    ExperimentDto getExperiment(@PathVariable String id,
+                                @RequestHeader("X-User-Id") String userId,
+                                @RequestHeader("X-Organization-Id") String organizationId);
     
-    public ExperimentDto createExperiment(CreateExperimentRequest request, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: POST /experiments");
-        ExperimentDto exp = restClient.post()
-            .uri(SERVICE_PATH)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .body(request)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Experiment created: {}", exp.getId());
-        return exp;
-    }
+    @PutExchange("/{id}")
+    ExperimentDto updateExperiment(@PathVariable String id,
+                                   @RequestBody CreateExperimentRequest request,
+                                   @RequestHeader("X-User-Id") String userId,
+                                   @RequestHeader("X-Organization-Id") String organizationId);
     
-    public ExperimentDto getExperiment(String id, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: GET /experiments/{}", id);
-        ExperimentDto exp = restClient.get()
-            .uri(SERVICE_PATH + "/{id}", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Retrieved experiment: {}", id);
-        return exp;
-    }
+    @DeleteExchange("/{id}")
+    void deleteExperiment(@PathVariable String id,
+                         @RequestHeader("X-User-Id") String userId,
+                         @RequestHeader("X-Organization-Id") String organizationId);
     
-    public ExperimentDto updateExperiment(String id, CreateExperimentRequest request, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: PUT /experiments/{}", id);
-        ExperimentDto exp = restClient.put()
-            .uri(SERVICE_PATH + "/{id}", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .body(request)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Experiment updated: {}", id);
-        return exp;
-    }
+    @PostExchange("/{id}/start")
+    ExperimentDto startExperiment(@PathVariable String id,
+                                  @RequestHeader("X-User-Id") String userId,
+                                  @RequestHeader("X-Organization-Id") String organizationId);
     
-    public void deleteExperiment(String id, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: DELETE /experiments/{}", id);
-        restClient.delete()
-            .uri(SERVICE_PATH + "/{id}", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .toBodilessEntity();
-        log.debug("Experiment deleted: {}", id);
-    }
+    @PostExchange("/{id}/complete")
+    ExperimentDto completeExperiment(@PathVariable String id,
+                                     @RequestHeader("X-User-Id") String userId,
+                                     @RequestHeader("X-Organization-Id") String organizationId);
     
-    public ExperimentDto startExperiment(String id, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: POST /experiments/{}/start", id);
-        ExperimentDto exp = restClient.post()
-            .uri(SERVICE_PATH + "/{id}/start", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Experiment started: {}", id);
-        return exp;
-    }
-    
-    public ExperimentDto completeExperiment(String id, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: POST /experiments/{}/complete", id);
-        ExperimentDto exp = restClient.post()
-            .uri(SERVICE_PATH + "/{id}/complete", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Experiment completed: {}", id);
-        return exp;
-    }
-    
-    public ExperimentDto cancelExperiment(String id, String userId, String organizationId) {
-        log.debug("Calling Experiment Service: POST /experiments/{}/cancel", id);
-        ExperimentDto exp = restClient.post()
-            .uri(SERVICE_PATH + "/{id}/cancel", id)
-            .header("X-User-Id", userId)
-            .header("X-Organization-Id", organizationId)
-            .retrieve()
-            .body(ExperimentDto.class);
-        log.debug("Experiment cancelled: {}", id);
-        return exp;
-    }
+    @PostExchange("/{id}/cancel")
+    ExperimentDto cancelExperiment(@PathVariable String id,
+                                   @RequestHeader("X-User-Id") String userId,
+                                   @RequestHeader("X-Organization-Id") String organizationId);
 }

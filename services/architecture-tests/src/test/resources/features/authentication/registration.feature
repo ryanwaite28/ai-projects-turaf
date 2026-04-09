@@ -4,7 +4,8 @@ Feature: User Registration
     * url baseUrl
     * def timestamp = new Date().getTime()
     * def uniqueEmail = 'test+' + timestamp + '@example.com'
-    * def newUser = { email: '#(uniqueEmail)', password: 'Test123!', username: 'testuser_#(timestamp)', firstName: 'Test', lastName: 'User', organizationId: 'test-org-001' }
+    * def uniqueUsername = 'testuser_' + timestamp
+    * def newUser = { email: '#(uniqueEmail)', password: 'Test123!', username: '#(uniqueUsername)', firstName: 'Test', lastName: 'User', organizationId: 'test-org-001' }
 
   Scenario: Successful registration returns LoginResponseDto
     Given path '/api/v1/auth/register'

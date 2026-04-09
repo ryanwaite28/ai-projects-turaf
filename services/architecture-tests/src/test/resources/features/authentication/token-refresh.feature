@@ -17,7 +17,7 @@ Feature: Token Refresh
     Then status 200
     And match response.accessToken != null
     And match response.refreshToken != null
-    And match response.expiresIn > 0
+    And assert response.expiresIn > 0
     
   Scenario: Refresh with invalid token returns 401
     Given path '/api/v1/auth/refresh'

@@ -221,6 +221,34 @@ All endpoints are prefixed with `/api/v1`
 - Response: `{ "id": "string", "experimentId": "string", "name": "string", ... }`
 - Auth: Required
 
+### Report Query Endpoints (Query S3/DynamoDB)
+
+**Note**: Reports are generated asynchronously by the Reporting Service (Lambda function) when experiments are completed. The BFF API provides read-only query access to generated reports stored in S3.
+
+**Event Flow**: Experiment Service publishes `ExperimentCompleted` event → EventBridge → Reporting Lambda → generates report → stores in S3 → publishes `ReportGenerated` event
+
+**GET /api/v1/reports**
+- Description: List reports (query S3 or DynamoDB metadata)
+- Query params: `experimentId`, `type`, `status`, `organizationId`
+- Response: `[{ "id": "string", "experimentId": "string", "type": "string", "format": "string", "status": "string", "downloadUrl": "string", "createdAt": "ISO-8601" }]`
+- Auth: Required
+- Implementation: Query DynamoDB for report metadata or list S3 objects
+
+**GET /api/v1/reports/{id}**
+- Description: Get report metadata
+- Response: `{ "id": "string", "experimentId": "string", "type": "string", "format": "string", "status": "string", "downloadUrl": "string", "s3Location": "string", "createdAt": "ISO-8601" }`
+- Auth: Required
+- Implementation: Query DynamoDB or S3 metadata
+
+**GET /api/v1/reports/{id}/download**
+- Description: Download report file from S3
+- Response: Binary file (PDF, CSV, etc.)
+- Headers: `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="report-{id}.pdf"`
+- Auth: Required
+- Implementation: Generate presigned S3 URL or stream file from S3
+
+**Note**: Report creation is NOT exposed via REST API. Reports are created automatically by the Reporting Lambda when experiments complete, following event-driven architecture principles.
+
 ### Orchestration Endpoints (Composite Queries)
 
 **GET /api/v1/dashboard/overview**
