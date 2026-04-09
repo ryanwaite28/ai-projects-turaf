@@ -29,3 +29,13 @@ import {
   to = module.messaging.aws_sqs_queue.dlq
   id = "https://sqs.us-east-1.amazonaws.com/801651112319/turaf-dlq-dev"
 }
+
+import {
+  to = module.messaging.aws_cloudwatch_event_archive.main
+  id = "turaf-event-archive-dev"
+}
+
+import {
+  to = module.messaging.aws_sqs_queue.events
+  id = "https://sqs.us-east-1.amazonaws.com/801651112319/turaf-events-dev"
+}
